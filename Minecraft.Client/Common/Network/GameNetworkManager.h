@@ -1,8 +1,10 @@
 #pragma once
 using namespace std;
 #include <vector>
+#ifndef __linux__
 #include <qnet.h>
-#include "..\..\..\Minecraft.World\C4JThread.h"
+#endif
+#include "../../../Minecraft.World/C4JThread.h"
 #include "NetworkPlayerInterface.h"
 #ifdef _XBOX
 #include "..\..\Xbox\Network\PlatformNetworkManagerXbox.h"

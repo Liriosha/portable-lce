@@ -1,6 +1,6 @@
 #pragma once
 
-#include "..\..\..\Minecraft.World\SoundTypes.h"
+#include "../../../Minecraft.World/SoundTypes.h"
 
 #ifdef _XBOX
 
@@ -16,6 +16,9 @@
 #include "..\..\Durango\Miles\include\mss.h"
 #elif defined _WINDOWS64
 #include "..\..\windows64\Miles\include\mss.h"
+#elif defined(__linux__)
+// (DecalOverdose)HACK + TODO: Find native Linux headers and libs for this, but for now I'm using Win64 ones
+// #include "../../windows64/Miles/include/mss.h"
 #else // PS4
 // 4J Stu - Temp define to get Miles to link, can likely be removed when we get a new version of Miles
 #define _SEKRIT2

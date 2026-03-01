@@ -3,25 +3,28 @@
 using namespace std;
 
 #include "Audio/Consoles_SoundEngine.h"
-
+#ifndef __linux__
 #include <xuiapp.h>
-#include "..\Common\Tutorial\TutorialEnum.h"
+#endif
+#include "../Common/Tutorial/TutorialEnum.h"
 
 #ifdef _XBOX
 #include "..\Common\XUI\XUI_Helper.h"
 #include "..\Common\XUI\XUI_HelpCredits.h"
 #endif
-#include "UI\UIStructs.h"
+#include "UI/UIStructs.h"
 
-#include "..\..\Minecraft.World\DisconnectPacket.h"
+#include "../../Minecraft.World/DisconnectPacket.h"
+#ifndef __linux__
 #include <xsocialpost.h>
+#endif // __linux__
 
-#include "..\StringTable.h"
-#include "..\Common\DLC\DLCManager.h"
-#include "..\Common\GameRules\ConsoleGameRulesConstants.h"
-#include "..\Common\GameRules\GameRuleManager.h"
-#include "..\SkinBox.h"
-#include "..\ArchiveFile.h"
+#include "../StringTable.h"
+#include "../Common/DLC/DLCManager.h"
+#include "../Common/GameRules/ConsoleGameRulesConstants.h"
+#include "../Common/GameRules/GameRuleManager.h"
+#include "../SkinBox.h"
+#include "../ArchiveFile.h"
 
 typedef struct _JoinFromInviteData
 {
