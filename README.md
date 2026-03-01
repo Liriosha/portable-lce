@@ -1,1 +1,1 @@
-# ![4JCraft on Linux](.github-assets/logo.jpg) 4JCraft on Linux
+# <img src=".github-assets/logo.jpg" alt="Logo"> 4JCraft on Linux
