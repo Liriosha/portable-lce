@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 class ImageFileBuffer 
 {
 public:
@@ -246,6 +248,7 @@ const int CLEAR_COLOUR_FLAG = 2;
 const int GL_DEPTH_BUFFER_BIT = CLEAR_DEPTH_FLAG;
 const int GL_COLOR_BUFFER_BIT = CLEAR_COLOUR_FLAG;
 
+#ifndef __linux__
 const int GL_SRC_ALPHA = D3D11_BLEND_SRC_ALPHA;
 const int GL_ONE_MINUS_SRC_ALPHA = D3D11_BLEND_INV_SRC_ALPHA;
 const int GL_ONE = D3D11_BLEND_ONE;
@@ -263,6 +266,7 @@ const int GL_EQUAL = D3D11_COMPARISON_EQUAL;
 const int GL_LEQUAL = D3D11_COMPARISON_LESS_EQUAL;
 const int GL_GEQUAL = D3D11_COMPARISON_GREATER_EQUAL;
 const int GL_ALWAYS = D3D11_COMPARISON_ALWAYS;
+#endif // __linux__
 
 const int GL_TEXTURE_MIN_FILTER = 1;
 const int GL_TEXTURE_MAG_FILTER = 2;

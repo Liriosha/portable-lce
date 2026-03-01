@@ -29,11 +29,37 @@ typedef unsigned int UINT;
 #define WINAPI
 typedef void* HANDLE;
 typedef int INT;
+typedef char CHAR;
+typedef void* PVOID;
 // From PSXSense
 #define XUSER_MAX_COUNT                 4
 #define XUSER_INDEX_ANY                 0x000000FF
+typedef unsigned long* ULONG_PTR;
+typedef long LONG;
+typedef void VOID;
 
-#define CRITICAL_SECTION
+
+typedef struct _RTL_CRITICAL_SECTION {
+    // 	//
+    // 	//  The following field is used for blocking when there is contention for
+    // 	//  the resource
+    // 	//
+    //
+    	union {
+    		ULONG_PTR RawEvent[4];
+    	} Synchronization;
+    //
+    // 	//
+    // 	//  The following three fields control entering and exiting the critical
+    // 	//  section for the resource
+    // 	//
+    //
+    	LONG LockCount;
+    	LONG RecursionCount;
+    	HANDLE OwningThread;
+} RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
+
+typedef RTL_CRITICAL_SECTION CRITICAL_SECTION;
 #endif
 
 #ifdef _WINDOWS64
