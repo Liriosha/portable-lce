@@ -23,7 +23,9 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <locale>
+#ifndef __EMSCRIPTEN__
 #include <linux/mman.h>
+#endif // __EMSCRIPTEN__
 #include <sys/mman.h>
 #include <codecvt>
 

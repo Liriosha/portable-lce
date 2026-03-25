@@ -47,10 +47,14 @@ global_cpp_args = [
 if host_machine.system() == 'emscripten'
   add_project_arguments(
     '-pthread',
+    '--use-port=zlib',
+    '-sUSE_SDL=2',
+    '--use-port=sdl2',
     language: 'cpp'
   )
 
   add_project_link_arguments(
+    '-sUSE_SDL=2',
     '-sUSE_WEBGL2=1',
     '-sLEGACY_GL_EMULATION=1',
     '-sALLOW_MEMORY_GROWTH=1',
