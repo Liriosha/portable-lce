@@ -31,7 +31,11 @@ int strcasecmp(const char* a, const char* b) {
     return ca - cb;
 }
 #define MINIAUDIO_IMPLEMENTATION
+#ifndef __EMSCRIPTEN__
 #include "miniaudio.h"
+#else
+#include "../../Emscripten/miniaudio.h"
+#endif // __EMSCRIPTEN__
 #undef STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
 #endif

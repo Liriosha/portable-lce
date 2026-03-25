@@ -60,7 +60,7 @@ is_emscripten = host_machine.system() == 'emscripten'
 emcc_link_args = []
 
 if is_emscripten
-    emcc_link_args += ['--preload-file', meson.global_source_root() + '/build/Minecraft.Client/Common@Common']
+    emcc_link_args += ['--preload-file', meson.global_source_root() + '/build/Minecraft.Assets@Common']
 endif
 
 client_dependencies = [
