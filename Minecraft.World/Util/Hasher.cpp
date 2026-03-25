@@ -1,14 +1,16 @@
 #include "../Platform/stdafx.h"
-#if defined(_WIN32)
-#include <xhash>
-#else
-#include <openssl/md5.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
+#if defined(_WIN32)
+#include <xhash>
+#elif defined (__EMSCRIPTEN__)
+// no.
+#else
+#include <openssl/md5.h>
+#include <openssl/evp.h>
 #endif  // _WIN32
 #include "Hasher.h"
-#include <openssl/evp.h>
 
 Hasher::Hasher(std::wstring& salt) { this->salt = salt; }
 
@@ -29,6 +31,9 @@ std::wstring Hasher::getHash(std::wstring& name) {
     //{
     //	throw new RuntimeException(e);
     //}
+#elif defined(__EMSCRIPTEN__)
+    std::wstring s = std::wstring(salt).append(name);
+    return s;
 #else
     // adapted from a SSL example
     std::wstring combined = salt + name;

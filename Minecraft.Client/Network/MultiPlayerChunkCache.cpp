@@ -10,6 +10,11 @@
 #include "../../Minecraft.World/Blocks/Tile.h"
 #include "../../Minecraft.World/Level/WaterLevelChunk.h"
 
+#if defined(__EMSCRIPTEN__)
+// eh... I should've enabled wasm64
+#define InterlockedCompareExchangeRelease InterlockedCompareExchangeRelease64
+#endif
+
 MultiPlayerChunkCache::MultiPlayerChunkCache(Level* level) {
     XZSIZE = level->dimension->getXZSize();  // 4J Added
     XZOFFSET = XZSIZE / 2;                   // 4J Added
