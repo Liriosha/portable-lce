@@ -60,7 +60,9 @@ is_emscripten = host_machine.system() == 'emscripten'
 emcc_link_args = []
 
 if is_emscripten
-    emcc_link_args += ['--preload-file', meson.global_source_root() + '/build/Minecraft.Assets@Common']
+    emcc_link_args += ['--preload-file', meson.global_source_root() + '/build/Minecraft.Client/Common@Common']
+    emcc_link_args += ['--shell-file', meson.global_source_root() + '/scripts/shell.html']
+    emcc_link_args += ['-o 4JCraft.html']
 endif
 
 client_dependencies = [
