@@ -46,7 +46,7 @@ platform_sources += run_command(
 ).stdout().strip().split('\n')
 
 # linux-specific files (everything in Platform/Linux)
-if host_machine.system() == 'linux'
+if host_machine.system() == 'linux' or host_machine.system() == 'emscripten'
   platform_sources += run_command(
     'sh', '-c',
     'find "'
@@ -54,6 +54,13 @@ if host_machine.system() == 'linux'
       + '" \\( -name "*.cpp" -o -name "*.c" \\) ',
       check : true,
   ).stdout().strip().split('\n')
+endif
+
+is_emscripten = host_machine.system() == 'emscripten'
+emcc_link_args = []
+
+if is_emscripten
+    emcc_link_args += ['--preload-file', meson.global_source_root() + '/build/Minecraft.Client/Common@Common']
 endif
 
 client_dependencies = [
@@ -67,7 +74,7 @@ client_dependencies = [
     glu_dep,
     thread_dep,
     thread_dep,
-    dependency('zlib'),
+    zlib_dep,
     miniaudio_dep
 ]
 
@@ -101,6 +108,7 @@ client = executable('Minecraft.Client',
     '-DUNICODE', '-D_UNICODE',
     '-include', meson.current_source_dir() / 'Platform/stdafx.h',
   ],
+  link_args: emcc_link_args,
   c_args   : global_cpp_defs + ['-DUNICODE', '-D_UNICODE'],
   install  : true,
   install_dir : ''

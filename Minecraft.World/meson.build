@@ -46,8 +46,12 @@ lib_world = static_library('Minecraft.World',
   ],
 )
 
-zlib_dep = dependency('zlib')
-crypto_dep = dependency('libcrypto')  # for MD5 in Hasher.cpp on Linux
+is_emscripten = host_machine.system() == 'emscripten'
+if is_emscripten
+    crypto_dep = declare_dependency()
+else
+    crypto_dep = dependency('libcrypto')  # for MD5 in Hasher.cpp on Linux
+endif
 
 world_dep = declare_dependency(
   link_with : lib_world,
