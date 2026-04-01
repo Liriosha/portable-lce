@@ -30,23 +30,32 @@ if dest_common.exists():
     # shutil.rmtree(client_build_dir / "DurangoMedia", ignore_errors=True)
 
 # copy `Minecraft.Assets/Common` into the build directory for the client.
-shutil.copytree(
-    src_assets / "Common",
-    dest_common,
-)
+try:
+    shutil.copytree(
+        src_assets / "Common",
+        dest_common,
+    )
+except FileNotFoundError:
+    print(f"Error: source Common directory not found: {src_assets / 'Common'}", file=sys.stderr)
+    raise
 
 # copy the media archive to `Common/Media` inside the folder we just copied.
 shutil.copy(media_archive, client_build_dir / "Common" / "Media")
 
-# copy music and Sound with updated paths because putting them in root looks ugly.
-shutil.copytree(
-    src_assets / "Common" / "Music",
-    dest_common / "Music"
-)
-shutil.copytree(
-    src_assets / "DurangoMedia" / "Sound", 
-    dest_common / "Sound"
-)
+# copy Sound with updated paths because putting them in root looks ugly.
+
+sound_src = src_assets / "DurangoMedia" / "Sound"
+sound_dst = dest_common / "Sound"
+if sound_src.exists():
+    if sound_dst.exists():
+        print(f"Info: destination {sound_dst} already exists; skipping sound copy", file=sys.stderr)
+    else:
+        try:
+            shutil.copytree(sound_src, sound_dst)
+        except FileExistsError:
+            print(f"Info: race: {sound_dst} already exists; skipping sound copy", file=sys.stderr)
+else:
+    print(f"Warning: sound source {sound_src} not found!!", file=sys.stderr)
 
 # copy DLC
 # XXX: The DLC path is handled inside of 4JLibs, the Windows64 build expects `DurangoMedia/DLC` to load DLC data from
