@@ -11,7 +11,7 @@
 #include <utility>
 
 #include "IPlatformInput.h"
-#include "app/common/src/Console_Debug_enum.h"
+#include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "util/Definitions.h"
 #include "java/File.h"

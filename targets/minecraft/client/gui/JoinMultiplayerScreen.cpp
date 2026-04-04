@@ -4,7 +4,7 @@
 
 #include "Button.h"
 #include "EditBox.h"
-#include "app/include/stubs.h"
+#include "app/common/stubs.h"
 #include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Options.h"

@@ -4,7 +4,7 @@
 #include <optional>
 
 #include "app/common/App_enums.h"
-#include "app/common/src/Colours/ColourTable.h"
+#include "app/common/Colours/ColourTable.h"
 #include "java/Class.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/world/entity/Entity.h"

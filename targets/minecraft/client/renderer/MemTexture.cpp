@@ -1,9 +1,9 @@
-#include "app/include/MemTexture.h"
+#include "app/common/MemTexture.h"
 
 #include <cstdint>
 #include <string>
 
-#include "app/include/BufferedImage.h"
+#include "app/common/BufferedImage.h"
 
 class MemTextureProcessor;
 

@@ -2,9 +2,9 @@
 #include <memory>
 #include <string>
 
-#include "app/include/NetTypes.h"
-#include "app/include/SkinBox.h"
-#include "app/include/XboxStubs.h"
+#include "app/common/NetTypes.h"
+#include "app/common/SkinBox.h"
+#include "app/common/XboxStubs.h"
 #include "MobRenderer.h"
 #include "minecraft/client/renderer/entity/LivingEntityRenderer.h"
 #include "minecraft/world/entity/player/Player.h"

@@ -11,7 +11,7 @@
 #include "Button.h"
 #include "MessageScreen.h"
 #include "app/common/App_enums.h"
-#include "app/common/src/Network/GameNetworkManager.h"
+#include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
 #include "OptionsScreen.h"
 #include "minecraft/client/Minecraft.h"

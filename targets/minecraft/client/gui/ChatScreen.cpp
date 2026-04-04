@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "app/include/stubs.h"
+#include "app/common/stubs.h"
 #include "util/StringHelpers.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"

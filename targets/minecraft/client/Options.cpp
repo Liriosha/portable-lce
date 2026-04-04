@@ -1,9 +1,9 @@
 #include "Options.h"
 
 #include "KeyMapping.h"
-#include "app/common/src/Audio/SoundEngine.h"
+#include "app/common/Audio/SoundEngine.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/stubs.h"
+#include "app/common/stubs.h"
 #include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/InputOutputStream/BufferedReader.h"

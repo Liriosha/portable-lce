@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "IPlatformInput.h"
-#include "app/common/src/Console_Debug_enum.h"
+#include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "java/Random.h"
 #include "java/System.h"

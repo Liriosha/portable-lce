@@ -5,11 +5,11 @@
 
 #include <vector>
 
-#include "app/common/src/Colours/ColourTable.h"
+#include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/BufferedImage.h"
+#include "app/common/BufferedImage.h"
 #include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/InputOutputStream/BufferedReader.h"

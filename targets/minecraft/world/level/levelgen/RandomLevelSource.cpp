@@ -5,7 +5,7 @@
 
 #include <cstdint>
 
-#include "app/common/src/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
 #include "util/Timer.h"
 #include "java/Random.h"

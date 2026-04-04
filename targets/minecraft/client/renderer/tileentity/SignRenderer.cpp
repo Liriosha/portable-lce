@@ -6,9 +6,9 @@
 
 #include "platform/sdl2/Render.h"
 #include "app/common/App_enums.h"
-#include "app/common/src/Colours/ColourTable.h"
+#include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/XboxStubs.h"
+#include "app/common/XboxStubs.h"
 
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Font.h"

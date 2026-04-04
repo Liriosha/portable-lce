@@ -4,7 +4,7 @@
 
 #include "platform/sdl2/Render.h"
 #include "app/common/App_enums.h"
-#include "app/common/src/Colours/ColourTable.h"
+#include "app/common/Colours/ColourTable.h"
 #include "java/Random.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/Minecraft.h"

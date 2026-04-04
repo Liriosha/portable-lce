@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "app/include/SkinBox.h"
+#include "app/common/SkinBox.h"
 #include "Model.h"
 #include "minecraft/client/model/Polygon.h"
 #include "minecraft/client/model/Vertex.h"

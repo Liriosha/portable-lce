@@ -5,7 +5,7 @@
 
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/BufferedImage.h"
+#include "app/common/BufferedImage.h"
 #include "SimpleIcon.h"
 #include "StitchedTexture.h"
 #include "Texture.h"

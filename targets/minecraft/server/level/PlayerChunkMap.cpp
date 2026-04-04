@@ -9,8 +9,8 @@
 #include <unordered_set>
 #include <utility>
 
-#include "app/common/src/Network/GameNetworkManager.h"
-#include "app/common/src/Network/NetworkPlayerInterface.h"
+#include "app/common/Network/GameNetworkManager.h"
+#include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/linux/LinuxGame.h"
 #include "ServerChunkCache.h"
 #include "ServerLevel.h"

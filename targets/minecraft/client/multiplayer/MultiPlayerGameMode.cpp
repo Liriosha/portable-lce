@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "ClientConnection.h"
-#include "app/common/src/Audio/SoundEngine.h"
+#include "app/common/Audio/SoundEngine.h"
 #include "MultiPlayerLevel.h"
 #include "java/Class.h"
 #include "minecraft/client/Minecraft.h"

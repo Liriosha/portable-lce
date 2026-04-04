@@ -11,7 +11,7 @@
 #include "app/common/App_structs.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
-#include "app/include/XboxStubs.h"
+#include "app/common/XboxStubs.h"
 #include "util/StringHelpers.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
@@ -55,7 +55,7 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/PortalTile.h"
 #include "minecraft/world/level/tile/Tile.h"
-#include "app/include/stubs.h"
+#include "app/common/stubs.h"
 
 #include "strings.h"
 

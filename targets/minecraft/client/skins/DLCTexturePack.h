@@ -5,7 +5,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "AbstractTexturePack.h"
-#include "app/common/src/Localisation/StringTable.h"
+#include "app/common/Localisation/StringTable.h"
 
 class DLCPack;
 class StringTable;

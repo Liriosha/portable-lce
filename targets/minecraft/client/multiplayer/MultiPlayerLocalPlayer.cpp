@@ -5,9 +5,9 @@
 #include <cmath>
 
 #include "ClientConnection.h"
-#include "app/common/src/Tutorial/Tutorial.h"
-#include "app/common/src/Tutorial/TutorialEnum.h"
-#include "app/common/src/Tutorial/TutorialMode.h"
+#include "app/common/Tutorial/Tutorial.h"
+#include "app/common/Tutorial/TutorialEnum.h"
+#include "app/common/Tutorial/TutorialMode.h"
 #include "app/linux/LinuxGame.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"

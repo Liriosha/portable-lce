@@ -1,7 +1,7 @@
 #include "MobSkinTextureProcessor.h"
 
-#include "app/include/BufferedImage.h"
-#include "app/include/stubs.h"
+#include "app/common/BufferedImage.h"
+#include "app/common/stubs.h"
 
 BufferedImage* MobSkinTextureProcessor::process(BufferedImage* in) {
     if (in == nullptr) return nullptr;

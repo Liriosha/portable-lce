@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "app/common/src/BuildVer/BuildVer.h"
+#include "app/common/BuildVer/BuildVer.h"
 #include "platform/IPlatformNetwork.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"

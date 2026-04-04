@@ -5,7 +5,7 @@
 #include <format>
 #include <vector>
 
-#include "app/common/src/Colours/ColourTable.h"
+#include "app/common/Colours/ColourTable.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "java/Class.h"
 #include "minecraft/client/Minecraft.h"

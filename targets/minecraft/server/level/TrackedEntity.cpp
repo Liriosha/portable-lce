@@ -10,7 +10,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "EntityTracker.h"
-#include "app/common/src/Network/NetworkPlayerInterface.h"
+#include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/linux/LinuxGame.h"
 #include "ServerPlayer.h"
 #include "java/Class.h"

@@ -6,7 +6,7 @@
 
 #include "platform/sdl2/Render.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/stubs.h"
+#include "app/common/stubs.h"
 #include "minecraft/client/MemoryTracker.h"
 
 bool Tesselator::TRIANGLE_MODE = false;

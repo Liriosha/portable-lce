@@ -3,7 +3,7 @@
 #include <list>
 #include <unordered_map>
 
-#include "app/common/src/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
 #include "NetherBridgePieces.h"
 #include "java/Class.h"

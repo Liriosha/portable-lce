@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "app/common/src/Network/GameNetworkManager.h"
+#include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "util/StringHelpers.h"
 #include "minecraft/server/MinecraftServer.h"

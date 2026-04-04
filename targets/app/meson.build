@@ -1,19 +1,3 @@
-exclude_sources = [
-  ' ! -path "*/common/*"',
-  ' ! -path "*/linux/*"',
-  ' ! -path "*/windows/*"',
-]
-
-# all sources except common/, linux/, windows/
-client_sources = run_command(
-  'sh',
-  '-c', 'find "'
-  + meson.current_source_dir()
-  + '" \\( -name "*.cpp" -o -name "*.c" \\)'
-  + ' '.join(exclude_sources),
-  check: true,
-).stdout().strip().split('\n')
-
 exclude_platform_common_sources = [
   ' ! -name "UIScene_InGameSaveManagementMenu.cpp"',
 ]
@@ -71,8 +55,8 @@ platform_services_src = files('../platform/PlatformServices.cpp')
 
 client = executable(
   'Minecraft.Client',
-  client_sources + platform_sources + platform_services_src + localisation[1],
-  include_directories: include_directories('include', '..'),
+  platform_sources + platform_services_src + localisation[1],
+  include_directories: include_directories('..'),
   dependencies: client_dependencies,
   cpp_args: global_cpp_args
   + global_cpp_defs

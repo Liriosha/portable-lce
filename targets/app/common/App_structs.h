@@ -5,11 +5,11 @@
 #include "platform/sdl2/Storage.h"
 #include "app/common/App_Defines.h"
 #include "app/common/App_enums.h"
-#include "app/common/src/Tutorial/TutorialEnum.h"
-#include "app/common/src/UI/All Platforms/UIEnums.h"
-#include "app/include/NetTypes.h"
-#include "app/include/SkinBox.h"
-#include "app/include/XboxStubs.h"
+#include "app/common/Tutorial/TutorialEnum.h"
+#include "app/common/UI/All Platforms/UIEnums.h"
+#include "app/common/NetTypes.h"
+#include "app/common/SkinBox.h"
+#include "app/common/XboxStubs.h"
 
 typedef struct {
     wchar_t* wchFilename;

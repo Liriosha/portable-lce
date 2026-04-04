@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "app/linux/LinuxGame.h"
-#include "app/include/BufferedImage.h"
+#include "app/common/BufferedImage.h"
 #include "Stitcher.h"
 #include "Texture.h"
 #include "java/File.h"
