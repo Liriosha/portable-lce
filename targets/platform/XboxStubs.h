@@ -5,11 +5,8 @@
 
 #include "platform/PlatformTypes.h"
 
-// XUI forward declarations
+// XUI handle type (used by App_structs.h for SceneStackPair)
 typedef struct _XUIOBJ* HXUIOBJ;
-typedef struct _XUICLASS* HXUICLASS;
-typedef struct _XUIBRUSH* HXUIBRUSH;
-typedef struct _XUIDC* HXUIDC;
 
 bool IsEqualXUID(PlayerUID a, PlayerUID b);
 
@@ -49,11 +46,6 @@ bool IsEqualXUID(PlayerUID a, PlayerUID b);
 #define VK_PAD_RTHUMB_UPRIGHT 0x5835
 #define VK_PAD_RTHUMB_DOWNRIGHT 0x5836
 #define VK_PAD_RTHUMB_DOWNLEFT 0x5837
-
-// D3D stubs
-inline constexpr int D3DBLEND_CONSTANTALPHA = 0;
-inline constexpr int D3DBLEND_INVCONSTANTALPHA = 0;
-inline constexpr int D3DPT_QUADLIST = 0;
 
 // XUI string table
 class CXuiStringTable {
@@ -150,6 +142,7 @@ uint32_t XGetLanguage();
 uint32_t XGetLocale();
 uint32_t XEnableGuestSignin(bool fEnable);
 
+// System notification constants (used by Game.cpp notification handler)
 inline constexpr int XN_SYS_SIGNINCHANGED = 0;
 inline constexpr int XN_SYS_INPUTDEVICESCHANGED = 1;
 inline constexpr int XN_LIVE_CONTENT_INSTALLED = 2;
