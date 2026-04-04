@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "SimpleContainer.h"
 
 #include <vector>
@@ -81,7 +82,7 @@ void SimpleContainer::setItem(unsigned int slot,
 unsigned int SimpleContainer::getContainerSize() { return size; }
 
 std::wstring SimpleContainer::getName() {
-    return stringName.empty() ? app.GetString(name) : stringName;
+    return stringName.empty() ? Strings::get(name) : stringName;
 }
 
 std::wstring SimpleContainer::getCustomName() {

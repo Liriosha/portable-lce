@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Arrow.h"
 
 #include <math.h>
@@ -182,7 +183,7 @@ void Arrow::lerpMotion(double xd, double yd, double zd) {
         xRotO = xRot = (float)(atan2(yd, sd) * 180 / std::numbers::pi);
         xRotO = xRot;
         yRotO = yRot;
-        app.DebugPrintf("%f %f : 0x%x\n", xRot, yRot, &yRot);
+        Log::info("%f %f : 0x%x\n", xRot, yRot, &yRot);
         moveTo(x, y, z, yRot, xRot);
         life = 0;
     }

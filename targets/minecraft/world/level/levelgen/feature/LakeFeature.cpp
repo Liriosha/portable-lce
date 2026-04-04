@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "LakeFeature.h"
 
 #include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
@@ -24,8 +26,8 @@ bool LakeFeature::place(Level* level, Random* random, int x, int y, int z) {
     bool grid[16 * 16 * 8] = {0};
 
     LevelGenerationOptions* levelGenOptions = nullptr;
-    if (app.getLevelGenerationOptions() != nullptr) {
-        levelGenOptions = app.getLevelGenerationOptions();
+    if (GameServices::getLevelGenerationOptions() != nullptr) {
+        levelGenOptions = GameServices::getLevelGenerationOptions();
 
         int minX = x;
         int minY = y;
@@ -38,7 +40,7 @@ bool LakeFeature::place(Level* level, Random* random, int x, int y, int z) {
         bool intersects = levelGenOptions->checkIntersects(minX, minY, minZ,
                                                            maxX, maxY, maxZ);
         if (intersects) {
-            // app.DebugPrintf("Skipping reeds feature generation as it overlaps
+            // Log::info("Skipping reeds feature generation as it overlaps
             // a game rule structure\n");
             return false;
         }

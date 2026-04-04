@@ -1,3 +1,5 @@
+#include "minecraft/util/DebugSettings.h"
+#include "minecraft/util/Log.h"
 #include "McRegionChunkStorage.h"
 
 #include <stdio.h>
@@ -144,7 +146,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing level data, skipping\n", x,
                     z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             delete chunkData;
             return nullptr;
         }
@@ -153,7 +155,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing block data, skipping\n", x,
                     z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             delete chunkData;
             return nullptr;
         }
@@ -165,7 +167,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
                     "Chunk file at %d, %d is in the wrong location; "
                     "relocating. Expected %d, %d, got %d, %d\n",
                     x, z, x, z, levelChunk->x, levelChunk->z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             delete levelChunk;
             delete chunkData;
             return nullptr;
@@ -182,8 +184,8 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
         delete chunkData;
     }
 #if !defined(_CONTENT_PACKAGE)
-    if (levelChunk && app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (levelChunk && DebugSettings::isOn() &&
+        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // 4J Stu - This will force an update of the chunk's biome array
         levelChunk->reloadBiomes();
@@ -333,7 +335,7 @@ void McRegionChunkStorage::staticCtor() {
         s_saveThreads[i] =
             new C4JThread(runSaveThreadProc, nullptr, threadName);
 
-        // app.DebugPrintf("Created new thread: %s\n",threadName);
+        // Log::info("Created new thread: %s\n",threadName);
 
         // ResumeThread( saveThreads[j] );
         s_saveThreads[i]->run();

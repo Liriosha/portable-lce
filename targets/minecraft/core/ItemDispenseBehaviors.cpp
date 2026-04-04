@@ -1,3 +1,4 @@
+#include "minecraft/GameHostOptions.h"
 #include "ItemDispenseBehaviors.h"
 
 #include <memory>
@@ -448,7 +449,7 @@ std::shared_ptr<ItemInstance> TntDispenseBehavior::execute(
     Level* world = source->getWorld();
 
     if (world->newPrimedTntAllowed() &&
-        app.GetGameHostOption(eGameHostOption_TNT)) {
+        GameHostOptions::get(eGameHostOption_TNT)) {
         int targetX = source->getBlockX() + facing->getStepX();
         int targetY = source->getBlockY() + facing->getStepY();
         int targetZ = source->getBlockZ() + facing->getStepZ();

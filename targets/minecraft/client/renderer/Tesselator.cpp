@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Tesselator.h"
 
 #include <GL/gl.h>
@@ -432,7 +433,7 @@ void logLinuxPackedLightmapCoords(const char* path, int tex2, std::int16_t u,
     if (logCount >= 16) return;
 
     ++logCount;
-    app.DebugPrintf(
+    Log::info(
         "[linux-lightmap] %s raw=0x%08x packed=(%d,%d) sampled=(%.4f,%.4f)\n",
         path, tex2, (int)u, (int)v, u / 256.0f, v / 256.0f);
 }

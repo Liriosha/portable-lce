@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "DropperTileEntity.h"
 
 #include <memory>
@@ -8,7 +9,7 @@
 #include "strings.h"
 
 std::wstring DropperTileEntity::getName() {
-    return hasCustomName() ? name : app.GetString(IDS_CONTAINER_DROPPER);
+    return hasCustomName() ? name : Strings::get(IDS_CONTAINER_DROPPER);
 }
 
 // 4J Added

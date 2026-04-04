@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "AbstractContainerScreen.h"
 
 #include <wchar.h>
@@ -248,7 +249,7 @@ void AbstractContainerScreen::renderTooltip(std::shared_ptr<ItemInstance> item,
         }
 
         if (!cleanedLines.empty()) {
-            lineColors[0] = app.GetHTMLColour(item->getRarity()->color);
+            lineColors[0] = GameServices::getHTMLColour(item->getRarity()->color);
         }
 
         renderTooltipInternal(cleanedLines, lineColors, xm, ym);

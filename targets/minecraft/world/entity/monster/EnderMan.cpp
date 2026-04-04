@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "EnderMan.h"
 
 #include <math.h>
@@ -106,7 +107,7 @@ void EnderMan::readAdditionalSaveData(CompoundTag* tag) {
 
 std::shared_ptr<Entity> EnderMan::findAttackTarget() {
 #ifndef _FINAL_BUILD
-    if (app.GetMobsDontAttackEnabled()) {
+    if (DebugSettings::mobsDontAttack()) {
         return std::shared_ptr<Player>();
     }
 #endif

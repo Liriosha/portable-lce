@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "RandomScatteredLargeFeature.h"
 
 #include <list>
@@ -67,7 +68,7 @@ bool RandomScatteredLargeFeature::isFeatureChunk(int x, int z,
     z = zz;
 
     bool forcePlacement = false;
-    LevelGenerationOptions* levelGenOptions = app.getLevelGenerationOptions();
+    LevelGenerationOptions* levelGenOptions = GameServices::getLevelGenerationOptions();
     if (levelGenOptions != nullptr) {
         forcePlacement =
             levelGenOptions->isFeatureChunk(x, z, eFeature_Temples);

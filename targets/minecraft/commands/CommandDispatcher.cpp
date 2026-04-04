@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "CommandDispatcher.h"
 
 #include <string>
@@ -24,7 +25,7 @@ int CommandDispatcher::performCommand(std::shared_ptr<CommandSender> sender,
 #endif
         }
     } else {
-        app.DebugPrintf("Command %d not found!\n", command);
+        Log::info("Command %d not found!\n", command);
     }
 
     return 0;

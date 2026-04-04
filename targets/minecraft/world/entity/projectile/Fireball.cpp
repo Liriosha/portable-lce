@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Fireball.h"
 
 #include <stdint.h>
@@ -133,7 +134,7 @@ void Fireball::tick() {
     if (!level->isClientSide) {
         if ((owner != nullptr && owner->removed) ||
             !level->hasChunkAt((int)x, (int)y, (int)z)) {
-            app.DebugPrintf(
+            Log::info(
                 "Fireball removed - owner is null or removed is true for "
                 "owner\n");
             remove();
@@ -146,7 +147,7 @@ void Fireball::tick() {
 
             if ((x <= minXZ) || (x >= maxXZ) || (z <= minXZ) || (z >= maxXZ)) {
                 remove();
-                app.DebugPrintf("Fireball removed - end of world\n");
+                Log::info("Fireball removed - end of world\n");
                 return;
             }
         }
@@ -154,7 +155,7 @@ void Fireball::tick() {
 
     Entity::tick();
 
-    // app.DebugPrintf("Fireball x %d, y %d, z%d\n",(int)x,(int)y,(int)z);
+    // Log::info("Fireball x %d, y %d, z%d\n",(int)x,(int)y,(int)z);
 
     if (shouldBurn()) setOnFire(1);
 
@@ -164,7 +165,7 @@ void Fireball::tick() {
             life++;
             if (life == SharedConstants::TICKS_PER_SECOND * 30) {
                 remove();
-                app.DebugPrintf("Fireball removed - life is 20*60\n");
+                Log::info("Fireball removed - life is 20*60\n");
             }
             return;
         } else {
@@ -264,7 +265,7 @@ void Fireball::tick() {
             xd = 0.0;
             zd = 0.0;
             yd = 0.0;
-            app.DebugPrintf("Removing a fireball with zero velocity\n");
+            Log::info("Removing a fireball with zero velocity\n");
             remove();
         }
     }

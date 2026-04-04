@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "HangingEntityItem.h"
 
 #include <string.h>
@@ -82,7 +83,7 @@ std::shared_ptr<HangingEntity> HangingEntityItem::createEntity(
             std::make_shared<Painting>(level, x, y, z, dir);
 
 #ifndef _CONTENT_PACKAGE
-        if (app.DebugArtToolsOn() && auxValue > 0) {
+        if (DebugSettings::artToolsOn() && auxValue > 0) {
             painting->PaintingPostConstructor(dir, auxValue - 1);
         } else
 #endif
@@ -106,7 +107,7 @@ void HangingEntityItem::appendHoverText(
     std::shared_ptr<ItemInstance> itemInstance, std::shared_ptr<Player> player,
     std::vector<HtmlString>* lines, bool advanced) {
 #ifndef _CONTENT_PACKAGE
-    if (eType == eTYPE_PAINTING && app.DebugArtToolsOn() &&
+    if (eType == eTYPE_PAINTING && DebugSettings::artToolsOn() &&
         itemInstance->getAuxValue() > 0) {
         int motive = itemInstance->getAuxValue() - 1;
 

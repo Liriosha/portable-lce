@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "FlatLevelSource.h"
 
 #include <stdlib.h>
@@ -105,7 +106,7 @@ void FlatLevelSource::postProcess(ChunkSource* parent, int xt, int zt) {
         villageFeature->postProcess(level, pprandom, xt, zt);
     }
 
-    app.processSchematics(parent->getChunk(xt, zt));
+    GameServices::processSchematics(parent->getChunk(xt, zt));
 }
 
 bool FlatLevelSource::save(bool force, ProgressListener* progressListener) {

@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "MultiPlayerLocalPlayer.h"
 
 #include <wchar.h>
@@ -72,11 +74,11 @@ void MultiplayerLocalPlayer::tick() {
     // bool bIsisPrimaryHost=g_NetworkManager.IsHost() &&
     // (InputManager.GetPrimaryPad()==m_iPad);
 
-    /*if((app.GetGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0) !=
+    /*if((GameServices::getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0) !=
     m_bShownOnMaps)
     {
             m_bShownOnMaps =
-    (app.GetGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0); if
+    (GameServices::getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0); if
     (m_bShownOnMaps) connection->send( std::shared_ptr<PlayerCommandPacket>( new
     PlayerCommandPacket(shared_from_this(), PlayerCommandPacket::SHOW_ON_MAPS) )
     ); else connection->send( std::shared_ptr<PlayerCommandPacket>( new
@@ -377,7 +379,7 @@ void MultiplayerLocalPlayer::setAndBroadcastCustomSkin(std::uint32_t skinId) {
     if (getCustomSkin() != oldSkinIndex)
         connection->send(std::shared_ptr<TextureAndGeometryChangePacket>(
             new TextureAndGeometryChangePacket(
-                shared_from_this(), app.GetPlayerSkinName(GetXboxPad()))));
+                shared_from_this(), GameServices::getPlayerSkinName(GetXboxPad()))));
 }
 
 void MultiplayerLocalPlayer::setAndBroadcastCustomCape(std::uint32_t capeId) {
@@ -390,7 +392,7 @@ void MultiplayerLocalPlayer::setAndBroadcastCustomCape(std::uint32_t capeId) {
     if (getCustomCape() != oldCapeIndex)
         connection->send(std::make_shared<TextureChangePacket>(
             shared_from_this(), TextureChangePacket::e_TextureChange_Cape,
-            app.GetPlayerCapeName(GetXboxPad())));
+            GameServices::getPlayerCapeName(GetXboxPad())));
 }
 
 // 4J added for testing. This moves the player in a repeated sequence of 2
@@ -419,7 +421,7 @@ void MultiplayerLocalPlayer::StressTestMove(double* tempX, double* tempY,
     /*
             if( faultFound )
             {
-                    app.DebugPrintf("Fault found\n");
+                    Log::info("Fault found\n");
                     stressTestEnabled = false;
             }
             */

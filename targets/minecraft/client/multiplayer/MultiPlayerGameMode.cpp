@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "MultiPlayerGameMode.h"
 
 #include <vector>
@@ -149,8 +150,8 @@ void MultiPlayerGameMode::startDestroyBlock(int x, int y, int z, int face) {
         if (t > 0 &&
             (Tile::tiles[t]->getDestroyProgress(
                  minecraft->player, minecraft->player->level, x, y, z) >= 1
-             // ||(app.DebugSettingsOn() &&
-             // app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_InstantDestroy))
+             // ||(DebugSettings::isOn() &&
+             // DebugSettings::getMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_InstantDestroy))
              )) {
             destroyBlock(x, y, z, face);
         } else {

@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "CompoundContainer.h"
 
 #include "app/linux/LinuxGame.h"
@@ -28,7 +29,7 @@ bool CompoundContainer::contains(std::shared_ptr<Container> c) {
 std::wstring CompoundContainer::getName() {
     if (c1->hasCustomName()) return c1->getName();
     if (c2->hasCustomName()) return c2->getName();
-    return app.GetString(name);
+    return Strings::get(name);
 }
 
 std::wstring CompoundContainer::getCustomName() {

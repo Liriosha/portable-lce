@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "Ocelot.h"
 
 #include <stdint.h>
@@ -306,7 +307,7 @@ MobGroupData* Ocelot::finalizeMobSpawn(
     groupData = TamableAnimal::finalizeMobSpawn(groupData);
 
 #ifndef _CONTENT_PACKAGE
-    if (app.DebugArtToolsOn() && (extraData != 0)) {
+    if (DebugSettings::artToolsOn() && (extraData != 0)) {
         setTame(true);
         setCatType(extraData - 1);
         setOwnerUUID(Minecraft::GetInstance()

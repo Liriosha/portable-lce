@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "TextureManager.h"
 
 #include <wchar.h>
@@ -48,7 +49,7 @@ void TextureManager::registerTexture(Texture* texture) {
             // Minecraft.getInstance().getLogger().warning("TextureManager.registerTexture
             // called, but this texture has " + "already been registered.
             // ignoring.");
-            app.DebugPrintf(
+            Log::info(
                 "TextureManager.registerTexture called, but this texture has "
                 "already been registered. ignoring.");
             return;

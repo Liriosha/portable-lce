@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Stitcher.h"
 
 #include <algorithm>
@@ -81,7 +82,7 @@ void Stitcher::stitch() {
         TextureHolder* textureHolder = *it;  // textureHolders[i];
 
         if (!addToStorage(textureHolder)) {
-            app.DebugPrintf("Stitcher exception!\n");
+            Log::info("Stitcher exception!\n");
 #ifndef _CONTENT_PACKAGE
             __debugbreak();
 #endif

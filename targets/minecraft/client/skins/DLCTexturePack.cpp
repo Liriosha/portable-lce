@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "DLCTexturePack.h"
 
 #include <cstdint>
@@ -77,8 +79,8 @@ DLCTexturePack::DLCTexturePack(std::uint32_t id, DLCPack* pack,
     m_bLoadingData = false;
     m_bHasLoadedData = false;
     m_archiveFile = nullptr;
-    if (app.getLevelGenerationOptions())
-        app.getLevelGenerationOptions()->setLoadedData();
+    if (GameServices::getLevelGenerationOptions())
+        GameServices::getLevelGenerationOptions()->setLoadedData();
     m_bUsingDefaultColourTable = true;
 
     m_stringTable = nullptr;
@@ -224,9 +226,9 @@ void DLCTexturePack::loadColourTable() {
     }
 
     // Load the text colours
-    if (app.hasArchiveFile(L"HTMLColours.col")) {
+    if (GameServices::hasArchiveFile(L"HTMLColours.col")) {
         std::vector<uint8_t> textColours =
-            app.getArchiveFile(L"HTMLColours.col");
+            GameServices::getArchiveFile(L"HTMLColours.col");
         m_colourTable->loadColoursFromData(textColours.data(),
                                            textColours.size());
     }
@@ -244,20 +246,20 @@ void DLCTexturePack::loadData() {
                 "TPACK") != ERROR_IO_PENDING) {
             // corrupt DLC
             m_bHasLoadedData = true;
-            if (app.getLevelGenerationOptions())
-                app.getLevelGenerationOptions()->setLoadedData();
-            app.DebugPrintf("Failed to mount texture pack DLC %d for pad %d\n",
+            if (GameServices::getLevelGenerationOptions())
+                GameServices::getLevelGenerationOptions()->setLoadedData();
+            Log::info("Failed to mount texture pack DLC %d for pad %d\n",
                             mountIndex, InputManager.GetPrimaryPad());
         } else {
             m_bLoadingData = true;
-            app.DebugPrintf("Attempted to mount DLC data for texture pack %d\n",
+            Log::info("Attempted to mount DLC data for texture pack %d\n",
                             mountIndex);
         }
     } else {
         m_bHasLoadedData = true;
-        if (app.getLevelGenerationOptions())
-            app.getLevelGenerationOptions()->setLoadedData();
-        app.SetAction(InputManager.GetPrimaryPad(),
+        if (GameServices::getLevelGenerationOptions())
+            GameServices::getLevelGenerationOptions()->setLoadedData();
+        GameServices::setAction(InputManager.GetPrimaryPad(),
                       eAppAction_ReloadTexturePack);
     }
 }
@@ -265,7 +267,7 @@ void DLCTexturePack::loadData() {
 std::wstring DLCTexturePack::getFilePath(std::uint32_t packId,
                                          std::wstring filename,
                                          bool bAddDataFolder) {
-    return app.getFilePath(packId, filename, bAddDataFolder);
+    return GameServices::getFilePath(packId, filename, bAddDataFolder);
 }
 
 int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
@@ -274,9 +276,9 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
     texturePack->m_bLoadingData = false;
     if (dwErr != ERROR_SUCCESS) {
         // corrupt DLC
-        app.DebugPrintf("Failed to mount DLC for pad %d: %u\n", iPad, dwErr);
+        Log::info("Failed to mount DLC for pad %d: %u\n", iPad, dwErr);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "Mounted DLC for texture pack, attempting to load data\n");
         texturePack->m_dlcDataPack =
             new DLCPack(texturePack->m_dlcInfoPack->getName(), dwLicenceMask);
@@ -286,7 +288,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
         std::wstring dataFilePath =
             texturePack->m_dlcInfoPack->getFullDataPath();
         if (!dataFilePath.empty()) {
-            if (!app.m_dlcManager.readDLCDataFile(
+            if (!GameServices::getDLCManager().readDLCDataFile(
                     dwFilesProcessed,
                     getFilePath(texturePack->m_dlcInfoPack->GetPackID(),
                                 dataFilePath),
@@ -309,7 +311,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
                 */
                 DLCPack* pack = texturePack->m_dlcInfoPack->GetParentPack();
                 LevelGenerationOptions* levelGen =
-                    app.getLevelGenerationOptions();
+                    GameServices::getLevelGenerationOptions();
                 if (levelGen != nullptr && !levelGen->hasLoadedData()) {
                     int gameRulesCount = pack->getDLCItemsCount(
                         DLCManager::e_DLCType_GameRulesHeader);
@@ -336,10 +338,10 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
 
                                     delete[] pbData;
 
-                                    app.m_gameRules.setLevelGenerationOptions(
+                                    GameServices::getGameRules().setLevelGenerationOptions(
                                         dlcFile->lgo);
                                 } else {
-                                    app.FatalLoadError();
+                                    GameServices::fatalLoadError();
                                 }
                             }
                         }
@@ -357,7 +359,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
                                 // after a read fail and it's not an error?
                                 levelGen->setBaseSaveData(pbData, fileSize);
                             } else {
-                                app.FatalLoadError();
+                                GameServices::fatalLoadError();
                             }
                         }
                     }
@@ -400,9 +402,9 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
     }
 
     texturePack->m_bHasLoadedData = true;
-    if (app.getLevelGenerationOptions())
-        app.getLevelGenerationOptions()->setLoadedData();
-    app.SetAction(InputManager.GetPrimaryPad(), eAppAction_ReloadTexturePack);
+    if (GameServices::getLevelGenerationOptions())
+        GameServices::getLevelGenerationOptions()->setLoadedData();
+    GameServices::setAction(InputManager.GetPrimaryPad(), eAppAction_ReloadTexturePack);
 
     return 0;
 }
@@ -429,7 +431,7 @@ void DLCTexturePack::unloadUI() {
     }
     AbstractTexturePack::unloadUI();
 
-    app.m_dlcManager.removePack(m_dlcDataPack);
+    GameServices::getDLCManager().removePack(m_dlcDataPack);
     m_dlcDataPack = nullptr;
     delete m_archiveFile;
     m_bHasLoadedData = false;

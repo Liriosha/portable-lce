@@ -1,3 +1,4 @@
+#include "minecraft/GameHostOptions.h"
 #include "GameRules.h"
 
 #include <assert.h>
@@ -40,21 +41,21 @@ GameRules::~GameRules() {
 bool GameRules::getBoolean(const int rule) {
     switch (rule) {
         case GameRules::RULE_DOFIRETICK:
-            return app.GetGameHostOption(eGameHostOption_FireSpreads);
+            return GameHostOptions::get(eGameHostOption_FireSpreads);
         case GameRules::RULE_MOBGRIEFING:
-            return app.GetGameHostOption(eGameHostOption_MobGriefing);
+            return GameHostOptions::get(eGameHostOption_MobGriefing);
         case GameRules::RULE_KEEPINVENTORY:
-            return app.GetGameHostOption(eGameHostOption_KeepInventory);
+            return GameHostOptions::get(eGameHostOption_KeepInventory);
         case GameRules::RULE_DOMOBSPAWNING:
-            return app.GetGameHostOption(eGameHostOption_DoMobSpawning);
+            return GameHostOptions::get(eGameHostOption_DoMobSpawning);
         case GameRules::RULE_DOMOBLOOT:
-            return app.GetGameHostOption(eGameHostOption_DoMobLoot);
+            return GameHostOptions::get(eGameHostOption_DoMobLoot);
         case GameRules::RULE_DOTILEDROPS:
-            return app.GetGameHostOption(eGameHostOption_DoTileDrops);
+            return GameHostOptions::get(eGameHostOption_DoTileDrops);
         case GameRules::RULE_NATURAL_REGENERATION:
-            return app.GetGameHostOption(eGameHostOption_NaturalRegeneration);
+            return GameHostOptions::get(eGameHostOption_NaturalRegeneration);
         case GameRules::RULE_DAYLIGHT:
-            return app.GetGameHostOption(eGameHostOption_DoDaylightCycle);
+            return GameHostOptions::get(eGameHostOption_DoDaylightCycle);
         default:
             assert(0);
             return false;

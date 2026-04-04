@@ -1,3 +1,6 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/util/Log.h"
 #include "PlayerList.h"
 
 #include <string.h>
@@ -185,14 +188,14 @@ void PlayerList::placeNewPlayer(Connection* connection,
                    Item::map_Id, 1,
                    level->getAuxValueForMap(player->getXuid(), 0, centreXC,
                                             centreZC, mapScale)));
-        if (app.getGameRuleDefinitions() != nullptr) {
-            app.getGameRuleDefinitions()->postProcessPlayer(player);
+        if (GameServices::getGameRuleDefinitions() != nullptr) {
+            GameServices::getGameRuleDefinitions()->postProcessPlayer(player);
         }
     }
 
     if (!player->customTextureUrl.empty() &&
         player->customTextureUrl.substr(0, 3).compare(L"def") != 0 &&
-        !app.IsFileInMemoryTextures(player->customTextureUrl)) {
+        !GameServices::isFileInMemoryTextures(player->customTextureUrl)) {
         if (server->getConnection()->addPendingTextureRequest(
                 player->customTextureUrl)) {
 #if !defined(_CONTENT_PACKAGE)
@@ -206,14 +209,14 @@ void PlayerList::placeNewPlayer(Connection* connection,
                                              0)));
         }
     } else if (!player->customTextureUrl.empty() &&
-               app.IsFileInMemoryTextures(player->customTextureUrl)) {
+               GameServices::isFileInMemoryTextures(player->customTextureUrl)) {
         // Update the ref count on the memory texture data
-        app.AddMemoryTextureFile(player->customTextureUrl, nullptr, 0);
+        GameServices::addMemoryTextureFile(player->customTextureUrl, nullptr, 0);
     }
 
     if (!player->customTextureUrl2.empty() &&
         player->customTextureUrl2.substr(0, 3).compare(L"def") != 0 &&
-        !app.IsFileInMemoryTextures(player->customTextureUrl2)) {
+        !GameServices::isFileInMemoryTextures(player->customTextureUrl2)) {
         if (server->getConnection()->addPendingTextureRequest(
                 player->customTextureUrl2)) {
 #if !defined(_CONTENT_PACKAGE)
@@ -226,9 +229,9 @@ void PlayerList::placeNewPlayer(Connection* connection,
                 new TexturePacket(player->customTextureUrl2, nullptr, 0)));
         }
     } else if (!player->customTextureUrl2.empty() &&
-               app.IsFileInMemoryTextures(player->customTextureUrl2)) {
+               GameServices::isFileInMemoryTextures(player->customTextureUrl2)) {
         // Update the ref count on the memory texture data
-        app.AddMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
+        GameServices::addMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
     }
 
     player->setIsGuest(packet->m_isGuest);
@@ -416,7 +419,7 @@ void PlayerList::validatePlayerSpawnPosition(
     // 4J Stu - Some adjustments to make sure the current players position is
     // correct Make sure that the player is on the ground, and in the centre x/z
     // of the current column
-    app.DebugPrintf("Original pos is %f, %f, %f in dimension %d\n", player->x,
+    Log::info("Original pos is %f, %f, %f in dimension %d\n", player->x,
                     player->y, player->z, player->dimension);
 
     bool spawnForced = player->isRespawnForced();
@@ -437,14 +440,14 @@ void PlayerList::validatePlayerSpawnPosition(
 
     player->setPos(targetX, targetY, targetZ);
 
-    app.DebugPrintf("New pos is %f, %f, %f in dimension %d\n", player->x,
+    Log::info("New pos is %f, %f, %f in dimension %d\n", player->x,
                     player->y, player->z, player->dimension);
 
     ServerLevel* level = server->getLevel(player->dimension);
     while (level->getCubes(player, &player->bb)->size() != 0) {
         player->setPos(player->x, player->y + 1, player->z);
     }
-    app.DebugPrintf("Final pos is %f, %f, %f in dimension %d\n", player->x,
+    Log::info("Final pos is %f, %f, %f in dimension %d\n", player->x,
                     player->y, player->z, player->dimension);
 
     // 4J Stu - If we are in the nether and the above while loop has put us
@@ -455,7 +458,7 @@ void PlayerList::validatePlayerSpawnPosition(
     // use this mechanism to force a spawn point in the overworld for players
     // who were in the save when the reset nether option was applied
     if (level->dimension->id == -1 && player->y > 125) {
-        app.DebugPrintf(
+        Log::info(
             "Player in the nether tried to spawn at y = %f, moving to "
             "overworld\n",
             player->y);
@@ -485,7 +488,7 @@ void PlayerList::validatePlayerSpawnPosition(
             player->setPos(player->x, player->y + 1, player->z);
         }
 
-        app.DebugPrintf("Updated pos is %f, %f, %f in dimension %d\n",
+        Log::info("Updated pos is %f, %f, %f in dimension %d\n",
                         player->x, player->y, player->z, player->dimension);
     }
 }
@@ -557,7 +560,7 @@ void PlayerList::remove(std::shared_ptr<ServerPlayer> player) {
         // removed, also remove mount because it's saved in the player's
         // save tag
         level->removeEntityImmediately(player->riding);
-        app.DebugPrintf("removing player mount");
+        Log::info("removing player mount");
     }
     level->removeEntity(player);
     level->getChunkMap()->remove(player);
@@ -601,11 +604,11 @@ std::shared_ptr<ServerPlayer> PlayerList::getPlayerForLogin(
         pendingConnection->connection->getSocket()->getPlayer();
     if (networkPlayer != nullptr && !networkPlayer->IsHost()) {
         player->enableAllPlayerPrivileges(
-            app.GetGameHostOption(eGameHostOption_TrustPlayers) > 0);
+            GameHostOptions::get(eGameHostOption_TrustPlayers) > 0);
     }
 
     // 4J Added
-    LevelRuleset* serverRuleDefs = app.getGameRuleDefinitions();
+    LevelRuleset* serverRuleDefs = GameServices::getGameRuleDefinitions();
     if (serverRuleDefs != nullptr) {
         player->gameMode->setGameRules(
             GameRuleDefinition::generateNewGameRulesInstance(
@@ -661,14 +664,14 @@ std::shared_ptr<ServerPlayer> PlayerList::respawn(
 
     if (isPrimary) {
         if (isEmptying) {
-            app.DebugPrintf("Emptying this dimension\n");
+            Log::info("Emptying this dimension\n");
             serverPlayer->getLevel()->getTracker()->clear(serverPlayer);
         } else {
-            app.DebugPrintf("Transferring... storing flags\n");
+            Log::info("Transferring... storing flags\n");
             serverPlayer->getLevel()->getTracker()->removeEntity(serverPlayer);
         }
     } else {
-        app.DebugPrintf("Not primary player\n");
+        Log::info("Not primary player\n");
         serverPlayer->getLevel()->getTracker()->removeEntity(serverPlayer);
     }
 
@@ -816,7 +819,7 @@ std::shared_ptr<ServerPlayer> PlayerList::respawn(
     if (Minecraft::GetInstance()->isTutorial() &&
         (!Minecraft::GetInstance()->gameMode->getTutorial()->isStateCompleted(
             e_Tutorial_State_Food_Bar))) {
-        app.getGameRuleDefinitions()->postProcessPlayer(player);
+        GameServices::getGameRuleDefinitions()->postProcessPlayer(player);
     }
 
     if (oldDimension == 1 && player->dimension != 1) {
@@ -863,14 +866,14 @@ void PlayerList::toggleDimension(std::shared_ptr<ServerPlayer> player,
 
     if (isPrimary) {
         if (isEmptying) {
-            app.DebugPrintf("Toggle... Emptying this dimension\n");
+            Log::info("Toggle... Emptying this dimension\n");
             player->getLevel()->getTracker()->clear(player);
         } else {
-            app.DebugPrintf("Toggle...  transferring\n");
+            Log::info("Toggle...  transferring\n");
             player->getLevel()->getTracker()->removeEntity(player);
         }
     } else {
-        app.DebugPrintf("Toggle...  Not primary player\n");
+        Log::info("Toggle...  Not primary player\n");
         player->getLevel()->getTracker()->removeEntity(player);
     }
 
@@ -1116,7 +1119,7 @@ void PlayerList::tick() {
                     findAlivePlayerOnSystem(currentPlayer);
                 if (newPlayer != nullptr) {
                     receiveAllPlayers[dim][i] = newPlayer;
-                    app.DebugPrintf(
+                    Log::info(
                         "Replacing primary player %ls with %ls in dimension "
                         "%d\n",
                         currentPlayer->name.c_str(), newPlayer->name.c_str(),
@@ -1165,9 +1168,9 @@ bool PlayerList::isWhiteListed(const std::wstring& name) { return true; }
 bool PlayerList::isOp(const std::wstring& name) { return false; }
 
 bool PlayerList::isOp(std::shared_ptr<ServerPlayer> player) {
-    bool cheatsEnabled = app.GetGameHostOption(eGameHostOption_CheatsEnabled);
+    bool cheatsEnabled = GameHostOptions::get(eGameHostOption_CheatsEnabled);
 #if defined(_DEBUG_MENUS_ENABLED)
-    cheatsEnabled = cheatsEnabled || app.GetUseDPadForDebug();
+    cheatsEnabled = cheatsEnabled || GameServices::getUseDPadForDebug();
 #endif
     INetworkPlayer* networkPlayer = player->connection->getNetworkPlayer();
     bool isOp = cheatsEnabled &&
@@ -1233,7 +1236,7 @@ std::vector<ServerPlayer>* PlayerList::getPlayers(
     std::unordered_map<std::wstring, int>* scoreRequirements,
     const std::wstring& playerName, const std::wstring& teamName,
     Level* level) {
-    app.DebugPrintf("getPlayers NOT IMPLEMENTED!");
+    Log::info("getPlayers NOT IMPLEMENTED!");
     return nullptr;
 
     /*if (players.empty()) return nullptr;
@@ -1288,7 +1291,7 @@ std::vector<ServerPlayer>* PlayerList::getPlayers(
 bool PlayerList::meetsScoreRequirements(
     std::shared_ptr<Player> player,
     std::unordered_map<std::wstring, int> scoreRequirements) {
-    app.DebugPrintf("meetsScoreRequirements NOT IMPLEMENTED!");
+    Log::info("meetsScoreRequirements NOT IMPLEMENTED!");
     return false;
 
     // if (scoreRequirements == null || scoreRequirements.size() == 0) return
@@ -1522,7 +1525,7 @@ void PlayerList::removePlayerFromReceiving(std::shared_ptr<ServerPlayer> player,
         dimIndex = 2;
 
 #if !defined(_CONTENT_PACKAGE)
-    app.DebugPrintf("Requesting remove player %ls as primary in dimension %d\n",
+    Log::info("Requesting remove player %ls as primary in dimension %d\n",
                     player->name.c_str(), dimIndex);
 #endif
     bool playerRemoved = false;
@@ -1531,7 +1534,7 @@ void PlayerList::removePlayerFromReceiving(std::shared_ptr<ServerPlayer> player,
                    receiveAllPlayers[dimIndex].end(), player);
     if (it != receiveAllPlayers[dimIndex].end()) {
 #if !defined(_CONTENT_PACKAGE)
-        app.DebugPrintf(
+        Log::info(
             "Remove: Removing player %ls as primary in dimension %d\n",
             player->name.c_str(), dimIndex);
 #endif
@@ -1551,7 +1554,7 @@ void PlayerList::removePlayerFromReceiving(std::shared_ptr<ServerPlayer> player,
                 otherPlayer != nullptr &&
                 otherPlayer->IsSameSystem(thisPlayer)) {
 #if !defined(_CONTENT_PACKAGE)
-                app.DebugPrintf(
+                Log::info(
                     "Remove: Adding player %ls as primary in dimension %d\n",
                     newPlayer->name.c_str(), dimIndex);
 #endif
@@ -1561,7 +1564,7 @@ void PlayerList::removePlayerFromReceiving(std::shared_ptr<ServerPlayer> player,
         }
     } else if (thisPlayer == nullptr) {
 #if !defined(_CONTENT_PACKAGE)
-        app.DebugPrintf(
+        Log::info(
             "Remove: Qnet player for %ls was nullptr so re-checking all "
             "players\n",
             player->name.c_str());
@@ -1594,7 +1597,7 @@ void PlayerList::removePlayerFromReceiving(std::shared_ptr<ServerPlayer> player,
                 }
                 if (!foundPrimary) {
 #if !defined(_CONTENT_PACKAGE)
-                    app.DebugPrintf(
+                    Log::info(
                         "Remove: Adding player %ls as primary in dimension "
                         "%d\n",
                         newPlayer->name.c_str(), newPlayerDim);
@@ -1614,7 +1617,7 @@ void PlayerList::addPlayerToReceiving(std::shared_ptr<ServerPlayer> player) {
         playerDim = 2;
 
 #if !defined(_CONTENT_PACKAGE)
-    app.DebugPrintf("Requesting add player %ls as primary in dimension %d\n",
+    Log::info("Requesting add player %ls as primary in dimension %d\n",
                     player->name.c_str(), playerDim);
 #endif
 
@@ -1624,7 +1627,7 @@ void PlayerList::addPlayerToReceiving(std::shared_ptr<ServerPlayer> player) {
 
     if (thisPlayer == nullptr) {
 #if !defined(_CONTENT_PACKAGE)
-        app.DebugPrintf(
+        Log::info(
             "Add: Qnet player for player %ls is nullptr so not adding them\n",
             player->name.c_str());
 #endif
@@ -1645,7 +1648,7 @@ void PlayerList::addPlayerToReceiving(std::shared_ptr<ServerPlayer> player) {
 
     if (shouldAddPlayer) {
 #if !defined(_CONTENT_PACKAGE)
-        app.DebugPrintf("Add: Adding player %ls as primary in dimension %d\n",
+        Log::info("Add: Adding player %ls as primary in dimension %d\n",
                         player->name.c_str(), playerDim);
 #endif
         receiveAllPlayers[playerDim].push_back(player);

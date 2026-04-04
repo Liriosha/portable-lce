@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "TheEndLevelRandomLevelSource.h"
 
 #include <stdlib.h>
@@ -402,7 +403,7 @@ void TheEndLevelRandomLevelSource::postProcess(ChunkSource* parent, int xt,
 
     HeavyTile::instaFall = false;
 
-    app.processSchematics(parent->getChunk(xt, zt));
+    GameServices::processSchematics(parent->getChunk(xt, zt));
 }
 
 bool TheEndLevelRandomLevelSource::save(bool force,

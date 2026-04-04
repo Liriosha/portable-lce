@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "Entity.h"
 
 #include <stdarg.h>
@@ -87,7 +89,7 @@ int Entity::getSmallId() {
             if (removedFound) {
                 // Has set up the entityIdRemovingFlags vector in this case, so
                 // we should check against this when allocating new ids
-                //				app.DebugPrintf("getSmallId:
+                //				Log::info("getSmallId:
                 // Removed entities found\n");
                 puiRemovedFlags = entityIdRemovingFlags;
             }
@@ -105,7 +107,7 @@ int Entity::getSmallId() {
                 // should.
                 if (puiRemovedFlags) {
                     if (puiRemovedFlags[i] & uiMask) {
-                        //						app.DebugPrintf("Avoiding
+                        //						Log::info("Avoiding
                         // using ID %d (0x%x)\n", i * 32 +
                         // j,puiRemovedFlags[i]);
                         uiMask >>= 1;
@@ -123,7 +125,7 @@ int Entity::getSmallId() {
         puiUsedFlags++;
     }
 
-    app.DebugPrintf("Out of small entity Ids... possible leak?\n");
+    Log::info("Out of small entity Ids... possible leak?\n");
     __debugbreak();
     return -1;
 }
@@ -1862,10 +1864,10 @@ std::wstring Entity::getNetworkName() { return getDisplayName(); }
 
 void Entity::setAnimOverrideBitmask(unsigned int uiBitmask) {
     m_uiAnimOverrideBitmask = uiBitmask;
-    app.DebugPrintf("!!! Setting anim override bitmask to %d\n", uiBitmask);
+    Log::info("!!! Setting anim override bitmask to %d\n", uiBitmask);
 }
 unsigned int Entity::getAnimOverrideBitmask() {
-    if (app.GetGameSettings(eGameSetting_CustomSkinAnim) == 0) {
+    if (GameServices::getGameSettings(eGameSetting_CustomSkinAnim) == 0) {
         // We have a force animation for some skins (claptrap)
         // 4J-PB - treat all the eAnim_Disable flags as a force anim
         unsigned int uiIgnoreUserCustomSkinAnimSettingMask =

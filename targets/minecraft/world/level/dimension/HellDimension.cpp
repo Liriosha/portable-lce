@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "HellDimension.h"
 
 #include <cmath>
@@ -49,8 +50,8 @@ void HellDimension::updateLightRamp() {
 
 ChunkSource* HellDimension::createRandomLevelSource() const {
 #ifdef _DEBUG_MENUS_ENABLED
-    if (app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (DebugSettings::isOn() &&
+        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_SuperflatNether)) {
         return new HellFlatLevelSource(level, level->getSeed());
     } else

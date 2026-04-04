@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "minecraft/world/level/newbiome/layer/Layer.h"
 
 #include <stdint.h>
@@ -110,8 +111,8 @@ std::vector<std::shared_ptr<Layer>> Layer::getDefaultLayers(
 
 #if !defined(_CONTENT_PACKAGE)
 #if defined(_BIOME_OVERRIDE)
-    if (app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (DebugSettings::isOn() &&
+        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         biomeLayer = std::make_shared<BiomeOverrideLayer>(1);
     }

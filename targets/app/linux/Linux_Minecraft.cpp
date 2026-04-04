@@ -1,3 +1,7 @@
+#include "app/common/GameMenuService.h"
+#include "minecraft/GameServices.h"
+#include "minecraft/util/DebugSettings.h"
+#include "minecraft/locale/Strings.h"
 // Minecraft.cpp : Defines the entry point for the application.
 //
 
@@ -451,7 +455,153 @@ int main(int argc, const char* argv[]) {
 
     app.loadMediaArchive();
     app.loadStringTable();
-    // fuck you
+    Strings::init([](int id) { return app.GetString(id); });
+    DebugSettings::init(
+        [] { return app.DebugSettingsOn(); },
+        [] { return app.DebugArtToolsOn(); },
+        [](int iPad, bool overridePlayer) {
+            return app.GetGameSettingsDebugMask(iPad, overridePlayer);
+        },
+        [] { return app.GetMobsDontAttackEnabled(); },
+        [] { return app.GetMobsDontTickEnabled(); },
+        [] { return app.GetFreezePlayers(); });
+    GameServices::initLevelGen(
+        [] { return app.getLevelGenerationOptions(); },
+        [] { return app.getGameRuleDefinitions(); });
+    GameServices::initTextureCache(
+        [](const std::wstring& n, std::uint8_t* d, unsigned int s) {
+            app.AddMemoryTextureFile(n, d, s);
+        },
+        [](const std::wstring& n) { app.RemoveMemoryTextureFile(n); },
+        [](const std::wstring& n, std::uint8_t** d, unsigned int* s) {
+            app.GetMemFileDetails(n, d, s);
+        },
+        [](const std::wstring& n) { return app.IsFileInMemoryTextures(n); });
+    GameServices::initPlayerSettings(
+        [](int iPad, int s) {
+            return app.GetGameSettings(iPad, static_cast<eGameSetting>(s));
+        },
+        [](int s) {
+            return app.GetGameSettings(static_cast<eGameSetting>(s));
+        });
+    GameServices::initAppTime([] { return app.getAppTime(); });
+    GameServices::initGameState(
+        [] { return app.GetGameStarted(); },
+        [](bool v) { app.SetGameStarted(v); },
+        [] { return app.GetTutorialMode(); },
+        [](bool v) { app.SetTutorialMode(v); },
+        [] { return app.IsAppPaused(); },
+        [] { return app.GetLocalPlayerCount(); },
+        [] { return app.AutosaveDue(); },
+        [] { app.SetAutosaveTimerTime(); },
+        [] { return app.SecondsToAutosave(); },
+        [](DisconnectPacket::eDisconnectReason r) { app.SetDisconnectReason(r); },
+        [] { app.lockSaveNotification(); },
+        [] { app.unlockSaveNotification(); },
+        [] { return app.GetResetNether(); },
+        [] { return app.GetUseDPadForDebug(); },
+        [] { return app.GetWriteSavesToFolderEnabled(); },
+        [] { return app.IsLocalMultiplayerAvailable(); },
+        [] { return app.DLCInstallPending(); },
+        [] { return app.DLCInstallProcessCompleted(); },
+        [] { return app.CanRecordStatsAndAchievements(); },
+        [] { return app.GetTMSGlobalFileListRead(); },
+        [](std::uint32_t id) { app.SetRequiredTexturePackID(id); },
+        [](int iPad, int idx) { app.SetSpecialTutorialCompletionFlag(iPad, idx); },
+        [](int iPad, bool v) { app.SetBanListCheck(iPad, v); },
+        [](int iPad) { return app.GetBanListCheck(iPad); },
+        [] { return app.GetGameNewWorldSize(); },
+        [] { return app.GetGameNewWorldSizeUseMoat(); },
+        [] { return app.GetGameNewHellScale(); }
+    );
+    GameServices::initUIDispatch(
+        [](int iPad, eXuiAction a, void* p) { app.SetAction(iPad, a, p); },
+        [](int iPad, eXuiServerAction a, void* p) { app.SetXuiServerAction(iPad, a, p); },
+        [](int iPad) { return app.GetXuiAction(iPad); },
+        [](int iPad) { return app.GetXuiServerAction(iPad); },
+        [](int iPad) { return app.GetXuiServerActionParam(iPad); },
+        [](eXuiAction a) { app.SetGlobalXuiAction(a); },
+        [] { app.HandleButtonPresses(); },
+        [](int iPad, eTMSAction a) { app.SetTMSAction(iPad, a); }
+    );
+    GameServices::initSkinCape(
+        [](int iPad) { return app.GetPlayerSkinName(iPad); },
+        [](int iPad) { return app.GetPlayerSkinId(iPad); },
+        [](int iPad) { return app.GetPlayerCapeName(iPad); },
+        [](int iPad) { return app.GetPlayerCapeId(iPad); },
+        [](int iPad) { return app.GetAdditionalModelParts(iPad); },
+        [](std::uint32_t id, SKIN_BOX* a, unsigned int c) {
+            app.SetAdditionalSkinBoxes(id, a, c);
+        },
+        [](std::uint32_t id) { return app.GetAdditionalSkinBoxes(id); },
+        [](std::uint32_t id) { return app.GetAdditionalModelParts(id); },
+        [](std::uint32_t id, std::vector<SKIN_BOX*>* v) {
+            return app.SetAdditionalSkinBoxes(id, v);
+        },
+        [](std::uint32_t id, unsigned int m) { app.SetAnimOverrideBitmask(id, m); },
+        [](std::uint32_t id) { return app.GetAnimOverrideBitmask(id); },
+        [](const std::wstring& s) { return Game::getSkinIdFromPath(s); },
+        [](std::uint32_t id) { return Game::getSkinPathFromId(id); },
+        [] { return app.DefaultCapeExists(); },
+        [](PlayerUID x) { return app.isXuidNotch(x); },
+        [](PlayerUID x) { return app.isXuidDeadmau5(x); }
+    );
+    GameServices::initPlatformFeatures(
+        [] { app.FatalLoadError(); },
+        [](int iPad, int ctx) { app.SetRichPresenceContext(iPad, ctx); },
+        [] { app.CaptureSaveThumbnail(); },
+        [](std::uint8_t** d, unsigned int* s) { app.GetSaveThumbnail(d, s); },
+        [](int iPad, eTMSAction a, bool cb) { app.ReadBannedList(iPad, a, cb); },
+        [](std::uint8_t id, int16_t col, unsigned int priv) {
+            app.UpdatePlayerInfo(id, col, priv);
+        },
+        [](std::uint8_t id) { return app.GetPlayerPrivileges(id); },
+        [](int iPad, unsigned int v) { app.SetGameSettingsDebugMask(iPad, v); }
+    );
+    GameServices::initSchematics(
+        [](LevelChunk* c) { app.processSchematics(c); },
+        [](LevelChunk* c) { app.processSchematicsLighting(c); },
+        [](_eTerrainFeatureType t, int x, int z) {
+            app.AddTerrainFeaturePosition(t, x, z);
+        },
+        [](_eTerrainFeatureType t, int* x, int* z) {
+            return app.GetTerrainFeaturePosition(t, x, z);
+        },
+        [] { app.loadDefaultGameRules(); }
+    );
+    GameServices::initArchive(
+        [](const std::wstring& f) { return app.hasArchiveFile(f); },
+        [](const std::wstring& f) { return app.getArchiveFile(f); }
+    );
+    GameServices::initStringsAndMisc(
+        [](eMinecraftColour c) { return app.GetHTMLColour(c); },
+        [](int type) { return app.getEntityName(static_cast<eINSTANCEOF>(type)); },
+        [](const std::wstring& k) { return app.GetGameRulesString(k); },
+        [](std::uint8_t* m, int64_t s, bool h, unsigned int ho, unsigned int tp) {
+            return app.CreateImageTextData(m, s, h, ho, tp);
+        },
+        [](std::uint32_t p, std::wstring f, bool a, std::wstring mp) {
+            return app.getFilePath(p, f, a, mp);
+        },
+        [] { return app.GetUniqueMapName(); },
+        [](char* n) { app.SetUniqueMapName(n); },
+        [](int iPad) { return app.GetOpacityTimer(iPad); },
+        [](int iPad) { app.SetOpacityTimer(iPad); },
+        [](int iPad) { app.TickOpacityTimer(iPad); },
+        [](int iPad, PlayerUID x, char* n) {
+            return app.IsInBannedLevelList(iPad, x, n);
+        },
+        [](PlayerUID x) { return app.GetMojangDataForXuid(x); },
+        [](const char* msg) { app.DebugPrintf("%s", msg); }
+    );
+    GameServices::initMemberAccess(
+        &app.m_dlcManager,
+        &app.m_gameRules,
+        &app.vSkinNames,
+        &app.m_vTerrainFeatures
+    );
+    static GameMenuService menuService(app);
+    GameServices::initMenuService(&menuService);
     ui.init(1920, 1080);
     // storage manager is needed for the trial key check
     StorageManager.Init(

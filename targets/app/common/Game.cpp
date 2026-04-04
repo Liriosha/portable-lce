@@ -1,3 +1,4 @@
+#include "minecraft/GameHostOptions.h"
 #include "app/common/Game.h"
 
 #include "platform/PlatformTypes.h"
@@ -118,6 +119,8 @@ int Game::s_iHTMLFontSizesA[eHTMLSize_COUNT] = {
     20, 13, 20, 26};
 
 Game::Game() {
+    GameHostOptions::init(&m_uiGameHostSettings);
+
     if (GAME_SETTINGS_PROFILE_DATA_BYTES != sizeof(GAME_SETTINGS)) {
         // 4J Stu - See comment for GAME_SETTINGS_PROFILE_DATA_BYTES in
         // Xbox_App.h
@@ -5797,7 +5800,7 @@ SCreditTextItemDef* Game::GetDLCCredits(int iIndex) {
 
 void Game::SetGameHostOption(eGameHostOption eVal,
                                       unsigned int uiVal) {
-    SetGameHostOption(m_uiGameHostSettings, eVal, uiVal);
+    GameHostOptions::set(eVal, uiVal);
 }
 
 void Game::SetGameHostOption(unsigned int& uiHostSettings,
@@ -6036,7 +6039,7 @@ void Game::SetGameHostOption(unsigned int& uiHostSettings,
 }
 
 unsigned int Game::GetGameHostOption(eGameHostOption eVal) {
-    return GetGameHostOption(m_uiGameHostSettings, eVal);
+    return GameHostOptions::get(eVal);
 }
 
 unsigned int Game::GetGameHostOption(unsigned int uiHostSettings,

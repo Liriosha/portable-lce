@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "ItemInHandRenderer.h"
 
 #include <GL/gl.h>
@@ -464,7 +466,7 @@ void ItemInHandRenderer::render(float a) {
         static int lightmapLogCount = 0;
         if (lightmapLogCount < 8) {
             ++lightmapLogCount;
-            app.DebugPrintf(
+            Log::info(
                 "[linux-lightmap] item-hand raw=0x%08x uv=(%d,%d)\n", col, u,
                 v);
         }
@@ -547,7 +549,7 @@ void ItemInHandRenderer::render(float a) {
                     player->inventory->getSelected();
                 if ((itemInstance &&
                      (itemInstance->getItem()->id == Item::map_Id)) ||
-                    app.GetGameSettings(localPlayer->GetXboxPad(),
+                    GameServices::getGameSettings(localPlayer->GetXboxPad(),
                                         eGameSetting_DisplayHand) != 0) {
                     playerRenderer->renderHand();
                 }
@@ -764,7 +766,7 @@ void ItemInHandRenderer::render(float a) {
             player->inventory->getSelected();
 
         if ((itemInstance && (itemInstance->getItem()->id == Item::map_Id)) ||
-            app.GetGameSettings(localPlayer->GetXboxPad(),
+            GameServices::getGameSettings(localPlayer->GetXboxPad(),
                                 eGameSetting_DisplayHand) != 0) {
             playerRenderer->renderHand();
         }

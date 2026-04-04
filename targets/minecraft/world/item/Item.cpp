@@ -1,3 +1,5 @@
+#include "minecraft/locale/Strings.h"
+#include "minecraft/util/Log.h"
 
 #include "Item.h"
 
@@ -1395,7 +1397,7 @@ Item::Item(int id) : id(256 + id) {
 
     // this->id = 256 + id;
     if (items[256 + id] != nullptr) {
-        app.DebugPrintf("CONFLICT @ %d", id);
+        Log::info("CONFLICT @ %d", id);
     }
 
     items[256 + id] = this;
@@ -1539,12 +1541,12 @@ Item* Item::setDescriptionId(unsigned int id) {
 }
 
 const wchar_t* Item::getDescription() {
-    return app.GetString(getDescriptionId());
+    return Strings::get(getDescriptionId());
     // return I18n::get(getDescriptionId());
 }
 
 const wchar_t* Item::getDescription(std::shared_ptr<ItemInstance> instance) {
-    return app.GetString(getDescriptionId(instance));
+    return Strings::get(getDescriptionId(instance));
     // return I18n::get(getDescriptionId(instance));
 }
 
@@ -1638,7 +1640,7 @@ std::wstring Item::getHoverName(std::shared_ptr<ItemInstance> itemInstance) {
     // String elementName = ("" +
     // Language.getInstance().getElementName(getDescription(itemInstance))).trim();
     // return elementName;
-    return app.GetString(getDescriptionId(itemInstance));
+    return Strings::get(getDescriptionId(itemInstance));
 }
 
 bool Item::isFoil(std::shared_ptr<ItemInstance> itemInstance) {

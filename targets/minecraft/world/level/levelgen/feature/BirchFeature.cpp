@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "BirchFeature.h"
 
 #include <stdlib.h>
@@ -44,15 +46,15 @@ bool BirchFeature::place(Level* level, Random* random, int x, int y, int z) {
 
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (app.getLevelGenerationOptions() != nullptr) {
+    if (GameServices::getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            app.getLevelGenerationOptions();
+            GameServices::getLevelGenerationOptions();
         int radius = 3;
         bool intersects = levelGenOptions->checkIntersects(
             x - radius, y - 1, z - radius, x + radius, y + treeHeight,
             z + radius);
         if (intersects) {
-            // app.DebugPrintf("Skipping reeds feature generation as it overlaps
+            // Log::info("Skipping reeds feature generation as it overlaps
             // a game rule structure\n");
             return false;
         }

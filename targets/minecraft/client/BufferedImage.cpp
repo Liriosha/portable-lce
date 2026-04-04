@@ -10,7 +10,7 @@
 #include "app/common/DLC/DLCFile.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
-#include "app/linux/LinuxGame.h"
+#include "minecraft/GameServices.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "PlatformTypes.h"
 #include "util/StringHelpers.h"
@@ -98,8 +98,8 @@ BufferedImage::BufferedImage(const std::wstring& File,
                                                &ImageInfo, &data[l]);
         } else {
             std::wstring archiveKey = L"res/" + fileName;
-            if (app.hasArchiveFile(archiveKey)) {
-                std::vector<uint8_t> ba = app.getArchiveFile(archiveKey);
+            if (GameServices::hasArchiveFile(archiveKey)) {
+                std::vector<uint8_t> ba = GameServices::getArchiveFile(archiveKey);
                 hr = RenderManager.LoadTextureData(ba.data(), ba.size(),
                                                    &ImageInfo, &data[l]);
             }
@@ -140,14 +140,14 @@ BufferedImage::BufferedImage(DLCPack* dlcPack, const std::wstring& File,
                                    mipMapPath + L".png");
 
         if (!dlcPack->doesPackContainFile(DLCManager::e_DLCType_All, name)) {
-            if (l == 0) app.FatalLoadError();
+            if (l == 0) GameServices::fatalLoadError();
             return;
         }
 
         DLCFile* dlcFile = dlcPack->getFile(DLCManager::e_DLCType_All, name);
         pbData = dlcFile->getData(dataBytes);
         if (pbData == nullptr || dataBytes == 0) {
-            if (l == 0) app.FatalLoadError();
+            if (l == 0) GameServices::fatalLoadError();
             return;
         }
 
@@ -175,7 +175,7 @@ BufferedImage::BufferedImage(std::uint8_t* pbData, std::uint32_t dataBytes) {
         width = ImageInfo.Width;
         height = ImageInfo.Height;
     } else {
-        app.FatalLoadError();
+        GameServices::fatalLoadError();
     }
 }
 

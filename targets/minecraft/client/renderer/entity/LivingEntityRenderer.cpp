@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/GameHostOptions.h"
 #include "LivingEntityRenderer.h"
 
 #include <cmath>
@@ -388,12 +390,12 @@ void LivingEntityRenderer::renderName(std::shared_ptr<LivingEntity> mob,
 
             if (!msg.empty()) {
                 if (mob->isSneaking()) {
-                    if (app.GetGameSettings(eGameSetting_DisplayHUD) == 0) {
+                    if (GameServices::getGameSettings(eGameSetting_DisplayHUD) == 0) {
                         // 4J-PB - turn off gamertag render
                         return;
                     }
 
-                    if (app.GetGameHostOption(eGameHostOption_Gamertags) == 0) {
+                    if (GameHostOptions::get(eGameHostOption_Gamertags) == 0) {
                         // turn off gamertags if the host has set them off
                         return;
                     }
@@ -463,12 +465,12 @@ void LivingEntityRenderer::renderNameTag(std::shared_ptr<LivingEntity> mob,
                                          const std::wstring& name, double x,
                                          double y, double z, int maxDist,
                                          int color /*= 0xff000000*/) {
-    if (app.GetGameSettings(eGameSetting_DisplayHUD) == 0) {
+    if (GameServices::getGameSettings(eGameSetting_DisplayHUD) == 0) {
         // 4J-PB - turn off gamertag render
         return;
     }
 
-    if (app.GetGameHostOption(eGameHostOption_Gamertags) == 0) {
+    if (GameHostOptions::get(eGameHostOption_Gamertags) == 0) {
         // turn off gamertags if the host has set them off
         return;
     }
@@ -499,7 +501,7 @@ void LivingEntityRenderer::renderNameTag(std::shared_ptr<LivingEntity> mob,
     int readableDist = PLAYER_NAME_READABLE_FULLSCREEN;
     if (!RenderManager.IsHiDef()) {
         readableDist = PLAYER_NAME_READABLE_DISTANCE_SD;
-    } else if (app.GetLocalPlayerCount() > 2) {
+    } else if (GameServices::getLocalPlayerCount() > 2) {
         readableDist = PLAYER_NAME_READABLE_DISTANCE_SPLITSCREEN;
     }
 
@@ -527,7 +529,7 @@ void LivingEntityRenderer::renderNameTag(std::shared_ptr<LivingEntity> mob,
     if (mob->instanceof(eTYPE_PLAYER)) {
         std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(mob);
 
-        if (app.isXuidDeadmau5(player->getXuid())) offs = -10;
+        if (GameServices::isXuidDeadmau5(player->getXuid())) offs = -10;
 
         playerName = name;
     } else {

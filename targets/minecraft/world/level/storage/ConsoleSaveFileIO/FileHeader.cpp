@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 
 // #define _DEBUG_FILE_HEADER
 
@@ -106,7 +107,7 @@ void FileHeader::WriteHeader(void* saveMem) {
     *(versions + 1) = versionNumber;
 
 #if defined(_DEBUG_FILE_HEADER)
-    app.DebugPrintf(
+    Log::info(
         "Write save file with original version: %d, and current version %d\n",
         m_originalSaveVersion, versionNumber);
 #endif
@@ -114,7 +115,7 @@ void FileHeader::WriteHeader(void* saveMem) {
     char* headerPosition = (char*)saveMem + headerOffset;
 
 #if defined(_DEBUG_FILE_HEADER)
-    app.DebugPrintf("\n\nWrite file Header: Offset = %d, Size = %d\n",
+    Log::info("\n\nWrite file Header: Offset = %d, Size = %d\n",
                     headerOffset, headerSize);
 #endif
 
@@ -178,10 +179,10 @@ void FileHeader::ReadHeader(
     if (isSaveEndianDifferent()) System::ReverseSHORT(&m_saveVersion);
 
 #if defined(_DEBUG_FILE_HEADER)
-    app.DebugPrintf(
+    Log::info(
         "Read save file with orignal version: %d, and current version %d\n",
         m_originalSaveVersion, m_saveVersion);
-    app.DebugPrintf("\n\nRead file Header: Offset = %d, Size = %d\n",
+    Log::info("\n\nRead file Header: Offset = %d, Size = %d\n",
                     headerOffset, headerSize);
 #endif
 
@@ -236,7 +237,7 @@ void FileHeader::ReadHeader(
                 lastFile = entry;
                 fileTable.push_back(entry);
 #if defined(_DEBUG_FILE_HEADER)
-                app.DebugPrintf(
+                Log::info(
                     "File: %ls, Start = %d, Length = %d, End = %d, Timestamp = "
                     "%lld\n",
                     entry->data.filename, entry->data.startOffset,
@@ -268,7 +269,7 @@ void FileHeader::ReadHeader(
                 lastFile = entry;
                 fileTable.push_back(entry);
 #if defined(_DEBUG_FILE_HEADER)
-                app.DebugPrintf(
+                Log::info(
                     "File: %ls, Start = %d, Length = %d, End = %d\n",
                     entry->data.filename, entry->data.startOffset,
                     entry->data.length,
@@ -281,7 +282,7 @@ void FileHeader::ReadHeader(
         } break;
         default:
 #if !defined(_CONTENT_PACKAGE)
-            app.DebugPrintf("**********  Invalid save version %d\n",
+            Log::info("**********  Invalid save version %d\n",
                             m_saveVersion);
             __debugbreak();
 #endif

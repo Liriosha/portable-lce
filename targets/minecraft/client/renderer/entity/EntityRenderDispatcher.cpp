@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "EntityRenderDispatcher.h"
 
 #include <assert.h>
@@ -195,7 +196,7 @@ EntityRenderer* EntityRenderDispatcher::getRenderer(eINSTANCEOF e) {
                                   // insert elements if they don't exist
 
     if (it == renderers.end()) {
-        app.DebugPrintf("Couldn't find renderer for entity of type %d\n", e);
+        Log::info("Couldn't find renderer for entity of type %d\n", e);
         // New renderer mapping required in above table
         // __debugbreak();
         assert(0);

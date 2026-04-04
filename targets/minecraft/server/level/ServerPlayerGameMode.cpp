@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "ServerPlayerGameMode.h"
 
 #include <vector>
@@ -151,7 +152,7 @@ void ServerPlayerGameMode::startDestroyBlock(int x, int y, int z, int face) {
 
     if (t > 0 &&
         (progress >=
-         1))  //|| (app.DebugSettingsOn() &&
+         1))  //|| (DebugSettings::isOn() &&
               //(player->GetDebugOptions()&(1L<<eDebugSetting_InstantDestroy)
               //) )))
     {

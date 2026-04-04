@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "SignRenderer.h"
 
 #include <cstdint>
@@ -89,7 +90,7 @@ void SignRenderer::render(std::shared_ptr<TileEntity> _sign, double x, double y,
                         msg = L"Censored";  // In-game font, so English only
                         break;
                     default:
-                        msg = app.GetString(IDS_STRINGVERIFY_CENSORED);
+                        msg = Strings::get(IDS_STRINGVERIFY_CENSORED);
                         break;
                 }
             } else {
@@ -104,7 +105,7 @@ void SignRenderer::render(std::shared_ptr<TileEntity> _sign, double x, double y,
                         L"Awaiting Approval";  // In-game font, so English only
                     break;
                 default:
-                    msg = app.GetString(IDS_STRINGVERIFY_AWAITING_APPROVAL);
+                    msg = Strings::get(IDS_STRINGVERIFY_AWAITING_APPROVAL);
                     break;
             }
         }

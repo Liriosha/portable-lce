@@ -1,3 +1,5 @@
+#include "minecraft/locale/Strings.h"
+#include "minecraft/util/Log.h"
 #include "Inventory.h"
 
 #include <stdint.h>
@@ -391,14 +393,14 @@ void Inventory::setItem(unsigned int slot, std::shared_ptr<ItemInstance> item) {
 #ifdef _DEBUG
     if (item != nullptr) {
         std::wstring itemstring = item->toString();
-        app.DebugPrintf("Inventory::setItem - slot = %d,\t item = %d ", slot,
+        Log::info("Inventory::setItem - slot = %d,\t item = %d ", slot,
                         item->id);
         // OutputDebugStringW(itemstring.c_str());
-        app.DebugPrintf("\n");
+        Log::info("\n");
     }
 #else
     if (item != nullptr) {
-        app.DebugPrintf(
+        Log::info(
             "Inventory::setItem - slot = %d,\t item = %d, aux = %d\n", slot,
             item->id, item->getAuxValue());
     }
@@ -488,7 +490,7 @@ std::shared_ptr<ItemInstance> Inventory::getItem(unsigned int slot) {
     */
 }
 
-std::wstring Inventory::getName() { return app.GetString(IDS_INVENTORY); }
+std::wstring Inventory::getName() { return Strings::get(IDS_INVENTORY); }
 
 std::wstring Inventory::getCustomName() { return L""; }
 

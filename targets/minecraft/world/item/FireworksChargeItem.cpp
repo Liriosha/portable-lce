@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "FireworksChargeItem.h"
 
 #include <stdint.h>
@@ -99,9 +100,9 @@ void FireworksChargeItem::appendHoverText(CompoundTag* expTag,
     uint8_t type = expTag->getByte(FireworksItem::TAG_E_TYPE);
     if (type >= FireworksItem::TYPE_MIN && type <= FireworksItem::TYPE_MAX) {
         lines->push_back(
-            HtmlString(app.GetString(FIREWORKS_CHARGE_TYPE_NAME[type])));
+            HtmlString(Strings::get(FIREWORKS_CHARGE_TYPE_NAME[type])));
     } else {
-        lines->push_back(HtmlString(app.GetString(IDS_FIREWORKS_CHARGE_TYPE)));
+        lines->push_back(HtmlString(Strings::get(IDS_FIREWORKS_CHARGE_TYPE)));
     }
 
     // colors
@@ -124,12 +125,12 @@ void FireworksChargeItem::appendHoverText(CompoundTag* expTag,
             for (int dc = 0; dc < 16; dc++) {
                 if (c == DyePowderItem::COLOR_RGB[dc]) {
                     found = true;
-                    output += app.GetString(FIREWORKS_CHARGE_COLOUR_NAME[dc]);
+                    output += Strings::get(FIREWORKS_CHARGE_COLOUR_NAME[dc]);
                     break;
                 }
             }
             if (!found) {
-                output += app.GetString(IDS_FIREWORKS_CHARGE_CUSTOM);
+                output += Strings::get(IDS_FIREWORKS_CHARGE_CUSTOM);
             }
         }
         lines->push_back(output);
@@ -141,7 +142,7 @@ void FireworksChargeItem::appendHoverText(CompoundTag* expTag,
     if (fadeList.size() > 0) {
         bool first = true;
         std::wstring output =
-            std::wstring(app.GetString(IDS_FIREWORKS_CHARGE_FADE_TO)) + L" ";
+            std::wstring(Strings::get(IDS_FIREWORKS_CHARGE_FADE_TO)) + L" ";
         for (unsigned int i = 0; i < fadeList.size(); ++i) {
             int c = fadeList[i];
             if (!first) {
@@ -156,12 +157,12 @@ void FireworksChargeItem::appendHoverText(CompoundTag* expTag,
             for (int dc = 0; dc < 16; dc++) {
                 if (c == DyePowderItem::COLOR_RGB[dc]) {
                     found = true;
-                    output += app.GetString(FIREWORKS_CHARGE_COLOUR_NAME[dc]);
+                    output += Strings::get(FIREWORKS_CHARGE_COLOUR_NAME[dc]);
                     break;
                 }
             }
             if (!found) {
-                output += app.GetString(IDS_FIREWORKS_CHARGE_CUSTOM);
+                output += Strings::get(IDS_FIREWORKS_CHARGE_CUSTOM);
             }
         }
         lines->push_back(output);
@@ -170,14 +171,14 @@ void FireworksChargeItem::appendHoverText(CompoundTag* expTag,
     // has trail
     bool trail = expTag->getBoolean(FireworksItem::TAG_E_TRAIL);
     if (trail) {
-        lines->push_back(HtmlString(app.GetString(IDS_FIREWORKS_CHARGE_TRAIL)));
+        lines->push_back(HtmlString(Strings::get(IDS_FIREWORKS_CHARGE_TRAIL)));
     }
 
     // has flicker
     bool flicker = expTag->getBoolean(FireworksItem::TAG_E_FLICKER);
     if (flicker) {
         lines->push_back(
-            HtmlString(app.GetString(IDS_FIREWORKS_CHARGE_FLICKER)));
+            HtmlString(Strings::get(IDS_FIREWORKS_CHARGE_FLICKER)));
     }
 }
 

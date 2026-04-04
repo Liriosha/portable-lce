@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "StrongholdPieces.h"
 
 #include <stdio.h>
@@ -1970,7 +1971,7 @@ bool StrongholdPieces::PortalRoom::postProcess(Level* level, Random* random,
             // 4J Stu - The mob spawner location is close enough for the map
             // icon display, and this ensures that we only need to set the
             // position once
-            app.AddTerrainFeaturePosition(eTerrainFeature_StrongholdEndPortal,
+            GameServices::addTerrainFeaturePosition(eTerrainFeature_StrongholdEndPortal,
                                           x, z);
             level->getLevelData()->setXStrongholdEndPortal(x);
             level->getLevelData()->setZStrongholdEndPortal(z);

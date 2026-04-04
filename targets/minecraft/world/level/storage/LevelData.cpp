@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/GameHostOptions.h"
 #include "LevelData.h"
 
 #include <assert.h>
@@ -123,12 +125,12 @@ LevelData::LevelData(CompoundTag* tag) {
     m_smallEdgeMoat = tag->getInt(L"SmallMoat");
     m_mediumEdgeMoat = tag->getInt(L"MediumMoat");
 
-    int newWorldSize = app.GetGameNewWorldSize();
-    int newHellScale = app.GetGameNewHellScale();
+    int newWorldSize = GameServices::getGameNewWorldSize();
+    int newHellScale = GameServices::getGameNewHellScale();
     m_hellScaleOld = m_hellScale;
     m_xzSizeOld = m_xzSize;
     if (newWorldSize > m_xzSize) {
-        bool bUseMoat = app.GetGameNewWorldSizeUseMoat();
+        bool bUseMoat = GameServices::getGameNewWorldSizeUseMoat();
         switch (m_xzSize) {
             case LEVEL_WIDTH_CLASSIC:
                 m_classicEdgeMoat = bUseMoat;
@@ -182,7 +184,7 @@ LevelData::LevelData(CompoundTag* tag) {
             assert(0);
             break;
     }
-    app.SetGameHostOption(eGameHostOption_WorldSize, hostOptionworldSize);
+    GameHostOptions::set(eGameHostOption_WorldSize, hostOptionworldSize);
 #endif
 
     /* 4J - we don't store this anymore
@@ -516,7 +518,7 @@ void LevelData::setGameType(GameType* gameType) {
     // 4J Added
     hasBeenInCreative =
         hasBeenInCreative || (gameType == GameType::CREATIVE) ||
-        (app.GetGameHostOption(eGameHostOption_CheatsEnabled) > 0);
+        (GameHostOptions::get(eGameHostOption_CheatsEnabled) > 0);
 }
 
 bool LevelData::useNewSeaLevel() { return newSeaLevel; }

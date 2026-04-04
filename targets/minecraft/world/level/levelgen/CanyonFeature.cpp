@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "CanyonFeature.h"
 
 #include <numbers>
@@ -182,7 +183,7 @@ void CanyonFeature::addFeature(Level* level, int x, int z, int xOffs, int zOffs,
                   thickness, yRot, xRot, 0, 0, 3.0);
 
         // 4J Add to feature list
-        app.AddTerrainFeaturePosition(eTerrainFeature_Ravine,
+        GameServices::addTerrainFeaturePosition(eTerrainFeature_Ravine,
                                       (int)(xCave / 16.0), (int)(yCave / 16.0));
     }
 }

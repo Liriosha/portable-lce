@@ -1,3 +1,6 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/util/Log.h"
 // 4J TODO
 
 // All the instanceof s from Java have been converted to dynamic_cast in this
@@ -182,7 +185,7 @@ Player::Player(Level* level, const std::wstring& name) : LivingEntity(level) {
     m_OnlineXuid = INVALID_XUID;
     // m_bShownOnMaps = true;
     setShowOnMaps(
-        app.GetGameHostOption(eGameHostOption_Gamertags) != 0 ? true : false);
+        GameHostOptions::get(eGameHostOption_Gamertags) != 0 ? true : false);
     m_bIsGuest = false;
 
     // 4J: Set UUID to name on none-XB1 consoles, may change in future but for
@@ -569,34 +572,34 @@ void Player::setCustomSkin(std::uint32_t skinId) {
     setPlayerDefaultSkin(playerSkin);
 
     m_dwSkinId = skinId;
-    this->customTextureUrl = app.getSkinPathFromId(skinId);
+    this->customTextureUrl = GameServices::getSkinPathFromId(skinId);
 
     // set the new player additional boxes
-    /*vector<ModelPart *> *pvModelParts=app.GetAdditionalModelParts(m_dwSkinId);
+    /*vector<ModelPart *> *pvModelParts=GameServices::getAdditionalModelParts(m_dwSkinId);
 
     if(pvModelParts==nullptr)
     {
     // we don't have the data from the dlc skin yet
-    app.DebugPrintf("Couldn't get model parts for skin %X\n",m_dwSkinId);
+    Log::info("Couldn't get model parts for skin %X\n",m_dwSkinId);
 
     // do we have it from the DLC pack?
     DLCSkinFile *pDLCSkinFile =
-    app.m_dlcManager.getSkinFile(this->customTextureUrl);
+    GameServices::getDLCManager().getSkinFile(this->customTextureUrl);
 
     if(pDLCSkinFile!=nullptr)
     {
             const int additionalBoxCount =
     pDLCSkinFile->getAdditionalBoxesCount(); if(additionalBoxCount != 0)
     {
-    app.DebugPrintf("Got model parts from DLCskin for skin %X\n",m_dwSkinId);
-    pvModelParts=app.SetAdditionalSkinBoxes(m_dwSkinId,pDLCSkinFile->getAdditionalBoxes());
+    Log::info("Got model parts from DLCskin for skin %X\n",m_dwSkinId);
+    pvModelParts=GameServices::setAdditionalSkinBoxesFromVec(m_dwSkinId,pDLCSkinFile->getAdditionalBoxes());
     this->SetAdditionalModelParts(pvModelParts);
     }
     else
     {
     this->SetAdditionalModelParts(nullptr);
     }
-    app.SetAnimOverrideBitmask(pDLCSkinFile->getSkinID(),pDLCSkinFile->getAnimOverrideBitmask());
+    GameServices::setAnimOverrideBitmask(pDLCSkinFile->getSkinID(),pDLCSkinFile->getAnimOverrideBitmask());
     }
     else
     {
@@ -605,7 +608,7 @@ void Player::setCustomSkin(std::uint32_t skinId) {
     }
     else
     {
-    app.DebugPrintf("Got model parts from app.GetAdditionalModelParts for skin
+    Log::info("Got model parts from app.GetAdditionalModelParts for skin
     %X\n",m_dwSkinId);
 
     this->SetAdditionalModelParts(pvModelParts);
@@ -650,7 +653,7 @@ unsigned int Player::getSkinAnimOverrideBitmask(std::uint32_t skinId) {
             default:
                 // This is not one of the prefined skins
                 // Does the app have an anim override for this skin?
-                bitmask = app.GetAnimOverrideBitmask(skinId);
+                bitmask = GameServices::getAnimOverrideBitmask(skinId);
                 break;
         }
     }
@@ -670,13 +673,13 @@ void Player::setCustomCape(std::uint32_t capeId) {
     if (capeId > 0) {
         this->customTextureUrl2 = Player::getCapePathFromId(capeId);
     } else {
-        MOJANG_DATA* pMojangData = app.GetMojangDataForXuid(getOnlineXuid());
+        MOJANG_DATA* pMojangData = GameServices::getMojangDataForXuid(getOnlineXuid());
         if (pMojangData) {
             // Cape
             if (pMojangData->wchCape[0] != 0) {
                 this->customTextureUrl2 = pMojangData->wchCape;
             } else {
-                if (app.DefaultCapeExists()) {
+                if (GameServices::defaultCapeExists()) {
                     this->customTextureUrl2 = std::wstring(L"Special_Cape.png");
                 } else {
                     this->customTextureUrl2 = std::wstring(L"");
@@ -685,7 +688,7 @@ void Player::setCustomCape(std::uint32_t capeId) {
 
         } else {
             // if there is a custom default cloak, then set it here
-            if (app.DefaultCapeExists()) {
+            if (GameServices::defaultCapeExists()) {
                 this->customTextureUrl2 = std::wstring(L"Special_Cape.png");
             } else {
                 this->customTextureUrl2 = std::wstring(L"");
@@ -744,23 +747,23 @@ std::wstring Player::getCapePathFromId(std::uint32_t capeId) {
 }
 
 void Player::ChangePlayerSkin() {
-    if (app.vSkinNames.size() > 0) {
+    if (GameServices::getSkinNames().size() > 0) {
         m_uiPlayerCurrentSkin++;
-        if (m_uiPlayerCurrentSkin > app.vSkinNames.size()) {
+        if (m_uiPlayerCurrentSkin > GameServices::getSkinNames().size()) {
             m_uiPlayerCurrentSkin = 0;
             this->customTextureUrl = L"";
         } else {
             if (m_uiPlayerCurrentSkin > 0) {
                 // change this players custom texture url
                 this->customTextureUrl =
-                    app.vSkinNames[m_uiPlayerCurrentSkin - 1];
+                    GameServices::getSkinNames()[m_uiPlayerCurrentSkin - 1];
             }
         }
     }
 }
 
 void Player::prepareCustomTextures() {
-    MOJANG_DATA* pMojangData = app.GetMojangDataForXuid(getOnlineXuid());
+    MOJANG_DATA* pMojangData = GameServices::getMojangDataForXuid(getOnlineXuid());
 
     if (pMojangData) {
         // Skin
@@ -776,7 +779,7 @@ void Player::prepareCustomTextures() {
         //}
         // else
         //{
-        //	if(app.DefaultCapeExists())
+        //	if(GameServices::defaultCapeExists())
         //	{
         //		this->customTextureUrl2= wstring(L"Default_Cape.png");
         //	}
@@ -789,7 +792,7 @@ void Player::prepareCustomTextures() {
     } else {
         // 4J Stu - Don't update the cape here, it gets set elsewhere
         // if there is a custom default cloak, then set it here
-        // if(app.DefaultCapeExists())
+        // if(GameServices::defaultCapeExists())
         //{
         //	this->customTextureUrl2= wstring(L"Default_Cape.png");
         //}
@@ -933,7 +936,7 @@ void Player::die(DamageSource* source) {
     yd = 0.1f;
 
     // 4J - TODO need to use a xuid
-    if (app.isXuidNotch(m_xuid)) {
+    if (GameServices::isXuidNotch(m_xuid)) {
         drop(std::make_shared<ItemInstance>(Item::apple, 1), true);
     }
     if (!level->getGameRules()->getBoolean(GameRules::RULE_KEEPINVENTORY)) {
@@ -2081,7 +2084,7 @@ void Player::causeFoodExhaustion(float amount) {
 
     // 4J Stu - Added 1.8.2 bug fix (TU6) - If players cannot eat, then their
     // food bar should not decrease due to exhaustion
-    if (app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0 &&
+    if (GameHostOptions::get(eGameHostOption_TrustPlayers) == 0 &&
         getPlayerGamePrivilege(Player::ePlayerGamePrivilege_CannotBuild) != 0)
         return;
 
@@ -2387,7 +2390,7 @@ void Player::setPlayerGamePrivilege(unsigned int& uiGamePrivileges,
 bool Player::isAllowedToUse(Tile* tile) {
     bool allowed = true;
     if (tile != nullptr &&
-        app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0) {
+        GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) {
         allowed = false;
 
         if (getPlayerGamePrivilege(
@@ -2458,7 +2461,7 @@ bool Player::isAllowedToUse(Tile* tile) {
 bool Player::isAllowedToUse(std::shared_ptr<ItemInstance> item) {
     bool allowed = true;
     if (item != nullptr &&
-        app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0) {
+        GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) {
         if (getPlayerGamePrivilege(Player::ePlayerGamePrivilege_CannotBuild) !=
             0) {
             allowed = false;
@@ -2502,7 +2505,7 @@ bool Player::isAllowedToUse(std::shared_ptr<ItemInstance> item) {
 
 bool Player::isAllowedToInteract(std::shared_ptr<Entity> target) {
     bool allowed = true;
-    if (app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0) {
+    if (GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) {
         if (target->instanceof(eTYPE_MINECART)) {
             if (getPlayerGamePrivilege(
                     Player::ePlayerGamePrivilege_CanUseContainers) == 0) {
@@ -2530,7 +2533,7 @@ bool Player::isAllowedToInteract(std::shared_ptr<Entity> target) {
 
 bool Player::isAllowedToMine() {
     bool allowed = true;
-    if (app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0) {
+    if (GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) {
         if (getPlayerGamePrivilege(Player::ePlayerGamePrivilege_CannotMine) !=
             0) {
             allowed = false;
@@ -2542,7 +2545,7 @@ bool Player::isAllowedToMine() {
 bool Player::isAllowedToAttackPlayers() {
     bool allowed = true;
     if (hasInvisiblePrivilege() ||
-        ((app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0) &&
+        ((GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) &&
          getPlayerGamePrivilege(
              Player::ePlayerGamePrivilege_CannotAttackPlayers))) {
         allowed = false;
@@ -2552,7 +2555,7 @@ bool Player::isAllowedToAttackPlayers() {
 
 bool Player::isAllowedToAttackAnimals() {
     bool allowed = true;
-    if ((app.GetGameHostOption(eGameHostOption_TrustPlayers) == 0) &&
+    if ((GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) &&
         getPlayerGamePrivilege(
             Player::ePlayerGamePrivilege_CannotAttackAnimals)) {
         allowed = false;
@@ -2586,7 +2589,7 @@ bool Player::isAllowedToHurtEntity(std::shared_ptr<Entity> target) {
 
 bool Player::isAllowedToFly() {
     bool allowed = false;
-    if (app.GetGameHostOption(eGameHostOption_HostCanFly) != 0 &&
+    if (GameHostOptions::get(eGameHostOption_HostCanFly) != 0 &&
         getPlayerGamePrivilege(Player::ePlayerGamePrivilege_CanFly) != 0) {
         allowed = true;
     }
@@ -2595,7 +2598,7 @@ bool Player::isAllowedToFly() {
 
 bool Player::isAllowedToIgnoreExhaustion() {
     bool allowed = false;
-    if ((app.GetGameHostOption(eGameHostOption_HostCanChangeHunger) != 0 &&
+    if ((GameHostOptions::get(eGameHostOption_HostCanChangeHunger) != 0 &&
          getPlayerGamePrivilege(Player::ePlayerGamePrivilege_ClassicHunger) !=
              0) ||
         (isAllowedToFly() && abilities.flying)) {
@@ -2615,7 +2618,7 @@ bool Player::isAllowedToTeleport() {
 
 bool Player::hasInvisiblePrivilege() {
     bool enabled = false;
-    if (app.GetGameHostOption(eGameHostOption_HostCanBeInvisible) != 0 &&
+    if (GameHostOptions::get(eGameHostOption_HostCanBeInvisible) != 0 &&
         getPlayerGamePrivilege(Player::ePlayerGamePrivilege_Invisible) != 0) {
         enabled = true;
     }
@@ -2624,7 +2627,7 @@ bool Player::hasInvisiblePrivilege() {
 
 bool Player::hasInvulnerablePrivilege() {
     bool enabled = false;
-    if (app.GetGameHostOption(eGameHostOption_HostCanBeInvisible) != 0 &&
+    if (GameHostOptions::get(eGameHostOption_HostCanBeInvisible) != 0 &&
         getPlayerGamePrivilege(Player::ePlayerGamePrivilege_Invulnerable) !=
             0) {
         enabled = true;
@@ -2671,14 +2674,14 @@ std::vector<ModelPart*>* Player::GetAdditionalModelParts() {
             customTextureUrl.substr(0, 3).compare(L"def") == 0;
 
         // see if we can find the parts
-        m_ppAdditionalModelParts = app.GetAdditionalModelParts(m_dwSkinId);
+        m_ppAdditionalModelParts = GameServices::getAdditionalModelParts(m_dwSkinId);
 
         // If it's a default texture (which has no parts), we have the parts, or
         // we already have the texture (in which case we should have parts if
         // there are any) then we are done
         if (!hasCustomTexture || customTextureIsDefaultSkin ||
             m_ppAdditionalModelParts != nullptr ||
-            app.IsFileInMemoryTextures(customTextureUrl)) {
+            GameServices::isFileInMemoryTextures(customTextureUrl)) {
             m_bCheckedForModelParts = true;
         }
         if (m_ppAdditionalModelParts == nullptr &&
@@ -2686,28 +2689,28 @@ std::vector<ModelPart*>* Player::GetAdditionalModelParts() {
             m_bCheckedDLCForModelParts = true;
 
             // we don't have the data from the dlc skin yet
-            app.DebugPrintf(
+            Log::info(
                 "m_bCheckedForModelParts Couldn't get model parts for skin "
                 "%X\n",
                 m_dwSkinId);
 
             // do we have it from the DLC pack?
             DLCSkinFile* pDLCSkinFile =
-                app.m_dlcManager.getSkinFile(this->customTextureUrl);
+                GameServices::getDLCManager().getSkinFile(this->customTextureUrl);
 
             if (pDLCSkinFile != nullptr) {
                 const int additionalBoxCount =
                     pDLCSkinFile->getAdditionalBoxesCount();
                 if (additionalBoxCount != 0) {
-                    app.DebugPrintf(
+                    Log::info(
                         "m_bCheckedForModelParts Got model parts from DLCskin "
                         "for skin %X\n",
                         m_dwSkinId);
-                    m_ppAdditionalModelParts = app.SetAdditionalSkinBoxes(
+                    m_ppAdditionalModelParts = GameServices::setAdditionalSkinBoxesFromVec(
                         m_dwSkinId, pDLCSkinFile->getAdditionalBoxes());
                 }
 
-                app.SetAnimOverrideBitmask(
+                GameServices::setAnimOverrideBitmask(
                     pDLCSkinFile->getSkinID(),
                     pDLCSkinFile->getAnimOverrideBitmask());
 

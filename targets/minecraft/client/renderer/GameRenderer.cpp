@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "GameRenderer.h"
 
 #include <float.h>
@@ -663,7 +665,7 @@ void GameRenderer::setupCamera(float a, int eye) {
     bool bNoBobbingAnim = (mc->player->getAnimOverrideBitmask() &
                            (1 << HumanoidModel::eAnim_NoBobbing)) != 0;
 
-    if (app.GetGameSettings(mc->player->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (GameServices::getGameSettings(mc->player->GetXboxPad(), eGameSetting_ViewBob) &&
         !mc->player->abilities.flying && !bNoLegAnim && !bNoBobbingAnim)
         bobView(a);
 
@@ -717,7 +719,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
         std::shared_ptr<ItemInstance> item =
             localplayer->inventory->getSelected();
         if (!(item && item->getItem()->id == Item::map_Id) &&
-            app.GetGameSettings(localplayer->GetXboxPad(),
+            GameServices::getGameSettings(localplayer->GetXboxPad(),
                                 eGameSetting_DisplayHand) == 0)
             renderHand = false;
     }
@@ -758,7 +760,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
     bool bNoLegAnim = (localplayer->getAnimOverrideBitmask() &
                        ((1 << HumanoidModel::eAnim_NoLegAnim) |
                         (1 << HumanoidModel::eAnim_NoBobbing))) != 0;
-    if (app.GetGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (GameServices::getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
         !localplayer->abilities.flying && !bNoLegAnim)
         bobView(a);
 
@@ -790,7 +792,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
 
     // 4J-PB - changing this to be per player
     // if (mc->options->bobView) bobView(a);
-    if (app.GetGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (GameServices::getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
         !localplayer->abilities.flying && !bNoLegAnim)
         bobView(a);
 }
@@ -835,7 +837,7 @@ void GameRenderer::turnOnLightLayer(
     static int logCount = 0;
     if (logCount < 16) {
         ++logCount;
-        app.DebugPrintf("[linux-lightmap] turnOnLightLayer tex=%d scale=%d\n",
+        Log::info("[linux-lightmap] turnOnLightLayer tex=%d scale=%d\n",
                         textureId, scaleLight ? 1 : 0);
     }
 
@@ -1201,7 +1203,7 @@ void GameRenderer::EnableUpdateThread() {
     // #endif
 #if defined(MULTITHREAD_ENABLE)
     if (updateRunning) return;
-    app.DebugPrintf(
+    Log::info(
         "------------------EnableUpdateThread--------------------\n");
     updateRunning = true;
     m_updateEvents->set(eUpdateCanRun);
@@ -1215,7 +1217,7 @@ void GameRenderer::DisableUpdateThread() {
     // #endif
 #if defined(MULTITHREAD_ENABLE)
     if (!updateRunning) return;
-    app.DebugPrintf(
+    Log::info(
         "------------------DisableUpdateThread--------------------\n");
     updateRunning = false;
     m_updateEvents->clear(eUpdateCanRun);

@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "HopperTileEntity.h"
 
 #include <stdint.h>
@@ -109,7 +110,7 @@ void HopperTileEntity::setItem(unsigned int slot,
 }
 
 std::wstring HopperTileEntity::getName() {
-    return hasCustomName() ? name : app.GetString(IDS_CONTAINER_HOPPER);
+    return hasCustomName() ? name : Strings::get(IDS_CONTAINER_HOPPER);
 }
 
 std::wstring HopperTileEntity::getCustomName() {

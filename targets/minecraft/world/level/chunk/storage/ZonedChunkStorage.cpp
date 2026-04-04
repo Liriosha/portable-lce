@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "ZonedChunkStorage.h"
 
 #include <filesystem>
@@ -166,7 +167,7 @@ void ZonedChunkStorage::tick() {
             //            try {
             char buf[256];
             sprintf(buf, "Closing zone %I64d\n", key);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             zoneFiles[key]->close();
             zoneFiles.erase(zoneFiles.find(key));
             //           } catch (IOException e) {

@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "BasicTreeFeature.h"
 
 #include <stdlib.h>
@@ -450,14 +452,14 @@ bool BasicTree::checkLocation() {
 
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (app.getLevelGenerationOptions() != nullptr) {
+    if (GameServices::getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            app.getLevelGenerationOptions();
+            GameServices::getLevelGenerationOptions();
         bool intersects = levelGenOptions->checkIntersects(
             startPosition[0], startPosition[1], startPosition[2],
             endPosition[0], endPosition[1], endPosition[2]);
         if (intersects) {
-            // app.DebugPrintf("Skipping reeds feature generation as it overlaps
+            // Log::info("Skipping reeds feature generation as it overlaps
             // a game rule structure\n");
             return false;
         }

@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "DispenserTileEntity.h"
 
 #include <stdint.h>
@@ -124,7 +125,7 @@ int DispenserTileEntity::addItem(std::shared_ptr<ItemInstance> item) {
 }
 
 std::wstring DispenserTileEntity::getName() {
-    return hasCustomName() ? name : app.GetString(IDS_TILE_DISPENSER);
+    return hasCustomName() ? name : Strings::get(IDS_TILE_DISPENSER);
 }
 
 std::wstring DispenserTileEntity::getCustomName() {

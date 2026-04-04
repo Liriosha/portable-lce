@@ -1,3 +1,6 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/util/Log.h"
 #include "CreateWorldScreen.h"
 
 #include <stddef.h>
@@ -160,10 +163,10 @@ std::wstring CreateWorldScreen::findAvailableFolderName(
 void CreateWorldScreen::removed() { Keyboard::enableRepeatEvents(false); }
 
 void CreateWorldScreen::buttonClicked(Button* button) {
-    app.DebugPrintf("CreateWorldScreen::buttonClicked START\n");
+    Log::info("CreateWorldScreen::buttonClicked START\n");
     if (!button->active) return;
     if (button->id == 1) {
-        app.DebugPrintf(
+        Log::info(
             "CreateWorldScreen::buttonClicked 'Cancel' "
             "minecraft->setScreen(lastScreen)\n");
         minecraft->setScreen(lastScreen);
@@ -250,38 +253,38 @@ void CreateWorldScreen::buttonClicked(Button* button) {
         param->texturePackId = 0;
         param->settings = 0;
 
-        app.SetGameHostOption(eGameHostOption_Difficulty,
+        GameHostOptions::set(eGameHostOption_Difficulty,
                               minecraft->options->difficulty);
-        app.SetGameHostOption(eGameHostOption_FriendsOfFriends,
+        GameHostOptions::set(eGameHostOption_FriendsOfFriends,
                               moreOptionsParams->bAllowFriendsOfFriends);
-        app.SetGameHostOption(eGameHostOption_Gamertags, 1);
-        app.SetGameHostOption(eGameHostOption_BedrockFog, 0);
-        app.SetGameHostOption(eGameHostOption_GameType,
+        GameHostOptions::set(eGameHostOption_Gamertags, 1);
+        GameHostOptions::set(eGameHostOption_BedrockFog, 0);
+        GameHostOptions::set(eGameHostOption_GameType,
                               (gameMode == L"survival")
                                   ? GameType::SURVIVAL->getId()
                                   : GameType::CREATIVE->getId());
-        app.SetGameHostOption(eGameHostOption_LevelType,
+        GameHostOptions::set(eGameHostOption_LevelType,
                               moreOptionsParams->bFlatWorld);
-        app.SetGameHostOption(eGameHostOption_Structures,
+        GameHostOptions::set(eGameHostOption_Structures,
                               moreOptionsParams->bStructures);
-        app.SetGameHostOption(eGameHostOption_BonusChest,
+        GameHostOptions::set(eGameHostOption_BonusChest,
                               moreOptionsParams->bBonusChest);
-        app.SetGameHostOption(eGameHostOption_PvP, moreOptionsParams->bPVP);
-        app.SetGameHostOption(eGameHostOption_TrustPlayers,
+        GameHostOptions::set(eGameHostOption_PvP, moreOptionsParams->bPVP);
+        GameHostOptions::set(eGameHostOption_TrustPlayers,
                               moreOptionsParams->bTrust);
-        app.SetGameHostOption(eGameHostOption_FireSpreads,
+        GameHostOptions::set(eGameHostOption_FireSpreads,
                               moreOptionsParams->bFireSpreads);
-        app.SetGameHostOption(eGameHostOption_TNT, moreOptionsParams->bTNT);
-        app.SetGameHostOption(eGameHostOption_HostCanFly,
+        GameHostOptions::set(eGameHostOption_TNT, moreOptionsParams->bTNT);
+        GameHostOptions::set(eGameHostOption_HostCanFly,
                               moreOptionsParams->bHostPrivileges);
-        app.SetGameHostOption(eGameHostOption_HostCanChangeHunger,
+        GameHostOptions::set(eGameHostOption_HostCanChangeHunger,
                               moreOptionsParams->bHostPrivileges);
-        app.SetGameHostOption(eGameHostOption_HostCanBeInvisible,
+        GameHostOptions::set(eGameHostOption_HostCanBeInvisible,
                               moreOptionsParams->bHostPrivileges);
-        app.SetGameHostOption(eGameHostOption_CheatsEnabled,
+        GameHostOptions::set(eGameHostOption_CheatsEnabled,
                               moreOptionsParams->bHostPrivileges);
 
-        param->settings = app.GetGameHostOption(eGameHostOption_All);
+        param->settings = GameHostOptions::get(eGameHostOption_All);
         param->xzSize = LEVEL_MAX_WIDTH;
         param->hellScale = HELL_LEVEL_MAX_SCALE;
 
@@ -294,7 +297,7 @@ void CreateWorldScreen::buttonClicked(Button* button) {
         loadingParams->func = &CGameNetworkManager::RunNetworkGameThreadProc;
         loadingParams->lpParam = param;
 
-        app.SetAutosaveTimerTime();
+        GameServices::setAutosaveTimerTime();
 
         UIFullscreenProgressCompletionData* completionData =
             new UIFullscreenProgressCompletionData();

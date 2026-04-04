@@ -1,3 +1,4 @@
+#include "minecraft/util/DebugSettings.h"
 #include "StoneMonsterTile.h"
 
 #include <memory>
@@ -25,7 +26,7 @@ StoneMonsterTile::StoneMonsterTile(int id) : Tile(id, Material::clay) {
 
 Icon* StoneMonsterTile::getTexture(int face, int data) {
 #ifndef _CONTENT_PACKAGE
-    if (app.DebugArtToolsOn()) {
+    if (DebugSettings::artToolsOn()) {
         return Tile::fire->getTexture(face, 0);
     }
 #endif

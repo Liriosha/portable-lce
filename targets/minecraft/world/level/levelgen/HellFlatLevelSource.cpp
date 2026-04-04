@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "HellFlatLevelSource.h"
 
 #include <stdlib.h>
@@ -181,7 +182,7 @@ void HellFlatLevelSource::postProcess(ChunkSource* parent, int xt, int zt) {
 
     HeavyTile::instaFall = false;
 
-    app.processSchematics(parent->getChunk(xt, zt));
+    GameServices::processSchematics(parent->getChunk(xt, zt));
 }
 
 bool HellFlatLevelSource::save(bool force, ProgressListener* progressListener) {

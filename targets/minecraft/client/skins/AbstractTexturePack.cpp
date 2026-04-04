@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "AbstractTexturePack.h"
 
 #include <GL/gl.h>
@@ -6,7 +7,7 @@
 #include <vector>
 
 #include "app/common/Colours/ColourTable.h"
-#include "app/linux/LinuxGame.h"
+#include "minecraft/GameServices.h"
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/BufferedImage.h"
@@ -61,7 +62,7 @@ void AbstractTexturePack::loadName() {}
 InputStream* AbstractTexturePack::getResource(
     const std::wstring& name, bool allowFallback)  // throws IOException
 {
-    app.DebugPrintf("texture - %ls\n", name.c_str());
+    Log::info("texture - %ls\n", name.c_str());
     InputStream* is = getResourceImplementation(name);
     if (is == nullptr && fallback != nullptr && allowFallback) {
         is = fallback->getResource(name, true);
@@ -136,7 +137,7 @@ std::wstring AbstractTexturePack::getAnimationString(
         // Minecraft::getInstance()->getLogger().info("Found animation info for:
         // " + animationDefinitionFile);
 #if !defined(_CONTENT_PACKAGE)
-        app.DebugPrintf("Found animation info for: %ls\n",
+        Log::info("Found animation info for: %ls\n",
                         animationDefinitionFile.c_str());
 #endif
         InputStreamReader isr(fileStream);
@@ -162,7 +163,7 @@ BufferedImage* AbstractTexturePack::getImageResource(
     bool bTitleUpdateTexture /*=false*/, const std::wstring& drive /*=L""*/) {
     std::string pchTexture = wstringtofilename(File);
     std::string pchDrive = wstringtofilename(drive);
-    app.DebugPrintf("AbstractTexturePack::getImageResource - %s, drive is %s\n",
+    Log::info("AbstractTexturePack::getImageResource - %s, drive is %s\n",
                     pchTexture.c_str(), pchDrive.c_str());
 
     return new BufferedImage(TexturePack::getResource(L"/" + File),
@@ -192,15 +193,15 @@ void AbstractTexturePack::loadDefaultColourTable() {
         m_colourTable = new ColourTable(data.data(), dataLength);
 
     } else {
-        app.DebugPrintf("Failed to load the default colours table\n");
-        app.FatalLoadError();
+        Log::info("Failed to load the default colours table\n");
+        GameServices::fatalLoadError();
     }
 }
 
 void AbstractTexturePack::loadDefaultHTMLColourTable() {
-    if (app.hasArchiveFile(L"HTMLColours.col")) {
+    if (GameServices::hasArchiveFile(L"HTMLColours.col")) {
         std::vector<uint8_t> textColours =
-            app.getArchiveFile(L"HTMLColours.col");
+            GameServices::getArchiveFile(L"HTMLColours.col");
         m_colourTable->loadColoursFromData(textColours.data(),
                                            textColours.size());
     }

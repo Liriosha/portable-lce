@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Options.h"
 
 #include "KeyMapping.h"
@@ -256,7 +257,7 @@ void Options::toggle(const Options::Option* option, int dir) {
     // if (option ==  Option::DIFFICULTY) difficulty = (difficulty + dir) & 3;
     if (option == Option::DIFFICULTY) difficulty = (dir) & 3;
 
-    app.DebugPrintf("Option::DIFFICULTY = %d", difficulty);
+    Log::info("Option::DIFFICULTY = %d", difficulty);
 
     if (option == Option::GRAPHICS) {
         fancyGraphics = !fancyGraphics;

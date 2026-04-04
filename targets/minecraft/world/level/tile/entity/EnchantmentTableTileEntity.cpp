@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "EnchantmentTableTileEntity.h"
 
 #include <cmath>
@@ -93,7 +94,7 @@ void EnchantmentTableEntity::tick() {
 }
 
 std::wstring EnchantmentTableEntity::getName() {
-    return hasCustomName() ? name : app.GetString(IDS_ENCHANT);
+    return hasCustomName() ? name : Strings::get(IDS_ENCHANT);
 }
 
 std::wstring EnchantmentTableEntity::getCustomName() {

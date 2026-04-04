@@ -1,3 +1,7 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/DebugSettings.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileOriginal.h"
 
 #include <assert.h>
@@ -66,7 +70,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
 
     // Load a save from the game rules
     bool bLevelGenBaseSave = false;
-    LevelGenerationOptions* levelGen = app.getLevelGenerationOptions();
+    LevelGenerationOptions* levelGen = GameServices::getLevelGenerationOptions();
     if (pvSaveData == nullptr && levelGen != nullptr &&
         levelGen->requiresBaseSave()) {
         pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -115,7 +119,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
         } else {
             unsigned int storageLength;
             PlatformStorage.GetSaveData(pvSaveMem, &storageLength);
-            app.DebugPrintf("Filesize - %d, Adjusted size - %d\n", fileSize,
+            Log::info("Filesize - %d, Adjusted size - %d\n", fileSize,
                             storageLength);
             fileSize = storageLength;
         }
@@ -129,7 +133,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
             if (decompSize == 0) {
                 // 4J Stu - Saves created between 2/12/2011 and 7/12/2011
                 // will have this problem
-                app.DebugPrintf("Invalid save data format\n");
+                Log::info("Invalid save data format\n");
                 std::memset(pvSourceData, 0, fileSize);
                 // Clear the first 8 bytes that reference the header
                 header.WriteHeader(pvSourceData);
@@ -606,7 +610,7 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
                            std::chrono::steady_clock::now() - startTime)
                            .count();
 
-        app.DebugPrintf("Check buffer size: Elapsed time %f\n", fElapsedTime);
+        Log::info("Check buffer size: Elapsed time %f\n", fElapsedTime);
 
         // We add 4 bytes to the start so that we can signal compressed data
         // And another 4 bytes to store the decompressed data size
@@ -626,14 +630,14 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
                            std::chrono::steady_clock::now() - startTime)
                            .count();
 
-        app.DebugPrintf("Compress: Elapsed time %f\n", fElapsedTime);
+        Log::info("Compress: Elapsed time %f\n", fElapsedTime);
 
         std::fill_n(compData, 8, std::uint8_t{0});
         int saveVer = 0;
         memcpy(compData, &saveVer, sizeof(int));
         memcpy(compData + 4, &fileSize, sizeof(int));
 
-        app.DebugPrintf("Save data compressed from %d to %d\n", fileSize,
+        Log::info("Save data compressed from %d to %d\n", fileSize,
                         compLength);
 
         std::uint8_t* pbThumbnailData = nullptr;
@@ -643,7 +647,7 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
         unsigned int dwDataSizeSaveImage = 0;
 
 #ifdef _WINDOWS64
-        app.GetSaveThumbnail(&pbThumbnailData, &dwThumbnailDataSize,
+        GameServices::getSaveThumbnail(&pbThumbnailData, &dwThumbnailDataSize,
                              &pbDataSaveImage, &dwDataSizeSaveImage);
 #endif
 
@@ -660,9 +664,9 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
             hasSeed = true;
         }
 
-        int iTextMetadataBytes = app.CreateImageTextData(
+        int iTextMetadataBytes = GameServices::createImageTextData(
             bTextMetadata, seed, hasSeed,
-            app.GetGameHostOption(eGameHostOption_All),
+            GameHostOptions::get(eGameHostOption_All),
             Minecraft::GetInstance()->getCurrentTexturePackId());
 
         int32_t saveOrCheckpointId = 0;
@@ -673,14 +677,14 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
         PlatformStorage.SetSaveImages(pbThumbnailData, dwThumbnailDataSize,
                                       pbDataSaveImage, dwDataSizeSaveImage,
                                       bTextMetadata, iTextMetadataBytes);
-        app.DebugPrintf("Save thumbnail size %d\n", dwThumbnailDataSize);
+        Log::info("Save thumbnail size %d\n", dwThumbnailDataSize);
 
         // save the data
         PlatformStorage.SaveSaveData(
             &ConsoleSaveFileOriginal::SaveSaveDataCallback, this);
 #ifndef _CONTENT_PACKAGE
-        if (app.DebugSettingsOn()) {
-            if (app.GetWriteSavesToFolderEnabled()) {
+        if (DebugSettings::isOn()) {
+            if (GameServices::getWriteSavesToFolderEnabled()) {
                 DebugFlushToFile(compData, compLength + 8);
             }
         }
@@ -867,10 +871,10 @@ void ConsoleSaveFileOriginal::ConvertToLocalPlatform() {
         std::wstring suffix(L".mcr");
         if (fName.compare(fName.length() - suffix.length(), suffix.length(),
                           suffix) == 0) {
-            app.DebugPrintf("Processing a region file: %ls\n", fName.c_str());
+            Log::info("Processing a region file: %ls\n", fName.c_str());
             ConvertRegionFile(File(fe->data.filename));
         } else {
-            app.DebugPrintf("%ls is not a region file, ignoring\n",
+            Log::info("%ls is not a region file, ignoring\n",
                             fName.c_str());
         }
     }

@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "SharedMonsterAttributes.h"
 
 #include <limits>
@@ -93,7 +94,7 @@ void SharedMonsterAttributes::loadAttributes(BaseAttributeMap* attributes,
         if (instance != nullptr) {
             loadAttribute(instance, tag);
         } else {
-            app.DebugPrintf("Ignoring unknown attribute '%d'",
+            Log::info("Ignoring unknown attribute '%d'",
                             tag->getInt(L"ID"));
         }
     }

@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "PreLoginPacket.h"
 
 #include <cstdint>
@@ -98,7 +99,7 @@ void PreLoginPacket::write(DataOutputStream* dos)  // throws IOException
         dos->writePlayerUID(m_playerXuids[i]);
     }
 
-    app.DebugPrintf("*** PreLoginPacket::write - %s\n", m_szUniqueSaveName);
+    Log::info("*** PreLoginPacket::write - %s\n", m_szUniqueSaveName);
     for (int i = 0; i < m_iSaveNameLen; ++i) {
         dos->writeByte(static_cast<std::uint8_t>(m_szUniqueSaveName[i]));
     }

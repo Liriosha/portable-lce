@@ -1,3 +1,5 @@
+#include "minecraft/util/DebugSettings.h"
+#include "minecraft/locale/Strings.h"
 #include "SpawnEggItem.h"
 
 #include <unordered_map>
@@ -40,7 +42,7 @@ std::wstring SpawnEggItem::getHoverName(
     int nameId = EntityIO::getNameId(itemInstance->getAuxValue());
     if (nameId >= 0) {
         elementName =
-            replaceAll(elementName, L"{*CREATURE*}", app.GetString(nameId));
+            replaceAll(elementName, L"{*CREATURE*}", Strings::get(nameId));
         // elementName += " " + I18n.get("entity." + encodeId + ".name");
     } else {
         elementName = replaceAll(elementName, L"{*CREATURE*}", L"");
@@ -153,7 +155,7 @@ std::shared_ptr<Entity> SpawnEggItem::canSpawn(int iAuxVal, Level* level,
                     }
                 }
 #ifndef _CONTENT_PACKAGE
-                else if (app.DebugArtToolsOn()) {
+                else if (DebugSettings::artToolsOn()) {
                     canSpawn = true;
                 }
 #endif
@@ -179,7 +181,7 @@ bool SpawnEggItem::useOn(std::shared_ptr<ItemInstance> itemInstance,
     int tile = level->getTile(x, y, z);
 
 #ifndef _CONTENT_PACKAGE
-    if (app.DebugArtToolsOn() && tile == Tile::mobSpawner_Id) {
+    if (DebugSettings::artToolsOn() && tile == Tile::mobSpawner_Id) {
         // 4J Stu - Force adding this as a tile update
         level->removeTile(x, y, z);
         level->setTileAndData(x, y, z, Tile::mobSpawner_Id, 0,

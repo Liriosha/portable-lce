@@ -1,3 +1,4 @@
+#include "minecraft/locale/Strings.h"
 #include "FireworksItem.h"
 
 #include <memory>
@@ -65,7 +66,7 @@ void FireworksItem::appendHoverText(std::shared_ptr<ItemInstance> itemInstance,
     }
     if (fireTag->contains(TAG_FLIGHT)) {
         lines->push_back(
-            std::wstring(app.GetString(IDS_ITEM_FIREWORKS_FLIGHT)) + L" " +
+            std::wstring(Strings::get(IDS_ITEM_FIREWORKS_FLIGHT)) + L" " +
             toWString<int>((fireTag->getByte(TAG_FLIGHT))));
     }
 

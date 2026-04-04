@@ -1,3 +1,5 @@
+#include "minecraft/GameServices.h"
+#include "minecraft/util/Log.h"
 #include "CustomLevelSource.h"
 
 #include <assert.h>
@@ -48,10 +50,10 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
         auto result = PlatformFileIO.readFile(
             path, m_heightmapOverride.data(), m_heightmapOverride.size());
         if (result.status == IPlatformFileIO::ReadStatus::TooLarge) {
-            app.DebugPrintf("Heightmap binary is too large!!\n");
+            Log::info("Heightmap binary is too large!!\n");
             __debugbreak();
         } else if (result.status != IPlatformFileIO::ReadStatus::Ok) {
-            app.FatalLoadError();
+            GameServices::fatalLoadError();
             assert(false);
         }
     }
@@ -68,10 +70,10 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
             memset(m_waterheightOverride.data(), level->seaLevel,
                    m_waterheightOverride.size());
         } else if (result.status == IPlatformFileIO::ReadStatus::TooLarge) {
-            app.DebugPrintf("waterheight binary is too large!!\n");
+            Log::info("waterheight binary is too large!!\n");
             __debugbreak();
         } else if (result.status != IPlatformFileIO::ReadStatus::Ok) {
-            app.FatalLoadError();
+            GameServices::fatalLoadError();
         }
     }
 
@@ -130,7 +132,7 @@ void CustomLevelSource::prepareHeights(int xOffs, int zOffs,
                                 (xMapStart * 16 + x + (xc * CHUNK_WIDTH));
                             int mapHeight = m_heightmapOverride[mapIndex];
                             waterHeight = m_waterheightOverride[mapIndex];
-                            // app.DebugPrintf("MapHeight = %d, y = %d\n",
+                            // Log::info("MapHeight = %d, y = %d\n",
                             // mapHeight, yc * CHUNK_HEIGHT + y);
                             ///////////////////////////////////////////////////////////////////
                             // 4J - add this chunk of code to make land
@@ -260,7 +262,7 @@ void CustomLevelSource::buildSurfaces(int xOffs, int zOffs,
             uint8_t top = b->topMaterial;
             uint8_t material = b->material;
 
-            LevelGenerationOptions* lgo = app.getLevelGenerationOptions();
+            LevelGenerationOptions* lgo = GameServices::getLevelGenerationOptions();
             if (lgo != nullptr) {
                 lgo->getBiomeOverride(b->id, material, top);
             }
@@ -527,7 +529,7 @@ void CustomLevelSource::postProcess(ChunkSource* parent, int xt, int zt) {
 
     biome->decorate(level, pprandom, xo, zo);
 
-    app.processSchematics(parent->getChunk(xt, zt));
+    GameServices::processSchematics(parent->getChunk(xt, zt));
 
     MobSpawner::postProcessSpawnMobs(level, biome, xo + 8, zo + 8, 16, 16,
                                      pprandom);

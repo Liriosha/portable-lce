@@ -1,3 +1,4 @@
+#include "minecraft/GameServices.h"
 #include "Screen.h"
 
 #include "platform/InputActions.h"
@@ -43,7 +44,7 @@ void Screen::keyPressed(wchar_t eventCharacter, int eventKey) {
         // unpausing is done in all scenarios
         if (g_NetworkManager.IsLocalGame() &&
             g_NetworkManager.GetPlayerCount() == 1)
-            app.SetXuiServerAction(InputManager.GetPrimaryPad(),
+            GameServices::setXuiServerAction(InputManager.GetPrimaryPad(),
                                    eXuiServerAction_PauseServer, (void*)false);
     }
 }

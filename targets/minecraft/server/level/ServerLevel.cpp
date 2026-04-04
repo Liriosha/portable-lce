@@ -1,3 +1,5 @@
+#include "minecraft/util/DebugSettings.h"
+#include "minecraft/util/Log.h"
 #include "ServerLevel.h"
 
 #include <assert.h>
@@ -311,7 +313,7 @@ void ServerLevel::tick() {
         (dimension->id * dimension->id * (saveInterval / 2)))
 #endif
     {
-        // app.DebugPrintf("Incremental save\n");
+        // Log::info("Incremental save\n");
         save(false, nullptr);
     }
 
@@ -323,8 +325,8 @@ void ServerLevel::tick() {
         // 4J: Debug setting added to keep it at day time
 #if !defined(_FINAL_BUILD)
         bool freezeTime =
-            app.DebugSettingsOn() &&
-            app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad()) &
+            DebugSettings::isOn() &&
+            DebugSettings::getMask(InputManager.GetPrimaryPad()) &
                 (1L << eDebugSetting_FreezeTime);
         if (!freezeTime)
 #endif
@@ -489,7 +491,7 @@ void ServerLevel::tickTiles() {
 
     // AP moved this outside of the loop
     int prob = 100000;
-    if (app.GetGameSettingsDebugMask() & (1L << eDebugSetting_RegularLightning))
+    if (DebugSettings::getMask() & (1L << eDebugSetting_RegularLightning))
         prob = 100;
 
     auto itEndCtp = chunksToPoll.end();
@@ -734,7 +736,7 @@ std::vector<TickNextTickData>* ServerLevel::fetchTicksInChunk(LevelChunk* chunk,
             }
         } else {
             if (!toBeTicked.empty()) {
-                app.DebugPrintf("To be ticked size: %d\n", toBeTicked.size());
+                Log::info("To be ticked size: %d\n", toBeTicked.size());
             }
             for (auto it = toBeTicked.begin(); it != toBeTicked.end();) {
                 TickNextTickData td = *it;
@@ -849,7 +851,7 @@ void ServerLevel::setInitialSpawn(LevelSettings* levelSettings) {
         zSpawn = findBiome->z;
         delete findBiome;
     } else {
-        app.DebugPrintf(
+        Log::info(
             "Level::setInitialSpawn - Unable to find spawn biome\n");
     }
 
@@ -1099,7 +1101,7 @@ std::shared_ptr<Explosion> ServerLevel::explode(std::shared_ptr<Entity> source,
 
         if (player->distanceToSqr(x, y, z) < 64 * 64) {
             Vec3 knockbackVec = explosion->getHitPlayerKnockback(player);
-            // app.DebugPrintf("Sending %s with knockback (%f,%f,%f)\n",
+            // Log::info("Sending %s with knockback (%f,%f,%f)\n",
             // knockbackOnly?"knockbackOnly":"allExplosion",knockbackVec->x,knockbackVec->y,knockbackVec->z);
             //  If the player is not the primary on the system, then we only
             //  want to send info for the knockback
