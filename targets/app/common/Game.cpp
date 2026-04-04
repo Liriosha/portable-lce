@@ -114,10 +114,6 @@ unsigned int Game::m_uiLastSignInData = 0;
 const float Game::fSafeZoneX = 64.0f;  // 5% of 1280
 const float Game::fSafeZoneY = 36.0f;  // 5% of 720
 
-int Game::s_iHTMLFontSizesA[eHTMLSize_COUNT] = {
-    // 20,15,20,24
-    20, 13, 20, 26};
-
 Game::Game() {
     GameHostOptions::init(&m_uiGameHostSettings);
 
@@ -171,7 +167,7 @@ Game::Game() {
 
     // memset(m_PreviewBuffer, 0, sizeof(XSOCIAL_PREVIEWIMAGE)*XUSER_MAX_COUNT);
 
-    m_xuidNotch = INVALID_XUID;
+    // m_xuidNotch moved to SkinManager
 
     memset(&m_InviteData, 0, sizeof(JoinFromInviteData));
 
@@ -204,8 +200,6 @@ Game::Game() {
     m_bAllDLCContentRetrieved = true;
     m_bAllTMSContentRetrieved = true;
     m_bTickTMSDLCFiles = true;
-    m_dwRequiredTexturePackID = 0;
-
     m_bResetNether = false;
 
     LocaleAndLanguageInit();
@@ -240,7 +234,7 @@ void Game::DebugPrintf(int user, const char* szFormat, ...) {
 const wchar_t* Game::GetString(int iID) {
     // return L"Değişiklikler ve Yenilikler";
     // return L"ÕÕÕÕÖÖÖÖ";
-    return app.m_stringTable->getString(iID);
+    return app.m_localizationManager.getString(iID);
 }
 
 void Game::SetAction(int iPad, eXuiAction action, void* param) {
@@ -1225,161 +1219,7 @@ void Game::ActionGameSettings(int iPad, eGameSetting eVal) {
     }
 }
 
-void Game::SetPlayerSkin(int iPad, const std::wstring& name) {
-    std::uint32_t skinId = app.getSkinIdFromPath(name);
-
-    SetPlayerSkin(iPad, skinId);
-}
-
-void Game::SetPlayerSkin(int iPad, std::uint32_t dwSkinId) {
-    DebugPrintf("Setting skin for %d to %08X\n", iPad, dwSkinId);
-
-    GameSettingsA[iPad]->dwSelectedSkin = dwSkinId;
-    GameSettingsA[iPad]->bSettingsChanged = true;
-
-    if (Minecraft::GetInstance()->localplayers[iPad] != nullptr)
-        Minecraft::GetInstance()->localplayers[iPad]->setAndBroadcastCustomSkin(
-            dwSkinId);
-}
-
-std::wstring Game::GetPlayerSkinName(int iPad) {
-    return app.getSkinPathFromId(GameSettingsA[iPad]->dwSelectedSkin);
-}
-
-std::uint32_t Game::GetPlayerSkinId(int iPad) {
-    // 4J-PB -check the user has rights to use this skin - they may have had at
-    // some point but the entitlement has been removed.
-    DLCPack* Pack = nullptr;
-    DLCSkinFile* skinFile = nullptr;
-    std::uint32_t dwSkin = GameSettingsA[iPad]->dwSelectedSkin;
-    wchar_t chars[256];
-
-    if (GET_IS_DLC_SKIN_FROM_BITMASK(dwSkin)) {
-        // 4J Stu - DLC skins are numbered using decimal rather than hex to make
-        // it easier to number manually
-        swprintf(chars, 256, L"dlcskin%08d.png",
-                 GET_DLC_SKIN_ID_FROM_BITMASK(dwSkin));
-
-        Pack = app.m_dlcManager.getPackContainingSkin(chars);
-
-        if (Pack) {
-            skinFile = Pack->getSkinFile(chars);
-
-            bool bSkinIsFree =
-                skinFile->getParameterAsBool(DLCManager::e_DLCParamType_Free);
-            bool bLicensed = Pack->hasPurchasedFile(DLCManager::e_DLCType_Skin,
-                                                    skinFile->getPath());
-
-            if (bSkinIsFree || bLicensed) {
-                return dwSkin;
-            } else {
-                return 0;
-            }
-        }
-    }
-
-    return dwSkin;
-}
-
-std::uint32_t Game::GetAdditionalModelParts(int iPad) {
-    return m_dwAdditionalModelParts[iPad];
-}
-
-void Game::SetPlayerCape(int iPad, const std::wstring& name) {
-    std::uint32_t capeId = Player::getCapeIdFromPath(name);
-
-    SetPlayerCape(iPad, capeId);
-}
-
-void Game::SetPlayerCape(int iPad, std::uint32_t dwCapeId) {
-    DebugPrintf("Setting cape for %d to %08X\n", iPad, dwCapeId);
-
-    GameSettingsA[iPad]->dwSelectedCape = dwCapeId;
-    GameSettingsA[iPad]->bSettingsChanged = true;
-
-    // SentientManager.RecordSkinChanged(iPad,
-    // GameSettingsA[iPad]->dwSelectedSkin);
-
-    if (Minecraft::GetInstance()->localplayers[iPad] != nullptr)
-        Minecraft::GetInstance()->localplayers[iPad]->setAndBroadcastCustomCape(
-            dwCapeId);
-}
-
-std::wstring Game::GetPlayerCapeName(int iPad) {
-    return Player::getCapePathFromId(GameSettingsA[iPad]->dwSelectedCape);
-}
-
-std::uint32_t Game::GetPlayerCapeId(int iPad) {
-    return GameSettingsA[iPad]->dwSelectedCape;
-}
-
-void Game::SetPlayerFavoriteSkin(int iPad, int iIndex,
-                                          unsigned int uiSkinID) {
-    DebugPrintf("Setting favorite skin for %d to %08X\n", iPad, uiSkinID);
-
-    GameSettingsA[iPad]->uiFavoriteSkinA[iIndex] = uiSkinID;
-    GameSettingsA[iPad]->bSettingsChanged = true;
-}
-
-unsigned int Game::GetPlayerFavoriteSkin(int iPad, int iIndex) {
-    return GameSettingsA[iPad]->uiFavoriteSkinA[iIndex];
-}
-
-unsigned char Game::GetPlayerFavoriteSkinsPos(int iPad) {
-    return GameSettingsA[iPad]->ucCurrentFavoriteSkinPos;
-}
-
-void Game::SetPlayerFavoriteSkinsPos(int iPad, int iPos) {
-    GameSettingsA[iPad]->ucCurrentFavoriteSkinPos = (unsigned char)iPos;
-    GameSettingsA[iPad]->bSettingsChanged = true;
-}
-
-unsigned int Game::GetPlayerFavoriteSkinsCount(int iPad) {
-    unsigned int uiCount = 0;
-    for (int i = 0; i < MAX_FAVORITE_SKINS; i++) {
-        if (GameSettingsA[iPad]->uiFavoriteSkinA[i] != 0xFFFFFFFF) {
-            uiCount++;
-        } else {
-            break;
-        }
-    }
-    return uiCount;
-}
-
-void Game::ValidateFavoriteSkins(int iPad) {
-    unsigned int uiCount = GetPlayerFavoriteSkinsCount(iPad);
-
-    // remove invalid skins
-    unsigned int uiValidSkin = 0;
-    wchar_t chars[256];
-
-    for (unsigned int i = 0; i < uiCount; i++) {
-        // get the pack number from the skin id
-        swprintf(chars, 256, L"dlcskin%08d.png",
-                 app.GetPlayerFavoriteSkin(iPad, i));
-
-        // Also check they haven't reverted to a trial pack
-        DLCPack* pDLCPack = app.m_dlcManager.getPackContainingSkin(chars);
-
-        if (pDLCPack != nullptr) {
-            // 4J-PB - We should let players add the free skins to their
-            // favourites as well!
-            // DLCFile
-            // *pDLCFile=pDLCPack->getFile(DLCManager::e_DLCType_Skin,chars);
-            DLCSkinFile* pSkinFile = pDLCPack->getSkinFile(chars);
-
-            if (pDLCPack->hasPurchasedFile(DLCManager::e_DLCType_Skin, L"") ||
-                (pSkinFile && pSkinFile->isFree())) {
-                GameSettingsA[iPad]->uiFavoriteSkinA[uiValidSkin++] =
-                    GameSettingsA[iPad]->uiFavoriteSkinA[i];
-            }
-        }
-    }
-
-    for (unsigned int i = uiValidSkin; i < MAX_FAVORITE_SKINS; i++) {
-        GameSettingsA[iPad]->uiFavoriteSkinA[i] = 0xFFFFFFFF;
-    }
-}
+// Skin/Cape/FavoriteSkin methods moved to SkinManager
 
 // Mash-up pack worlds
 void Game::HideMashupPackWorld(int iPad, unsigned int iMashupPackID) {
@@ -3607,47 +3447,7 @@ int Game::BannedLevelDialogReturned(
 
     return 0;
 }
-void Game::loadMediaArchive() {
-    std::wstring mediapath = L"";
-
-#if _WINDOWS64
-    mediapath = L"Common\\Media\\MediaWindows64.arc";
-#elif __linux__
-    mediapath = L"app/common/Media/MediaLinux.arc";
-#endif
-
-    if (!mediapath.empty()) {
-        // boom headshot
-#if defined(__linux__)
-        std::wstring exeDirW = PlatformFileIO.getBasePath().wstring();
-        std::wstring candidate = exeDirW + File::pathSeparator + mediapath;
-        if (File(candidate).exists()) {
-            m_mediaArchive = new ArchiveFile(File(candidate));
-        } else {
-            m_mediaArchive = new ArchiveFile(File(mediapath));
-        }
-#else
-        m_mediaArchive = new ArchiveFile(File(mediapath));
-#endif
-    }
-}
-
-void Game::loadStringTable() {
-    if (m_stringTable != nullptr) {
-        // we need to unload the current std::string table, this is a reload
-        delete m_stringTable;
-    }
-    std::wstring localisationFile = L"languages.loc";
-    if (m_mediaArchive->hasFile(localisationFile)) {
-        std::vector<uint8_t> locFile =
-            m_mediaArchive->getFile(localisationFile);
-        m_stringTable = new StringTable(locFile.data(), locFile.size());
-    } else {
-        m_stringTable = nullptr;
-        assert(false);
-        // AHHHHHHHHH.
-    }
-}
+// loadMediaArchive and loadStringTable moved to ArchiveManager/LocalizationManager
 
 int Game::PrimaryPlayerSignedOutReturned(
     void* pParam, int iPad, const C4JStorage::EMessageResult) {
@@ -4372,13 +4172,6 @@ void Game::UpdateTime() {
     m_Time.fAppTime = std::chrono::duration<float>(m_Time.qwAppTime).count();
 }
 
-bool Game::isXuidNotch(PlayerUID xuid) {
-    if (m_xuidNotch != INVALID_XUID && xuid != INVALID_XUID) {
-        return ProfileManager.AreXUIDSEqual(xuid, m_xuidNotch);
-    }
-    return false;
-}
-
 bool Game::isXuidDeadmau5(PlayerUID xuid) {
     auto it = MojangData.find(xuid);  // 4J Stu - The .at and [] accessors
                                       // insert elements if they don't exist
@@ -4391,183 +4184,6 @@ bool Game::isXuidDeadmau5(PlayerUID xuid) {
 
     return false;
 }
-
-void Game::AddMemoryTextureFile(const std::wstring& wName,
-                                         std::uint8_t* pbData,
-                                         unsigned int byteCount) {
-    std::lock_guard<std::mutex> lock(csMemFilesLock);
-    // check it's not already in
-    PMEMDATA pData = nullptr;
-    auto it = m_MEM_Files.find(wName);
-    if (it != m_MEM_Files.end()) {
-#if !defined(_CONTENT_PACKAGE)
-        wprintf(L"Incrementing the memory texture file count for %ls\n",
-                wName.c_str());
-#endif
-        pData = (*it).second;
-
-        if (pData->byteCount == 0 && byteCount != 0) {
-            // This should never be nullptr if dwBytes is 0
-            if (pData->pbData != nullptr) delete[] pData->pbData;
-
-            pData->pbData = pbData;
-            pData->byteCount = byteCount;
-        }
-
-        ++pData->ucRefCount;
-        return;
-    }
-    // this is a texture (png) file
-
-    // add this texture to the list of memory texture files - it will then be
-    // picked up by the level renderer's AddEntity
-
-    pData = new MEMDATA();
-    pData->pbData = pbData;
-    pData->byteCount = byteCount;
-    pData->ucRefCount = 1;
-
-    // use the xuid to access the skin data
-    m_MEM_Files[wName] = pData;
-}
-
-void Game::RemoveMemoryTextureFile(const std::wstring& wName) {
-    std::lock_guard<std::mutex> lock(csMemFilesLock);
-
-    auto it = m_MEM_Files.find(wName);
-    if (it != m_MEM_Files.end()) {
-#if !defined(_CONTENT_PACKAGE)
-        wprintf(L"Decrementing the memory texture file count for %ls\n",
-                wName.c_str());
-#endif
-        PMEMDATA pData = (*it).second;
-        --pData->ucRefCount;
-        if (pData->ucRefCount <= 0) {
-#if !defined(_CONTENT_PACKAGE)
-            wprintf(L"Erasing the memory texture file data for %ls\n",
-                    wName.c_str());
-#endif
-            delete pData;
-            m_MEM_Files.erase(wName);
-        }
-    }
-}
-
-bool Game::DefaultCapeExists() {
-    std::wstring wTex = L"Special_Cape.png";
-    bool val = false;
-
-    {
-        std::lock_guard<std::mutex> lock(csMemFilesLock);
-        auto it = m_MEM_Files.find(wTex);
-        if (it != m_MEM_Files.end()) val = true;
-    }
-
-    return val;
-}
-
-bool Game::IsFileInMemoryTextures(const std::wstring& wName) {
-    bool val = false;
-
-    {
-        std::lock_guard<std::mutex> lock(csMemFilesLock);
-        auto it = m_MEM_Files.find(wName);
-        if (it != m_MEM_Files.end()) val = true;
-    }
-
-    return val;
-}
-
-void Game::GetMemFileDetails(const std::wstring& wName,
-                                      std::uint8_t** ppbData,
-                                      unsigned int* pByteCount) {
-    std::lock_guard<std::mutex> lock(csMemFilesLock);
-    auto it = m_MEM_Files.find(wName);
-    if (it != m_MEM_Files.end()) {
-        PMEMDATA pData = (*it).second;
-        *ppbData = pData->pbData;
-        *pByteCount = pData->byteCount;
-    }
-}
-
-void Game::AddMemoryTPDFile(int iConfig, std::uint8_t* pbData,
-                                     unsigned int byteCount) {
-    std::lock_guard<std::mutex> lock(csMemTPDLock);
-    // check it's not already in
-    PMEMDATA pData = nullptr;
-    auto it = m_MEM_TPD.find(iConfig);
-    if (it == m_MEM_TPD.end()) {
-        pData = new MEMDATA();
-        pData->pbData = pbData;
-        pData->byteCount = byteCount;
-        pData->ucRefCount = 1;
-
-        m_MEM_TPD[iConfig] = pData;
-    }
-}
-
-void Game::RemoveMemoryTPDFile(int iConfig) {
-    std::lock_guard<std::mutex> lock(csMemTPDLock);
-    // check it's not already in
-    PMEMDATA pData = nullptr;
-    auto it = m_MEM_TPD.find(iConfig);
-    if (it != m_MEM_TPD.end()) {
-        pData = m_MEM_TPD[iConfig];
-        delete pData;
-        m_MEM_TPD.erase(iConfig);
-    }
-}
-
-#if defined(_WINDOWS64)
-int Game::GetTPConfigVal(wchar_t* pwchDataFile) { return -1; }
-#endif
-bool Game::IsFileInTPD(int iConfig) {
-    bool val = false;
-
-    {
-        std::lock_guard<std::mutex> lock(csMemTPDLock);
-        auto it = m_MEM_TPD.find(iConfig);
-        if (it != m_MEM_TPD.end()) val = true;
-    }
-
-    return val;
-}
-
-void Game::GetTPD(int iConfig, std::uint8_t** ppbData,
-                           unsigned int* pByteCount) {
-    std::lock_guard<std::mutex> lock(csMemTPDLock);
-    auto it = m_MEM_TPD.find(iConfig);
-    if (it != m_MEM_TPD.end()) {
-        PMEMDATA pData = (*it).second;
-        *ppbData = pData->pbData;
-        *pByteCount = pData->byteCount;
-    }
-}
-
-// bool Game::UploadFileToGlobalStorage(int iQuadrant,
-// C4JStorage::eGlobalStorage eStorageFacility, std::wstring *wsFile  )
-// {
-// 	bool bRes=false;
-// #ifndef _CONTENT_PACKAGE
-// 	// read the local file
-// 	File gtsFile( wsFile->c_str() );
-//
-// 	int64_t fileSize = gtsFile.length();
-//
-// 	if(fileSize!=0)
-// 	{
-// 		FileInputStream fis(gtsFile);
-// 		std::vector<uint8_t> ba((int)fileSize);
-// 		fis.read(ba);
-// 		fis.close();
-//
-// 		bRes=StorageManager.WriteTMSFile(iQuadrant,eStorageFacility,(wchar_t
-// *)wsFile->c_str(),ba.data(), ba.size());
-//
-// 	}
-// #endif
-// 	return bRes;
-// }
 
 void Game::StoreLaunchData() {}
 
@@ -4748,832 +4364,12 @@ int Game::ExitAndJoinFromInviteDeclineSaveReturned(
 //////////////////////////////////////////////////////////////////////////
 void Game::FatalLoadError() {}
 
-TIPSTRUCT Game::m_GameTipA[MAX_TIPS_GAMETIP] = {
-    {0, IDS_TIPS_GAMETIP_1},  {0, IDS_TIPS_GAMETIP_2},
-    {0, IDS_TIPS_GAMETIP_3},  {0, IDS_TIPS_GAMETIP_4},
-    {0, IDS_TIPS_GAMETIP_5},  {0, IDS_TIPS_GAMETIP_6},
-    {0, IDS_TIPS_GAMETIP_7},  {0, IDS_TIPS_GAMETIP_8},
-    {0, IDS_TIPS_GAMETIP_9},  {0, IDS_TIPS_GAMETIP_10},
-    {0, IDS_TIPS_GAMETIP_11}, {0, IDS_TIPS_GAMETIP_12},
-    {0, IDS_TIPS_GAMETIP_13}, {0, IDS_TIPS_GAMETIP_14},
-    {0, IDS_TIPS_GAMETIP_15}, {0, IDS_TIPS_GAMETIP_16},
-    {0, IDS_TIPS_GAMETIP_17}, {0, IDS_TIPS_GAMETIP_18},
-    {0, IDS_TIPS_GAMETIP_19}, {0, IDS_TIPS_GAMETIP_20},
-    {0, IDS_TIPS_GAMETIP_21}, {0, IDS_TIPS_GAMETIP_22},
-    {0, IDS_TIPS_GAMETIP_23}, {0, IDS_TIPS_GAMETIP_24},
-    {0, IDS_TIPS_GAMETIP_25}, {0, IDS_TIPS_GAMETIP_26},
-    {0, IDS_TIPS_GAMETIP_27}, {0, IDS_TIPS_GAMETIP_28},
-    {0, IDS_TIPS_GAMETIP_29}, {0, IDS_TIPS_GAMETIP_30},
-    {0, IDS_TIPS_GAMETIP_31}, {0, IDS_TIPS_GAMETIP_32},
-    {0, IDS_TIPS_GAMETIP_33}, {0, IDS_TIPS_GAMETIP_34},
-    {0, IDS_TIPS_GAMETIP_35}, {0, IDS_TIPS_GAMETIP_36},
-    {0, IDS_TIPS_GAMETIP_37}, {0, IDS_TIPS_GAMETIP_38},
-    {0, IDS_TIPS_GAMETIP_39}, {0, IDS_TIPS_GAMETIP_40},
-    {0, IDS_TIPS_GAMETIP_41}, {0, IDS_TIPS_GAMETIP_42},
-    {0, IDS_TIPS_GAMETIP_43}, {0, IDS_TIPS_GAMETIP_44},
-    {0, IDS_TIPS_GAMETIP_45}, {0, IDS_TIPS_GAMETIP_46},
-    {0, IDS_TIPS_GAMETIP_47}, {0, IDS_TIPS_GAMETIP_48},
-    {0, IDS_TIPS_GAMETIP_49}, {0, IDS_TIPS_GAMETIP_50},
-};
-
-TIPSTRUCT Game::m_TriviaTipA[MAX_TIPS_TRIVIATIP] = {
-    {0, IDS_TIPS_TRIVIA_1},  {0, IDS_TIPS_TRIVIA_2},  {0, IDS_TIPS_TRIVIA_3},
-    {0, IDS_TIPS_TRIVIA_4},  {0, IDS_TIPS_TRIVIA_5},  {0, IDS_TIPS_TRIVIA_6},
-    {0, IDS_TIPS_TRIVIA_7},  {0, IDS_TIPS_TRIVIA_8},  {0, IDS_TIPS_TRIVIA_9},
-    {0, IDS_TIPS_TRIVIA_10}, {0, IDS_TIPS_TRIVIA_11}, {0, IDS_TIPS_TRIVIA_12},
-    {0, IDS_TIPS_TRIVIA_13}, {0, IDS_TIPS_TRIVIA_14}, {0, IDS_TIPS_TRIVIA_15},
-    {0, IDS_TIPS_TRIVIA_16}, {0, IDS_TIPS_TRIVIA_17}, {0, IDS_TIPS_TRIVIA_18},
-    {0, IDS_TIPS_TRIVIA_19}, {0, IDS_TIPS_TRIVIA_20},
-};
-
-Random* Game::TipRandom = new Random();
-
-int Game::TipsSortFunction(const void* a, const void* b) {
-    // 4jcraft, scince the sortvalues can be negative, i changed it
-    // to a three way comparison,
-    // scince subtracting of signed integers can cause overflow.
-
-    int s1 = ((TIPSTRUCT*)a)->iSortValue;
-    int s2 = ((TIPSTRUCT*)b)->iSortValue;
-
-    if (s1 > s2) {
-        return 1;
-
-    } else if (s1 == s2) {
-        return 0;
-    }
-
-    return -1;
-}
-
-void Game::InitialiseTips() {
-    // We'll randomise the tips at start up based on their priority
-
-    memset(m_TipIDA, 0, sizeof(m_TipIDA));
-
-    // Make the first tip tell you that you can play splitscreen in HD modes if
-    // you are in SD
-    if (!RenderManager.IsHiDef()) {
-        m_GameTipA[0].uiStringID = IDS_TIPS_GAMETIP_0;
-    }
-    // randomise then quicksort
-    // going to leave the multiplayer tip so it is always first
-
-    // Only randomise the content package build
-#if defined(_CONTENT_PACKAGE)
-
-    for (int i = 1; i < MAX_TIPS_GAMETIP; i++) {
-        m_GameTipA[i].iSortValue = TipRandom->nextInt();
-    }
-    qsort(&m_GameTipA[1], MAX_TIPS_GAMETIP - 1, sizeof(TIPSTRUCT),
-          TipsSortFunction);
-#endif
-
-    for (int i = 0; i < MAX_TIPS_TRIVIATIP; i++) {
-        m_TriviaTipA[i].iSortValue = TipRandom->nextInt();
-    }
-    qsort(m_TriviaTipA, MAX_TIPS_TRIVIATIP, sizeof(TIPSTRUCT),
-          TipsSortFunction);
-
-    int iCurrentGameTip = 0;
-    int iCurrentTriviaTip = 0;
-
-    for (int i = 0; i < MAX_TIPS_GAMETIP + MAX_TIPS_TRIVIATIP; i++) {
-        // Add a trivia one every third tip (if there are any left)
-        if ((i % 3 == 2) && (iCurrentTriviaTip < MAX_TIPS_TRIVIATIP)) {
-            // Add a trivia one
-            m_TipIDA[i] = m_TriviaTipA[iCurrentTriviaTip++].uiStringID;
-        } else {
-            if (iCurrentGameTip < MAX_TIPS_GAMETIP) {
-                // Add a gametip
-                m_TipIDA[i] = m_GameTipA[iCurrentGameTip++].uiStringID;
-            } else {
-                // Add a trivia one
-                m_TipIDA[i] = m_TriviaTipA[iCurrentTriviaTip++].uiStringID;
-            }
-        }
-
-        if (m_TipIDA[i] == 0) {
-            // the m_TriviaTipA or the m_GameTipA are out of sync
-#if !defined(_CONTENT_PACKAGE)
-            __debugbreak();
-#endif
-        }
-    }
-
-    m_uiCurrentTip = 0;
-}
-
-int Game::GetNextTip() {
-    static bool bShowSkinDLCTip = true;
-    if (app.GetNewDLCAvailable() && app.DisplayNewDLCTip()) {
-        return IDS_TIPS_GAMETIP_NEWDLC;
-    } else {
-        if (bShowSkinDLCTip) {
-            bShowSkinDLCTip = false;
-            if (app.DLCInstallProcessCompleted()) {
-                if (app.m_dlcManager.getPackCount(DLCManager::e_DLCType_Skin) ==
-                    0) {
-                    return IDS_TIPS_GAMETIP_SKINPACKS;
-                }
-            } else {
-                return IDS_TIPS_GAMETIP_SKINPACKS;
-            }
-        }
-    }
-
-    if (m_uiCurrentTip == MAX_TIPS_GAMETIP + MAX_TIPS_TRIVIATIP)
-        m_uiCurrentTip = 0;
-
-    return m_TipIDA[m_uiCurrentTip++];
-}
-
-int Game::GetHTMLColour(eMinecraftColour colour) {
-    Minecraft* pMinecraft = Minecraft::GetInstance();
-    return pMinecraft->skins->getSelected()->getColourTable()->getColour(
-        colour);
-}
-
-int Game::GetHTMLFontSize(EHTMLFontSize size) {
-    return s_iHTMLFontSizesA[size];
-}
-
-std::wstring Game::FormatHTMLString(
-    int iPad, const std::wstring& desc, int shadowColour /*= 0xFFFFFFFF*/) {
-    std::wstring text(desc);
-
-    wchar_t replacements[64];
-    // We will also insert line breaks here as couldn't figure out how to get
-    // them to come through from strings.resx !
-    text = replaceAll(text, L"{*B*}", L"<br />");
-    swprintf(replacements, 64, L"<font color=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_T1));
-    text = replaceAll(text, L"{*T1*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_T2));
-    text = replaceAll(text, L"{*T2*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_T3));
-    text = replaceAll(text, L"{*T3*}", replacements);  // for How To Play
-    swprintf(replacements, 64, L"<font color=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_Black));
-    text = replaceAll(text, L"{*ETB*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_White));
-    text = replaceAll(text, L"{*ETW*}", replacements);
-    text = replaceAll(text, L"{*EF*}", L"</font>");
-
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_0), shadowColour);
-    text = replaceAll(text, L"{*C0*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_1), shadowColour);
-    text = replaceAll(text, L"{*C1*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_2), shadowColour);
-    text = replaceAll(text, L"{*C2*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_3), shadowColour);
-    text = replaceAll(text, L"{*C3*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_4), shadowColour);
-    text = replaceAll(text, L"{*C4*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_5), shadowColour);
-    text = replaceAll(text, L"{*C5*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_6), shadowColour);
-    text = replaceAll(text, L"{*C6*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_7), shadowColour);
-    text = replaceAll(text, L"{*C7*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_8), shadowColour);
-    text = replaceAll(text, L"{*C8*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_9), shadowColour);
-    text = replaceAll(text, L"{*C9*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_a), shadowColour);
-    text = replaceAll(text, L"{*CA*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_b), shadowColour);
-    text = replaceAll(text, L"{*CB*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_c), shadowColour);
-    text = replaceAll(text, L"{*CC*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_d), shadowColour);
-    text = replaceAll(text, L"{*CD*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_e), shadowColour);
-    text = replaceAll(text, L"{*CE*}", replacements);
-    swprintf(replacements, 64, L"<font color=\"#%08x\" shadowcolor=\"#%08x\">",
-             GetHTMLColour(eHTMLColor_f), shadowColour);
-    text = replaceAll(text, L"{*CF*}", replacements);
-
-    // Swap for southpaw.
-    if (app.GetGameSettings(iPad, eGameSetting_ControlSouthPaw)) {
-        text =
-            replaceAll(text, L"{*CONTROLLER_ACTION_MOVE*}",
-                       GetActionReplacement(iPad, MINECRAFT_ACTION_LOOK_RIGHT));
-        text = replaceAll(text, L"{*CONTROLLER_ACTION_LOOK*}",
-                          GetActionReplacement(iPad, MINECRAFT_ACTION_RIGHT));
-
-        text = replaceAll(text, L"{*CONTROLLER_MENU_NAVIGATE*}",
-                          GetVKReplacement(VK_PAD_RTHUMB_LEFT));
-    } else  // Normal right handed.
-    {
-        text = replaceAll(text, L"{*CONTROLLER_ACTION_MOVE*}",
-                          GetActionReplacement(iPad, MINECRAFT_ACTION_RIGHT));
-        text =
-            replaceAll(text, L"{*CONTROLLER_ACTION_LOOK*}",
-                       GetActionReplacement(iPad, MINECRAFT_ACTION_LOOK_RIGHT));
-
-        text = replaceAll(text, L"{*CONTROLLER_MENU_NAVIGATE*}",
-                          GetVKReplacement(VK_PAD_LTHUMB_LEFT));
-    }
-
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_JUMP*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_JUMP));
-    text =
-        replaceAll(text, L"{*CONTROLLER_ACTION_SNEAK*}",
-                   GetActionReplacement(iPad, MINECRAFT_ACTION_SNEAK_TOGGLE));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_USE*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_USE));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_ACTION*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_ACTION));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_LEFT_SCROLL*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_LEFT_SCROLL));
-    text =
-        replaceAll(text, L"{*CONTROLLER_ACTION_RIGHT_SCROLL*}",
-                   GetActionReplacement(iPad, MINECRAFT_ACTION_RIGHT_SCROLL));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_INVENTORY*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_INVENTORY));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_CRAFTING*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_CRAFTING));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_DROP*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_DROP));
-    text = replaceAll(
-        text, L"{*CONTROLLER_ACTION_CAMERA*}",
-        GetActionReplacement(iPad, MINECRAFT_ACTION_RENDER_THIRD_PERSON));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_MENU_PAGEDOWN*}",
-                      GetActionReplacement(iPad, ACTION_MENU_PAGEDOWN));
-    text =
-        replaceAll(text, L"{*CONTROLLER_ACTION_DISMOUNT*}",
-                   GetActionReplacement(iPad, MINECRAFT_ACTION_SNEAK_TOGGLE));
-    text = replaceAll(text, L"{*CONTROLLER_VK_A*}", GetVKReplacement(VK_PAD_A));
-    text = replaceAll(text, L"{*CONTROLLER_VK_B*}", GetVKReplacement(VK_PAD_B));
-    text = replaceAll(text, L"{*CONTROLLER_VK_X*}", GetVKReplacement(VK_PAD_X));
-    text = replaceAll(text, L"{*CONTROLLER_VK_Y*}", GetVKReplacement(VK_PAD_Y));
-    text = replaceAll(text, L"{*CONTROLLER_VK_LB*}",
-                      GetVKReplacement(VK_PAD_LSHOULDER));
-    text = replaceAll(text, L"{*CONTROLLER_VK_RB*}",
-                      GetVKReplacement(VK_PAD_RSHOULDER));
-    text = replaceAll(text, L"{*CONTROLLER_VK_LS*}",
-                      GetVKReplacement(VK_PAD_LTHUMB_UP));
-    text = replaceAll(text, L"{*CONTROLLER_VK_RS*}",
-                      GetVKReplacement(VK_PAD_RTHUMB_UP));
-    text = replaceAll(text, L"{*CONTROLLER_VK_LT*}",
-                      GetVKReplacement(VK_PAD_LTRIGGER));
-    text = replaceAll(text, L"{*CONTROLLER_VK_RT*}",
-                      GetVKReplacement(VK_PAD_RTRIGGER));
-    text = replaceAll(text, L"{*ICON_SHANK_01*}",
-                      GetIconReplacement(XZP_ICON_SHANK_01));
-    text = replaceAll(text, L"{*ICON_SHANK_03*}",
-                      GetIconReplacement(XZP_ICON_SHANK_03));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_DPAD_UP*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_DPAD_UP));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_DPAD_DOWN*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_DPAD_DOWN));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_DPAD_RIGHT*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_DPAD_RIGHT));
-    text = replaceAll(text, L"{*CONTROLLER_ACTION_DPAD_LEFT*}",
-                      GetActionReplacement(iPad, MINECRAFT_ACTION_DPAD_LEFT));
-
-    // Fix for #8903 - UI: Localization: KOR/JPN/CHT: Button Icons are rendered
-    // with padding space, which looks no good
-    std::uint32_t dwLanguage = XGetLanguage();
-    switch (dwLanguage) {
-        case XC_LANGUAGE_KOREAN:
-        case XC_LANGUAGE_JAPANESE:
-        case XC_LANGUAGE_TCHINESE:
-            text = replaceAll(text, L"&nbsp;", L"");
-            break;
-    }
-
-    return text;
-}
-
-std::wstring Game::GetActionReplacement(int iPad,
-                                                 unsigned char ucAction) {
-    unsigned int input = InputManager.GetGameJoypadMaps(
-        InputManager.GetJoypadMapVal(iPad), ucAction);
-
-    std::wstring replacement = L"";
-
-    // 4J Stu - Some of our actions can be mapped to multiple physical buttons,
-    // so replaces the switch that was here
-    if (input & _360_JOY_BUTTON_A)
-        replacement = L"ButtonA";
-    else if (input & _360_JOY_BUTTON_B)
-        replacement = L"ButtonB";
-    else if (input & _360_JOY_BUTTON_X)
-        replacement = L"ButtonX";
-    else if (input & _360_JOY_BUTTON_Y)
-        replacement = L"ButtonY";
-    else if ((input & _360_JOY_BUTTON_LSTICK_UP) ||
-             (input & _360_JOY_BUTTON_LSTICK_DOWN) ||
-             (input & _360_JOY_BUTTON_LSTICK_LEFT) ||
-             (input & _360_JOY_BUTTON_LSTICK_RIGHT)) {
-        replacement = L"ButtonLeftStick";
-    } else if ((input & _360_JOY_BUTTON_RSTICK_LEFT) ||
-               (input & _360_JOY_BUTTON_RSTICK_RIGHT) ||
-               (input & _360_JOY_BUTTON_RSTICK_UP) ||
-               (input & _360_JOY_BUTTON_RSTICK_DOWN)) {
-        replacement = L"ButtonRightStick";
-    } else if (input & _360_JOY_BUTTON_DPAD_LEFT)
-        replacement = L"ButtonDpadL";
-    else if (input & _360_JOY_BUTTON_DPAD_RIGHT)
-        replacement = L"ButtonDpadR";
-    else if (input & _360_JOY_BUTTON_DPAD_UP)
-        replacement = L"ButtonDpadU";
-    else if (input & _360_JOY_BUTTON_DPAD_DOWN)
-        replacement = L"ButtonDpadD";
-    else if (input & _360_JOY_BUTTON_LT)
-        replacement = L"ButtonLeftTrigger";
-    else if (input & _360_JOY_BUTTON_RT)
-        replacement = L"ButtonRightTrigger";
-    else if (input & _360_JOY_BUTTON_RB)
-        replacement = L"ButtonRightBumper";
-    else if (input & _360_JOY_BUTTON_LB)
-        replacement = L"ButtonLeftBumper";
-    else if (input & _360_JOY_BUTTON_BACK)
-        replacement = L"ButtonBack";
-    else if (input & _360_JOY_BUTTON_START)
-        replacement = L"ButtonStart";
-    else if (input & _360_JOY_BUTTON_RTHUMB)
-        replacement = L"ButtonRS";
-    else if (input & _360_JOY_BUTTON_LTHUMB)
-        replacement = L"ButtonLS";
-
-    wchar_t string[128];
-
-#if defined(_WIN64)
-    int size = 45;
-    if (ui.getScreenWidth() < 1920) size = 30;
-#else
-    int size = 45;
-#endif
-
-    swprintf(string, 128,
-             L"<img src=\"%ls\" align=\"middle\" height=\"%d\" width=\"%d\"/>",
-             replacement.c_str(), size, size);
-
-    return string;
-}
-
-std::wstring Game::GetVKReplacement(unsigned int uiVKey) {
-    std::wstring replacement = L"";
-    switch (uiVKey) {
-        case VK_PAD_A:
-            replacement = L"ButtonA";
-            break;
-        case VK_PAD_B:
-            replacement = L"ButtonB";
-            break;
-        case VK_PAD_X:
-            replacement = L"ButtonX";
-            break;
-        case VK_PAD_Y:
-            replacement = L"ButtonY";
-            break;
-        case VK_PAD_LSHOULDER:
-            replacement = L"ButtonLeftBumper";
-            break;
-        case VK_PAD_RSHOULDER:
-            replacement = L"ButtonRightBumper";
-            break;
-        case VK_PAD_LTRIGGER:
-            replacement = L"ButtonLeftTrigger";
-            break;
-        case VK_PAD_RTRIGGER:
-            replacement = L"ButtonRightTrigger";
-            break;
-        case VK_PAD_LTHUMB_UP:
-        case VK_PAD_LTHUMB_DOWN:
-        case VK_PAD_LTHUMB_RIGHT:
-        case VK_PAD_LTHUMB_LEFT:
-        case VK_PAD_LTHUMB_UPLEFT:
-        case VK_PAD_LTHUMB_UPRIGHT:
-        case VK_PAD_LTHUMB_DOWNRIGHT:
-        case VK_PAD_LTHUMB_DOWNLEFT:
-            replacement = L"ButtonLeftStick";
-            break;
-        case VK_PAD_RTHUMB_UP:
-        case VK_PAD_RTHUMB_DOWN:
-        case VK_PAD_RTHUMB_RIGHT:
-        case VK_PAD_RTHUMB_LEFT:
-        case VK_PAD_RTHUMB_UPLEFT:
-        case VK_PAD_RTHUMB_UPRIGHT:
-        case VK_PAD_RTHUMB_DOWNRIGHT:
-        case VK_PAD_RTHUMB_DOWNLEFT:
-            replacement = L"ButtonRightStick";
-            break;
-        default:
-            break;
-    }
-    wchar_t string[128];
-
-#if defined(_WIN64)
-    int size = 45;
-    if (ui.getScreenWidth() < 1920) size = 30;
-#else
-    int size = 45;
-#endif
-
-    swprintf(string, 128,
-             L"<img src=\"%ls\" align=\"middle\" height=\"%d\" width=\"%d\"/>",
-             replacement.c_str(), size, size);
-
-    return string;
-}
-
-std::wstring Game::GetIconReplacement(unsigned int uiIcon) {
-    wchar_t string[128];
-
-#if defined(_WIN64)
-    int size = 33;
-    if (ui.getScreenWidth() < 1920) size = 22;
-#else
-    int size = 33;
-#endif
-
-    swprintf(string, 128,
-             L"<img src=\"Icon_Shank\" align=\"middle\" height=\"%d\" "
-             L"width=\"%d\"/>",
-             size, size);
-    std::wstring result = L"";
-    switch (uiIcon) {
-        case XZP_ICON_SHANK_01:
-            result = string;
-            break;
-        case XZP_ICON_SHANK_03:
-            result.append(string).append(string).append(string);
-            break;
-        default:
-            break;
-    }
-    return result;
-}
-
-std::unordered_map<PlayerUID, MOJANG_DATA*> Game::MojangData;
-std::unordered_map<int, uint64_t> Game::DLCTextures_PackID;
-std::unordered_map<uint64_t, DLC_INFO*> Game::DLCInfo_Trial;
-std::unordered_map<uint64_t, DLC_INFO*> Game::DLCInfo_Full;
-std::unordered_map<std::wstring, uint64_t> Game::DLCInfo_SkinName;
-
-int32_t Game::RegisterMojangData(wchar_t* pXuidName, PlayerUID xuid,
-                                          wchar_t* pSkin, wchar_t* pCape) {
-    int32_t hr = 0;
-    eXUID eTempXuid = eXUID_Undefined;
-    MOJANG_DATA* pMojangData = nullptr;
-
-    // ignore the names if we don't recognize them
-    if (pXuidName != nullptr) {
-        if (wcscmp(pXuidName, L"XUID_NOTCH") == 0) {
-            eTempXuid =
-                eXUID_Notch;  // might be needed for the apple at some point
-        } else if (wcscmp(pXuidName, L"XUID_DEADMAU5") == 0) {
-            eTempXuid = eXUID_Deadmau5;  // Needed for the deadmau5 ears
-        } else {
-            eTempXuid = eXUID_NoName;
-        }
-    }
-
-    if (eTempXuid != eXUID_Undefined) {
-        pMojangData = new MOJANG_DATA;
-        memset(pMojangData, 0, sizeof(MOJANG_DATA));
-        pMojangData->eXuid = eTempXuid;
-
-        wcsncpy(pMojangData->wchSkin, pSkin, MAX_CAPENAME_SIZE);
-        wcsncpy(pMojangData->wchCape, pCape, MAX_CAPENAME_SIZE);
-        MojangData[xuid] = pMojangData;
-    }
-
-    return hr;
-}
-
-MOJANG_DATA* Game::GetMojangDataForXuid(PlayerUID xuid) {
-    return MojangData[xuid];
-}
-
-int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
-    int32_t hr = 0;
-
-    // #ifdef 0
-    // 	if(pType!=nullptr)
-    // 	{
-    // 		if(wcscmp(pType,L"XboxOneTransfer")==0)
-    // 		{
-    // 			if(iValue>0)
-    // 			{
-    // 				app.m_bTransferSavesToXboxOne=true;
-    // 			}
-    // 			else
-    // 			{
-    // 				app.m_bTransferSavesToXboxOne=false;
-    // 			}
-    // 		}
-    // 		else if(wcscmp(pType,L"TransferSlotCount")==0)
-    // 		{
-    // 			app.m_uiTransferSlotC=iValue;
-    // 		}
-    //
-    // 	}
-    // #endif
-
-    return hr;
-}
-
-#if defined(_WINDOWS64)
-int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
-                                       int iGender, uint64_t ullOfferID_Full,
-                                       uint64_t ullOfferID_Trial,
-                                       wchar_t* pFirstSkin,
-                                       unsigned int uiSortIndex, int iConfig,
-                                       wchar_t* pDataFile) {
-    int32_t hr = 0;
-    DLC_INFO* pDLCData = new DLC_INFO;
-    memset(pDLCData, 0, sizeof(DLC_INFO));
-    pDLCData->ullOfferID_Full = ullOfferID_Full;
-    pDLCData->ullOfferID_Trial = ullOfferID_Trial;
-    pDLCData->eDLCType = e_DLC_NotDefined;
-    pDLCData->iGender = iGender;
-    pDLCData->uiSortIndex = uiSortIndex;
-    pDLCData->iConfig = iConfig;
-
-    // ignore the names if we don't recognize them
-    if (pBannerName != L"") {
-        wcsncpy_s(pDLCData->wchBanner, pBannerName, MAX_BANNERNAME_SIZE);
-    }
-
-    if (pDataFile[0] != 0) {
-        wcsncpy_s(pDLCData->wchDataFile, pDataFile, MAX_BANNERNAME_SIZE);
-    }
-
-    if (pType != nullptr) {
-        if (wcscmp(pType, L"Skin") == 0) {
-            pDLCData->eDLCType = e_DLC_SkinPack;
-        } else if (wcscmp(pType, L"Gamerpic") == 0) {
-            pDLCData->eDLCType = e_DLC_Gamerpics;
-        } else if (wcscmp(pType, L"Theme") == 0) {
-            pDLCData->eDLCType = e_DLC_Themes;
-        } else if (wcscmp(pType, L"Avatar") == 0) {
-            pDLCData->eDLCType = e_DLC_AvatarItems;
-        } else if (wcscmp(pType, L"MashUpPack") == 0) {
-            pDLCData->eDLCType = e_DLC_MashupPacks;
-            DLCTextures_PackID[pDLCData->iConfig] = ullOfferID_Full;
-        } else if (wcscmp(pType, L"TexturePack") == 0) {
-            pDLCData->eDLCType = e_DLC_TexturePacks;
-            DLCTextures_PackID[pDLCData->iConfig] = ullOfferID_Full;
-        }
-    }
-
-    if (ullOfferID_Trial != 0ll) DLCInfo_Trial[ullOfferID_Trial] = pDLCData;
-    if (ullOfferID_Full != 0ll) DLCInfo_Full[ullOfferID_Full] = pDLCData;
-    if (pFirstSkin[0] != 0) DLCInfo_SkinName[pFirstSkin] = ullOfferID_Full;
-
-    return hr;
-}
-#elif defined(__linux__)
-int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
-                                       int iGender, uint64_t ullOfferID_Full,
-                                       uint64_t ullOfferID_Trial,
-                                       wchar_t* pFirstSkin,
-                                       unsigned int uiSortIndex, int iConfig,
-                                       wchar_t* pDataFile) {
-    fprintf(stderr,
-            "warning: Game::RegisterDLCData unimplemented for "
-            "platform `__linux__`\n");
-    return 0;
-}
-#else
-
-int32_t Game::RegisterDLCData(char* pchDLCName,
-                                       unsigned int uiSortIndex,
-                                       char* pchImageURL) {
-    // on PS3 we get all the required info from the name
-    char chDLCType[3];
-    int32_t hr = 0;
-    DLC_INFO* pDLCData = new DLC_INFO;
-    memset(pDLCData, 0, sizeof(DLC_INFO));
-
-    chDLCType[0] = pchDLCName[0];
-    chDLCType[1] = pchDLCName[1];
-    chDLCType[2] = 0;
-
-    pDLCData->iConfig = app.GetiConfigFromName(pchDLCName);
-    pDLCData->uiSortIndex = uiSortIndex;
-    pDLCData->eDLCType = app.GetDLCTypeFromName(pchDLCName);
-    strcpy(pDLCData->chImageURL, pchImageURL);
-    // bool bIsTrialDLC = app.GetTrialFromName(pchDLCName);
-
-    switch (pDLCData->eDLCType) {
-        case e_DLC_TexturePacks: {
-            char* pchName = (char*)malloc(strlen(pchDLCName) + 1);
-            strcpy(pchName, pchDLCName);
-            DLCTextures_PackID[pDLCData->iConfig] = pchName;
-        } break;
-        case e_DLC_MashupPacks: {
-            char* pchName = (char*)malloc(strlen(pchDLCName) + 1);
-            strcpy(pchName, pchDLCName);
-            DLCTextures_PackID[pDLCData->iConfig] = pchName;
-        } break;
-        default:
-            break;
-    }
-
-    app.DebugPrintf(5, "Adding DLC - %s\n", pchDLCName);
-    DLCInfo[pchDLCName] = pDLCData;
-
-    // 	if(ullOfferID_Trial!=0ll) DLCInfo_Trial[ullOfferID_Trial]=pDLCData;
-    // 	if(ullOfferID_Full!=0ll) DLCInfo_Full[ullOfferID_Full]=pDLCData;
-    // 	if(pFirstSkin[0]!=0) DLCInfo_SkinName[pFirstSkin]=ullOfferID_Full;
-
-    //	DLCInfo[ullOfferID_Trial]=pDLCData;
-
-    return hr;
-}
-#endif
-
-bool Game::GetDLCFullOfferIDForSkinID(const std::wstring& FirstSkin,
-                                               uint64_t* pullVal) {
-    auto it = DLCInfo_SkinName.find(FirstSkin);
-    if (it == DLCInfo_SkinName.end()) {
-        return false;
-    } else {
-        *pullVal = (uint64_t)it->second;
-        return true;
-    }
-}
-bool Game::GetDLCFullOfferIDForPackID(const int iPackID,
-                                               uint64_t* pullVal) {
-    auto it = DLCTextures_PackID.find(iPackID);
-    if (it == DLCTextures_PackID.end()) {
-        *pullVal = (uint64_t)0;
-        return false;
-    } else {
-        *pullVal = (uint64_t)it->second;
-        return true;
-    }
-}
-DLC_INFO* Game::GetDLCInfoForTrialOfferID(uint64_t ullOfferID_Trial) {
-    // DLC_INFO *pDLCInfo=NULL;
-    if (DLCInfo_Trial.size() > 0) {
-        auto it = DLCInfo_Trial.find(ullOfferID_Trial);
-
-        if (it == DLCInfo_Trial.end()) {
-            // nothing for this
-            return nullptr;
-        } else {
-            return it->second;
-        }
-    } else
-        return nullptr;
-}
-
-DLC_INFO* Game::GetDLCInfoTrialOffer(int iIndex) {
-    std::unordered_map<uint64_t, DLC_INFO*>::iterator it =
-        DLCInfo_Trial.begin();
-
-    for (int i = 0; i < iIndex; i++) {
-        ++it;
-    }
-
-    return it->second;
-}
-DLC_INFO* Game::GetDLCInfoFullOffer(int iIndex) {
-    std::unordered_map<uint64_t, DLC_INFO*>::iterator it = DLCInfo_Full.begin();
-
-    for (int i = 0; i < iIndex; i++) {
-        ++it;
-    }
-
-    return it->second;
-}
-uint64_t Game::GetDLCInfoTexturesFullOffer(int iIndex) {
-    std::unordered_map<int, uint64_t>::iterator it = DLCTextures_PackID.begin();
-
-    for (int i = 0; i < iIndex; i++) {
-        ++it;
-    }
-
-    return it->second;
-}
-
-DLC_INFO* Game::GetDLCInfoForFullOfferID(uint64_t ullOfferID_Full) {
-    if (DLCInfo_Full.size() > 0) {
-        auto it = DLCInfo_Full.find(ullOfferID_Full);
-
-        if (it == DLCInfo_Full.end()) {
-            // nothing for this
-            return nullptr;
-        } else {
-            return it->second;
-        }
-    } else
-        return nullptr;
-}
-
-
-int Game::RemoteSaveThreadProc(void* lpParameter) {
-    // The game should be stopped while we are doing this, but the connections
-    // ticks may try to create some AABB's or Vec3's
-    Compression::UseDefaultThreadStorage();
-
-    // 4J-PB - Xbox 360 - 163153 - [CRASH] TU17: Code: Multiplayer: During the
-    // Autosave in an online Multiplayer session, the game occasionally crashes
-    // for one or more Clients callstack - >	if(tls->tileId != this->id)
-    // updateDefaultShape(); callstack - >
-    // default.exe!WaterlilyTile::getAABB(Level * level, int x, int y, int z)
-    // line 38 + 8 bytes	C++
-    // ...
-    //  	default.exe!Game::RemoteSaveThreadProc(void *
-    //  lpParameter)  line 6694	C++
-    // host autosave, and the clients can crash on receiving handleMoveEntity
-    // when it's a tile within this thread, so need to do the tls for tiles
-    Tile::CreateNewThreadStorage();
-
-    Minecraft* pMinecraft = Minecraft::GetInstance();
-
-    pMinecraft->progressRenderer->progressStartNoAbort(
-        IDS_PROGRESS_HOST_SAVING);
-    pMinecraft->progressRenderer->progressStage(-1);
-    pMinecraft->progressRenderer->progressStagePercentage(0);
-
-    while (!app.GetGameStarted() &&
-           app.GetXuiAction(ProfileManager.GetPrimaryPad()) ==
-               eAppAction_WaitRemoteServerSaveComplete) {
-        // Tick all the games connections
-        pMinecraft->tickAllConnections();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    if (app.GetXuiAction(ProfileManager.GetPrimaryPad()) !=
-        eAppAction_WaitRemoteServerSaveComplete) {
-        // Something cancelled us?
-        return ERROR_CANCELLED;
-    }
-    app.SetAction(ProfileManager.GetPrimaryPad(), eAppAction_Idle);
-
-    ui.UpdatePlayerBasePositions();
-
-    Tile::ReleaseThreadStorage();
-
-    return 0;
-}
-
-void Game::ExitGameFromRemoteSave(void* lpParameter) {
-    int primaryPad = ProfileManager.GetPrimaryPad();
-
-    unsigned int uiIDA[3];
-    uiIDA[0] = IDS_CONFIRM_CANCEL;
-    uiIDA[1] = IDS_CONFIRM_OK;
-
-    ui.RequestAlertMessage(
-        IDS_EXIT_GAME, IDS_CONFIRM_EXIT_GAME, uiIDA, 2, primaryPad,
-        &Game::ExitGameFromRemoteSaveDialogReturned, nullptr);
-}
-
-int Game::ExitGameFromRemoteSaveDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
-    // CScene_Pause* pClass = (CScene_Pause*)pParam;
-
-    // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
-        app.SetAction(iPad, eAppAction_ExitWorld);
-    } else {
-        // Inform fullscreen progress scene that it's not being cancelled after
-        // all
-        UIScene_FullscreenProgress* pScene =
-            (UIScene_FullscreenProgress*)ui.FindScene(
-                eUIScene_FullscreenProgress);
-        if (pScene != nullptr) {
-            pScene->SetWasCancelled(false);
-        }
-    }
-    return 0;
-}
-
 void Game::SetSpecialTutorialCompletionFlag(int iPad, int index) {
     if (index >= 0 && index < 32 && GameSettingsA[iPad] != nullptr) {
         GameSettingsA[iPad]->uiSpecialTutorialBitmask |= (1 << index);
     }
 }
 
-
-// function to add credits for the DLC packs
 void Game::AddCreditText(const wchar_t* lpStr) {
     DebugPrintf("ADDING CREDIT - %ls\n", lpStr);
     // add a std::string from the DLC to a credits std::vector
@@ -5957,6 +4753,7 @@ unsigned int Game::GetGameHostOption(unsigned int uiHostSettings,
     return false;
 }
 
+
 bool Game::CanRecordStatsAndAchievements() {
     bool isTutorial = Minecraft::GetInstance() != nullptr &&
                       Minecraft::GetInstance()->isTutorial();
@@ -5994,6 +4791,7 @@ void Game::setLevelGenerationOptions(
 const wchar_t* Game::GetGameRulesString(const std::wstring& key) {
     return m_gameRules.GetGameRulesString(key);
 }
+
 
 unsigned char Game::m_szPNG[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 
@@ -6142,6 +4940,7 @@ unsigned int Game::CreateImageTextData(std::uint8_t* textMetadata,
 }
 
 
+
 void Game::UpdatePlayerInfo(std::uint8_t networkSmallId,
                                      int16_t playerColourIndex,
                                      unsigned int playerGamePrivileges) {
@@ -6239,6 +5038,352 @@ std::uint32_t Game::m_dwContentTypeA[e_Marketplace_MAX] = {
     XMARKETPLACE_OFFERING_TYPE_AVATARITEM,  // e_DLC_AvatarItems
     XMARKETPLACE_OFFERING_TYPE_TILE,        // e_DLC_Gamerpics
 };
+
+int Game::TexturePackDialogReturned(
+    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    return 0;
+}
+
+
+
+std::unordered_map<PlayerUID, MOJANG_DATA*> Game::MojangData;
+std::unordered_map<int, uint64_t> Game::DLCTextures_PackID;
+std::unordered_map<uint64_t, DLC_INFO*> Game::DLCInfo_Trial;
+std::unordered_map<uint64_t, DLC_INFO*> Game::DLCInfo_Full;
+std::unordered_map<std::wstring, uint64_t> Game::DLCInfo_SkinName;
+
+int32_t Game::RegisterMojangData(wchar_t* pXuidName, PlayerUID xuid,
+                                          wchar_t* pSkin, wchar_t* pCape) {
+    int32_t hr = 0;
+    eXUID eTempXuid = eXUID_Undefined;
+    MOJANG_DATA* pMojangData = nullptr;
+
+    // ignore the names if we don't recognize them
+    if (pXuidName != nullptr) {
+        if (wcscmp(pXuidName, L"XUID_NOTCH") == 0) {
+            eTempXuid =
+                eXUID_Notch;  // might be needed for the apple at some point
+        } else if (wcscmp(pXuidName, L"XUID_DEADMAU5") == 0) {
+            eTempXuid = eXUID_Deadmau5;  // Needed for the deadmau5 ears
+        } else {
+            eTempXuid = eXUID_NoName;
+        }
+    }
+
+    if (eTempXuid != eXUID_Undefined) {
+        pMojangData = new MOJANG_DATA;
+        memset(pMojangData, 0, sizeof(MOJANG_DATA));
+        pMojangData->eXuid = eTempXuid;
+
+        wcsncpy(pMojangData->wchSkin, pSkin, MAX_CAPENAME_SIZE);
+        wcsncpy(pMojangData->wchCape, pCape, MAX_CAPENAME_SIZE);
+        MojangData[xuid] = pMojangData;
+    }
+
+    return hr;
+}
+
+MOJANG_DATA* Game::GetMojangDataForXuid(PlayerUID xuid) {
+    return MojangData[xuid];
+}
+
+int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
+    int32_t hr = 0;
+
+    // #ifdef 0
+    // 	if(pType!=nullptr)
+    // 	{
+    // 		if(wcscmp(pType,L"XboxOneTransfer")==0)
+    // 		{
+    // 			if(iValue>0)
+    // 			{
+    // 				app.m_bTransferSavesToXboxOne=true;
+    // 			}
+    // 			else
+    // 			{
+    // 				app.m_bTransferSavesToXboxOne=false;
+    // 			}
+    // 		}
+    // 		else if(wcscmp(pType,L"TransferSlotCount")==0)
+    // 		{
+    // 			app.m_uiTransferSlotC=iValue;
+    // 		}
+    //
+    // 	}
+    // #endif
+
+    return hr;
+}
+
+#if defined(_WINDOWS64)
+int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
+                                       int iGender, uint64_t ullOfferID_Full,
+                                       uint64_t ullOfferID_Trial,
+                                       wchar_t* pFirstSkin,
+                                       unsigned int uiSortIndex, int iConfig,
+                                       wchar_t* pDataFile) {
+    int32_t hr = 0;
+    DLC_INFO* pDLCData = new DLC_INFO;
+    memset(pDLCData, 0, sizeof(DLC_INFO));
+    pDLCData->ullOfferID_Full = ullOfferID_Full;
+    pDLCData->ullOfferID_Trial = ullOfferID_Trial;
+    pDLCData->eDLCType = e_DLC_NotDefined;
+    pDLCData->iGender = iGender;
+    pDLCData->uiSortIndex = uiSortIndex;
+    pDLCData->iConfig = iConfig;
+
+    // ignore the names if we don't recognize them
+    if (pBannerName != L"") {
+        wcsncpy_s(pDLCData->wchBanner, pBannerName, MAX_BANNERNAME_SIZE);
+    }
+
+    if (pDataFile[0] != 0) {
+        wcsncpy_s(pDLCData->wchDataFile, pDataFile, MAX_BANNERNAME_SIZE);
+    }
+
+    if (pType != nullptr) {
+        if (wcscmp(pType, L"Skin") == 0) {
+            pDLCData->eDLCType = e_DLC_SkinPack;
+        } else if (wcscmp(pType, L"Gamerpic") == 0) {
+            pDLCData->eDLCType = e_DLC_Gamerpics;
+        } else if (wcscmp(pType, L"Theme") == 0) {
+            pDLCData->eDLCType = e_DLC_Themes;
+        } else if (wcscmp(pType, L"Avatar") == 0) {
+            pDLCData->eDLCType = e_DLC_AvatarItems;
+        } else if (wcscmp(pType, L"MashUpPack") == 0) {
+            pDLCData->eDLCType = e_DLC_MashupPacks;
+            DLCTextures_PackID[pDLCData->iConfig] = ullOfferID_Full;
+        } else if (wcscmp(pType, L"TexturePack") == 0) {
+            pDLCData->eDLCType = e_DLC_TexturePacks;
+            DLCTextures_PackID[pDLCData->iConfig] = ullOfferID_Full;
+        }
+    }
+
+    if (ullOfferID_Trial != 0ll) DLCInfo_Trial[ullOfferID_Trial] = pDLCData;
+    if (ullOfferID_Full != 0ll) DLCInfo_Full[ullOfferID_Full] = pDLCData;
+    if (pFirstSkin[0] != 0) DLCInfo_SkinName[pFirstSkin] = ullOfferID_Full;
+
+    return hr;
+}
+#elif defined(__linux__)
+int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
+                                       int iGender, uint64_t ullOfferID_Full,
+                                       uint64_t ullOfferID_Trial,
+                                       wchar_t* pFirstSkin,
+                                       unsigned int uiSortIndex, int iConfig,
+                                       wchar_t* pDataFile) {
+    fprintf(stderr,
+            "warning: Game::RegisterDLCData unimplemented for "
+            "platform `__linux__`\n");
+    return 0;
+}
+#else
+
+int32_t Game::RegisterDLCData(char* pchDLCName,
+                                       unsigned int uiSortIndex,
+                                       char* pchImageURL) {
+    // on PS3 we get all the required info from the name
+    char chDLCType[3];
+    int32_t hr = 0;
+    DLC_INFO* pDLCData = new DLC_INFO;
+    memset(pDLCData, 0, sizeof(DLC_INFO));
+
+    chDLCType[0] = pchDLCName[0];
+    chDLCType[1] = pchDLCName[1];
+    chDLCType[2] = 0;
+
+    pDLCData->iConfig = app.GetiConfigFromName(pchDLCName);
+    pDLCData->uiSortIndex = uiSortIndex;
+    pDLCData->eDLCType = app.GetDLCTypeFromName(pchDLCName);
+    strcpy(pDLCData->chImageURL, pchImageURL);
+    // bool bIsTrialDLC = app.GetTrialFromName(pchDLCName);
+
+    switch (pDLCData->eDLCType) {
+        case e_DLC_TexturePacks: {
+            char* pchName = (char*)malloc(strlen(pchDLCName) + 1);
+            strcpy(pchName, pchDLCName);
+            DLCTextures_PackID[pDLCData->iConfig] = pchName;
+        } break;
+        case e_DLC_MashupPacks: {
+            char* pchName = (char*)malloc(strlen(pchDLCName) + 1);
+            strcpy(pchName, pchDLCName);
+            DLCTextures_PackID[pDLCData->iConfig] = pchName;
+        } break;
+        default:
+            break;
+    }
+
+    app.DebugPrintf(5, "Adding DLC - %s\n", pchDLCName);
+    DLCInfo[pchDLCName] = pDLCData;
+
+    // 	if(ullOfferID_Trial!=0ll) DLCInfo_Trial[ullOfferID_Trial]=pDLCData;
+    // 	if(ullOfferID_Full!=0ll) DLCInfo_Full[ullOfferID_Full]=pDLCData;
+    // 	if(pFirstSkin[0]!=0) DLCInfo_SkinName[pFirstSkin]=ullOfferID_Full;
+
+    //	DLCInfo[ullOfferID_Trial]=pDLCData;
+
+    return hr;
+}
+#endif
+
+bool Game::GetDLCFullOfferIDForSkinID(const std::wstring& FirstSkin,
+                                               uint64_t* pullVal) {
+    auto it = DLCInfo_SkinName.find(FirstSkin);
+    if (it == DLCInfo_SkinName.end()) {
+        return false;
+    } else {
+        *pullVal = (uint64_t)it->second;
+        return true;
+    }
+}
+bool Game::GetDLCFullOfferIDForPackID(const int iPackID,
+                                               uint64_t* pullVal) {
+    auto it = DLCTextures_PackID.find(iPackID);
+    if (it == DLCTextures_PackID.end()) {
+        *pullVal = (uint64_t)0;
+        return false;
+    } else {
+        *pullVal = (uint64_t)it->second;
+        return true;
+    }
+}
+DLC_INFO* Game::GetDLCInfoForTrialOfferID(uint64_t ullOfferID_Trial) {
+    // DLC_INFO *pDLCInfo=NULL;
+    if (DLCInfo_Trial.size() > 0) {
+        auto it = DLCInfo_Trial.find(ullOfferID_Trial);
+
+        if (it == DLCInfo_Trial.end()) {
+            // nothing for this
+            return nullptr;
+        } else {
+            return it->second;
+        }
+    } else
+        return nullptr;
+}
+
+DLC_INFO* Game::GetDLCInfoTrialOffer(int iIndex) {
+    std::unordered_map<uint64_t, DLC_INFO*>::iterator it =
+        DLCInfo_Trial.begin();
+
+    for (int i = 0; i < iIndex; i++) {
+        ++it;
+    }
+
+    return it->second;
+}
+DLC_INFO* Game::GetDLCInfoFullOffer(int iIndex) {
+    std::unordered_map<uint64_t, DLC_INFO*>::iterator it = DLCInfo_Full.begin();
+
+    for (int i = 0; i < iIndex; i++) {
+        ++it;
+    }
+
+    return it->second;
+}
+uint64_t Game::GetDLCInfoTexturesFullOffer(int iIndex) {
+    std::unordered_map<int, uint64_t>::iterator it = DLCTextures_PackID.begin();
+
+    for (int i = 0; i < iIndex; i++) {
+        ++it;
+    }
+
+    return it->second;
+}
+
+DLC_INFO* Game::GetDLCInfoForFullOfferID(uint64_t ullOfferID_Full) {
+    if (DLCInfo_Full.size() > 0) {
+        auto it = DLCInfo_Full.find(ullOfferID_Full);
+
+        if (it == DLCInfo_Full.end()) {
+            // nothing for this
+            return nullptr;
+        } else {
+            return it->second;
+        }
+    } else
+        return nullptr;
+}
+
+
+int Game::RemoteSaveThreadProc(void* lpParameter) {
+    // The game should be stopped while we are doing this, but the connections
+    // ticks may try to create some AABB's or Vec3's
+    Compression::UseDefaultThreadStorage();
+
+    // 4J-PB - Xbox 360 - 163153 - [CRASH] TU17: Code: Multiplayer: During the
+    // Autosave in an online Multiplayer session, the game occasionally crashes
+    // for one or more Clients callstack - >	if(tls->tileId != this->id)
+    // updateDefaultShape(); callstack - >
+    // default.exe!WaterlilyTile::getAABB(Level * level, int x, int y, int z)
+    // line 38 + 8 bytes	C++
+    // ...
+    //  	default.exe!Game::RemoteSaveThreadProc(void *
+    //  lpParameter)  line 6694	C++
+    // host autosave, and the clients can crash on receiving handleMoveEntity
+    // when it's a tile within this thread, so need to do the tls for tiles
+    Tile::CreateNewThreadStorage();
+
+    Minecraft* pMinecraft = Minecraft::GetInstance();
+
+    pMinecraft->progressRenderer->progressStartNoAbort(
+        IDS_PROGRESS_HOST_SAVING);
+    pMinecraft->progressRenderer->progressStage(-1);
+    pMinecraft->progressRenderer->progressStagePercentage(0);
+
+    while (!app.GetGameStarted() &&
+           app.GetXuiAction(ProfileManager.GetPrimaryPad()) ==
+               eAppAction_WaitRemoteServerSaveComplete) {
+        // Tick all the games connections
+        pMinecraft->tickAllConnections();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    if (app.GetXuiAction(ProfileManager.GetPrimaryPad()) !=
+        eAppAction_WaitRemoteServerSaveComplete) {
+        // Something cancelled us?
+        return ERROR_CANCELLED;
+    }
+    app.SetAction(ProfileManager.GetPrimaryPad(), eAppAction_Idle);
+
+    ui.UpdatePlayerBasePositions();
+
+    Tile::ReleaseThreadStorage();
+
+    return 0;
+}
+
+void Game::ExitGameFromRemoteSave(void* lpParameter) {
+    int primaryPad = ProfileManager.GetPrimaryPad();
+
+    unsigned int uiIDA[3];
+    uiIDA[0] = IDS_CONFIRM_CANCEL;
+    uiIDA[1] = IDS_CONFIRM_OK;
+
+    ui.RequestAlertMessage(
+        IDS_EXIT_GAME, IDS_CONFIRM_EXIT_GAME, uiIDA, 2, primaryPad,
+        &Game::ExitGameFromRemoteSaveDialogReturned, nullptr);
+}
+
+int Game::ExitGameFromRemoteSaveDialogReturned(
+    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    // CScene_Pause* pClass = (CScene_Pause*)pParam;
+
+    // results switched for this dialog
+    if (result == C4JStorage::EMessage_ResultDecline) {
+        app.SetAction(iPad, eAppAction_ExitWorld);
+    } else {
+        // Inform fullscreen progress scene that it's not being cancelled after
+        // all
+        UIScene_FullscreenProgress* pScene =
+            (UIScene_FullscreenProgress*)ui.FindScene(
+                eUIScene_FullscreenProgress);
+        if (pScene != nullptr) {
+            pScene->SetWasCancelled(false);
+        }
+    }
+    return 0;
+}
 
 unsigned int Game::AddDLCRequest(eDLCMarketplaceType eType,
                                           bool bPromote) {
@@ -6692,226 +5837,7 @@ bool Game::DLCContentRetrieved(eDLCMarketplaceType eType) {
     return false;
 }
 
-void Game::SetAdditionalSkinBoxes(std::uint32_t dwSkinID,
-                                           SKIN_BOX* SkinBoxA,
-                                           unsigned int dwSkinBoxC) {
-    EntityRenderer* renderer =
-        EntityRenderDispatcher::instance->getRenderer(eTYPE_PLAYER);
-    Model* pModel = renderer->getModel();
-    std::vector<ModelPart*>* pvModelPart = new std::vector<ModelPart*>;
-    std::vector<SKIN_BOX*>* pvSkinBoxes = new std::vector<SKIN_BOX*>;
 
-    {
-        std::lock_guard<std::mutex> lock_mp(csAdditionalModelParts);
-        std::lock_guard<std::mutex> lock_sb(csAdditionalSkinBoxes);
-
-        app.DebugPrintf(
-            "*** SetAdditionalSkinBoxes - Inserting model parts for skin %d "
-            "from "
-            "array of Skin Boxes\n",
-            dwSkinID & 0x0FFFFFFF);
-
-        // convert the skin boxes into model parts, and add to the humanoid
-        // model
-        for (unsigned int i = 0; i < dwSkinBoxC; i++) {
-            if (pModel) {
-                ModelPart* pModelPart = pModel->AddOrRetrievePart(&SkinBoxA[i]);
-                pvModelPart->push_back(pModelPart);
-                pvSkinBoxes->push_back(&SkinBoxA[i]);
-            }
-        }
-
-        m_AdditionalModelParts.insert(
-            std::pair<std::uint32_t, std::vector<ModelPart*>*>(dwSkinID,
-                                                               pvModelPart));
-        m_AdditionalSkinBoxes.insert(
-            std::pair<std::uint32_t, std::vector<SKIN_BOX*>*>(dwSkinID,
-                                                              pvSkinBoxes));
-    }
-}
-
-std::vector<ModelPart*>* Game::SetAdditionalSkinBoxes(
-    std::uint32_t dwSkinID, std::vector<SKIN_BOX*>* pvSkinBoxA) {
-    EntityRenderer* renderer =
-        EntityRenderDispatcher::instance->getRenderer(eTYPE_PLAYER);
-    Model* pModel = renderer->getModel();
-    std::vector<ModelPart*>* pvModelPart = new std::vector<ModelPart*>;
-
-    {
-        std::lock_guard<std::mutex> lock_mp(csAdditionalModelParts);
-        std::lock_guard<std::mutex> lock_sb(csAdditionalSkinBoxes);
-        app.DebugPrintf(
-            "*** SetAdditionalSkinBoxes - Inserting model parts for skin %d "
-            "from "
-            "array of Skin Boxes\n",
-            dwSkinID & 0x0FFFFFFF);
-
-        // convert the skin boxes into model parts, and add to the humanoid
-        // model
-        for (auto it = pvSkinBoxA->begin(); it != pvSkinBoxA->end(); ++it) {
-            if (pModel) {
-                ModelPart* pModelPart = pModel->AddOrRetrievePart(*it);
-                pvModelPart->push_back(pModelPart);
-            }
-        }
-
-        m_AdditionalModelParts.insert(
-            std::pair<std::uint32_t, std::vector<ModelPart*>*>(dwSkinID,
-                                                               pvModelPart));
-        m_AdditionalSkinBoxes.insert(
-            std::pair<std::uint32_t, std::vector<SKIN_BOX*>*>(dwSkinID,
-                                                              pvSkinBoxA));
-    }
-    return pvModelPart;
-}
-
-std::vector<ModelPart*>* Game::GetAdditionalModelParts(
-    std::uint32_t dwSkinID) {
-    std::lock_guard<std::mutex> lock(csAdditionalModelParts);
-    std::vector<ModelPart*>* pvModelParts = nullptr;
-    if (m_AdditionalModelParts.size() > 0) {
-        auto it = m_AdditionalModelParts.find(dwSkinID);
-        if (it != m_AdditionalModelParts.end()) {
-            pvModelParts = (*it).second;
-        }
-    }
-
-    return pvModelParts;
-}
-
-std::vector<SKIN_BOX*>* Game::GetAdditionalSkinBoxes(
-    std::uint32_t dwSkinID) {
-    std::lock_guard<std::mutex> lock(csAdditionalSkinBoxes);
-    std::vector<SKIN_BOX*>* pvSkinBoxes = nullptr;
-    if (m_AdditionalSkinBoxes.size() > 0) {
-        auto it = m_AdditionalSkinBoxes.find(dwSkinID);
-        if (it != m_AdditionalSkinBoxes.end()) {
-            pvSkinBoxes = (*it).second;
-        }
-    }
-
-    return pvSkinBoxes;
-}
-
-unsigned int Game::GetAnimOverrideBitmask(std::uint32_t dwSkinID) {
-    std::lock_guard<std::mutex> lock(csAnimOverrideBitmask);
-    unsigned int uiAnimOverrideBitmask = 0L;
-
-    if (m_AnimOverrides.size() > 0) {
-        auto it = m_AnimOverrides.find(dwSkinID);
-        if (it != m_AnimOverrides.end()) {
-            uiAnimOverrideBitmask = (*it).second;
-        }
-    }
-
-    return uiAnimOverrideBitmask;
-}
-
-void Game::SetAnimOverrideBitmask(std::uint32_t dwSkinID,
-                                           unsigned int uiAnimOverrideBitmask) {
-    // Make thread safe
-    std::lock_guard<std::mutex> lock(csAnimOverrideBitmask);
-
-    if (m_AnimOverrides.size() > 0) {
-        auto it = m_AnimOverrides.find(dwSkinID);
-        if (it != m_AnimOverrides.end()) {
-            return;  // already in here
-        }
-    }
-    m_AnimOverrides.insert(std::pair<std::uint32_t, unsigned int>(
-        dwSkinID, uiAnimOverrideBitmask));
-}
-
-std::uint32_t Game::getSkinIdFromPath(const std::wstring& skin) {
-    bool dlcSkin = false;
-    unsigned int skinId = 0;
-
-    if (skin.size() >= 14) {
-        dlcSkin = skin.substr(0, 3).compare(L"dlc") == 0;
-
-        std::wstring skinValue = skin.substr(7, skin.size());
-        skinValue = skinValue.substr(0, skinValue.find_first_of(L'.'));
-
-        std::wstringstream ss;
-        // 4J Stu - dlc skins are numbered using decimal to make it easier for
-        // artists/people to number manually Everything else is numbered using
-        // hex
-        if (dlcSkin)
-            ss << std::dec << skinValue.c_str();
-        else
-            ss << std::hex << skinValue.c_str();
-        ss >> skinId;
-
-        skinId = MAKE_SKIN_BITMASK(dlcSkin, skinId);
-    }
-    return skinId;
-}
-
-std::wstring Game::getSkinPathFromId(std::uint32_t skinId) {
-    // 4J Stu - This function maps the encoded uint32_t we store in the player
-    // profile to a filename that is stored as a memory texture and shared
-    // between systems in game
-    wchar_t chars[256];
-    if (GET_IS_DLC_SKIN_FROM_BITMASK(skinId)) {
-        // 4J Stu - DLC skins are numbered using decimal rather than hex to make
-        // it easier to number manually
-        swprintf(chars, 256, L"dlcskin%08d.png",
-                 GET_DLC_SKIN_ID_FROM_BITMASK(skinId));
-
-    } else {
-        std::uint32_t ugcSkinIndex = GET_UGC_SKIN_ID_FROM_BITMASK(skinId);
-        std::uint32_t defaultSkinIndex =
-            GET_DEFAULT_SKIN_ID_FROM_BITMASK(skinId);
-        if (ugcSkinIndex == 0) {
-            swprintf(chars, 256, L"defskin%08X.png", defaultSkinIndex);
-        } else {
-            swprintf(chars, 256, L"ugcskin%08X.png", ugcSkinIndex);
-        }
-    }
-    return chars;
-}
-
-int Game::TexturePackDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
-    return 0;
-}
-
-int Game::getArchiveFileSize(const std::wstring& filename) {
-    TexturePack* tPack = nullptr;
-    Minecraft* pMinecraft = Minecraft::GetInstance();
-    if (pMinecraft && pMinecraft->skins)
-        tPack = pMinecraft->skins->getSelected();
-    if (tPack && tPack->hasData() && tPack->getArchiveFile() &&
-        tPack->getArchiveFile()->hasFile(filename)) {
-        return tPack->getArchiveFile()->getFileSize(filename);
-    } else
-        return m_mediaArchive->getFileSize(filename);
-}
-
-bool Game::hasArchiveFile(const std::wstring& filename) {
-    TexturePack* tPack = nullptr;
-    Minecraft* pMinecraft = Minecraft::GetInstance();
-    if (pMinecraft && pMinecraft->skins)
-        tPack = pMinecraft->skins->getSelected();
-    if (tPack && tPack->hasData() && tPack->getArchiveFile() &&
-        tPack->getArchiveFile()->hasFile(filename))
-        return true;
-    else
-        return m_mediaArchive->hasFile(filename);
-}
-
-std::vector<uint8_t> Game::getArchiveFile(
-    const std::wstring& filename) {
-    TexturePack* tPack = nullptr;
-    Minecraft* pMinecraft = Minecraft::GetInstance();
-    if (pMinecraft && pMinecraft->skins)
-        tPack = pMinecraft->skins->getSelected();
-    if (tPack && tPack->hasData() && tPack->getArchiveFile() &&
-        tPack->getArchiveFile()->hasFile(filename)) {
-        return tPack->getArchiveFile()->getFile(filename);
-    } else
-        return m_mediaArchive->getFile(filename);
-}
 
 // DLC
 
@@ -6976,373 +5902,7 @@ bool Game::IsLocalMultiplayerAvailable() {
 
 // 4J-PB - language and locale function
 
-void Game::getLocale(std::vector<std::wstring>& vecWstrLocales) {
-    std::vector<eMCLang> locales;
-
-    const unsigned int systemLanguage = XGetLanguage();
-
-    // 4J-PB - restrict the 360 language until we're ready to have them in
-
-    switch (systemLanguage) {
-        case XC_LANGUAGE_ENGLISH:
-            switch (XGetLocale()) {
-                case XC_LOCALE_AUSTRALIA:
-                case XC_LOCALE_CANADA:
-                case XC_LOCALE_CZECH_REPUBLIC:
-                case XC_LOCALE_GREECE:
-                case XC_LOCALE_HONG_KONG:
-                case XC_LOCALE_HUNGARY:
-                case XC_LOCALE_INDIA:
-                case XC_LOCALE_IRELAND:
-                case XC_LOCALE_ISRAEL:
-                case XC_LOCALE_NEW_ZEALAND:
-                case XC_LOCALE_SAUDI_ARABIA:
-                case XC_LOCALE_SINGAPORE:
-                case XC_LOCALE_SLOVAK_REPUBLIC:
-                case XC_LOCALE_SOUTH_AFRICA:
-                case XC_LOCALE_UNITED_ARAB_EMIRATES:
-                case XC_LOCALE_GREAT_BRITAIN:
-                    locales.push_back(eMCLang_enGB);
-                    break;
-                default:  // XC_LOCALE_UNITED_STATES
-                    break;
-            }
-            break;
-        case XC_LANGUAGE_JAPANESE:
-            locales.push_back(eMCLang_jaJP);
-            break;
-        case XC_LANGUAGE_GERMAN:
-            switch (XGetLocale()) {
-                case XC_LOCALE_AUSTRIA:
-                    locales.push_back(eMCLang_deAT);
-                    break;
-                case XC_LOCALE_SWITZERLAND:
-                    locales.push_back(eMCLang_deCH);
-                    break;
-                default:  // XC_LOCALE_GERMANY:
-                    break;
-            }
-            locales.push_back(eMCLang_deDE);
-            break;
-        case XC_LANGUAGE_FRENCH:
-            switch (XGetLocale()) {
-                case XC_LOCALE_BELGIUM:
-                    locales.push_back(eMCLang_frBE);
-                    break;
-                case XC_LOCALE_CANADA:
-                    locales.push_back(eMCLang_frCA);
-                    break;
-                case XC_LOCALE_SWITZERLAND:
-                    locales.push_back(eMCLang_frCH);
-                    break;
-                default:  // XC_LOCALE_FRANCE:
-                    break;
-            }
-            locales.push_back(eMCLang_frFR);
-            break;
-        case XC_LANGUAGE_SPANISH:
-            switch (XGetLocale()) {
-                case XC_LOCALE_MEXICO:
-                case XC_LOCALE_ARGENTINA:
-                case XC_LOCALE_CHILE:
-                case XC_LOCALE_COLOMBIA:
-                case XC_LOCALE_UNITED_STATES:
-                case XC_LOCALE_LATIN_AMERICA:
-                    locales.push_back(eMCLang_laLAS);
-                    locales.push_back(eMCLang_esMX);
-                    break;
-                default:  // XC_LOCALE_SPAIN
-                    break;
-            }
-            locales.push_back(eMCLang_esES);
-            break;
-        case XC_LANGUAGE_ITALIAN:
-            locales.push_back(eMCLang_itIT);
-            break;
-        case XC_LANGUAGE_KOREAN:
-            locales.push_back(eMCLang_koKR);
-            break;
-        case XC_LANGUAGE_TCHINESE:
-            switch (XGetLocale()) {
-                case XC_LOCALE_HONG_KONG:
-                    locales.push_back(eMCLang_zhHK);
-                    locales.push_back(eMCLang_zhTW);
-                    break;
-                case XC_LOCALE_TAIWAN:
-                    locales.push_back(eMCLang_zhTW);
-                    locales.push_back(eMCLang_zhHK);
-                default:
-                    break;
-            }
-            locales.push_back(eMCLang_hant);
-            locales.push_back(eMCLang_zhCHT);
-            break;
-        case XC_LANGUAGE_PORTUGUESE:
-            if (XGetLocale() == XC_LOCALE_BRAZIL) {
-                locales.push_back(eMCLang_ptBR);
-            }
-            locales.push_back(eMCLang_ptPT);
-            break;
-        case XC_LANGUAGE_POLISH:
-            locales.push_back(eMCLang_plPL);
-            break;
-        case XC_LANGUAGE_RUSSIAN:
-            locales.push_back(eMCLang_ruRU);
-            break;
-        case XC_LANGUAGE_SWEDISH:
-            locales.push_back(eMCLang_svSV);
-            locales.push_back(eMCLang_svSE);
-            break;
-        case XC_LANGUAGE_TURKISH:
-            locales.push_back(eMCLang_trTR);
-            break;
-        case XC_LANGUAGE_BNORWEGIAN:
-            locales.push_back(eMCLang_nbNO);
-            locales.push_back(eMCLang_noNO);
-            locales.push_back(eMCLang_nnNO);
-            break;
-        case XC_LANGUAGE_DUTCH:
-            switch (XGetLocale()) {
-                case XC_LOCALE_BELGIUM:
-                    locales.push_back(eMCLang_nlBE);
-                    break;
-                default:
-                    break;
-            }
-            locales.push_back(eMCLang_nlNL);
-            break;
-        case XC_LANGUAGE_SCHINESE:
-            switch (XGetLocale()) {
-                case XC_LOCALE_SINGAPORE:
-                    locales.push_back(eMCLang_zhSG);
-                    break;
-                default:
-                    break;
-            }
-            locales.push_back(eMCLang_hans);
-            locales.push_back(eMCLang_csCS);
-            locales.push_back(eMCLang_zhCN);
-            break;
-    }
-
-    locales.push_back(eMCLang_enUS);
-    locales.push_back(eMCLang_null);
-
-    for (int i = 0; i < locales.size(); i++) {
-        eMCLang lang = locales.at(i);
-        vecWstrLocales.push_back(m_localeA[lang]);
-    }
-}
-
-int Game::get_eMCLang(wchar_t* pwchLocale) {
-    return m_eMCLangA[pwchLocale];
-}
-
-int Game::get_xcLang(wchar_t* pwchLocale) {
-    return m_xcLangA[pwchLocale];
-}
-
-void Game::LocaleAndLanguageInit() {
-    m_localeA[eMCLang_zhCHT] = L"zh-CHT";
-    m_localeA[eMCLang_csCS] = L"cs-CS";
-    m_localeA[eMCLang_laLAS] = L"la-LAS";
-    m_localeA[eMCLang_null] = L"en-EN";
-    m_localeA[eMCLang_enUS] = L"en-US";
-    m_localeA[eMCLang_enGB] = L"en-GB";
-    m_localeA[eMCLang_enIE] = L"en-IE";
-    m_localeA[eMCLang_enAU] = L"en-AU";
-    m_localeA[eMCLang_enNZ] = L"en-NZ";
-    m_localeA[eMCLang_enCA] = L"en-CA";
-    m_localeA[eMCLang_jaJP] = L"ja-JP";
-    m_localeA[eMCLang_deDE] = L"de-DE";
-    m_localeA[eMCLang_deAT] = L"de-AT";
-    m_localeA[eMCLang_frFR] = L"fr-FR";
-    m_localeA[eMCLang_frCA] = L"fr-CA";
-    m_localeA[eMCLang_esES] = L"es-ES";
-    m_localeA[eMCLang_esMX] = L"es-MX";
-    m_localeA[eMCLang_itIT] = L"it-IT";
-    m_localeA[eMCLang_koKR] = L"ko-KR";
-    m_localeA[eMCLang_ptPT] = L"pt-PT";
-    m_localeA[eMCLang_ptBR] = L"pt-BR";
-    m_localeA[eMCLang_ruRU] = L"ru-RU";
-    m_localeA[eMCLang_nlNL] = L"nl-NL";
-    m_localeA[eMCLang_fiFI] = L"fi-FI";
-    m_localeA[eMCLang_svSV] = L"sv-SV";
-    m_localeA[eMCLang_daDA] = L"da-DA";
-    m_localeA[eMCLang_noNO] = L"no-NO";
-    m_localeA[eMCLang_plPL] = L"pl-PL";
-    m_localeA[eMCLang_trTR] = L"tr-TR";
-    m_localeA[eMCLang_elEL] = L"el-EL";
-
-    m_localeA[eMCLang_zhSG] = L"zh-SG";
-    m_localeA[eMCLang_zhCN] = L"zh-CN";
-    m_localeA[eMCLang_zhHK] = L"zh-HK";
-    m_localeA[eMCLang_zhTW] = L"zh-TW";
-    m_localeA[eMCLang_nlBE] = L"nl-BE";
-    m_localeA[eMCLang_daDK] = L"da-DK";
-    m_localeA[eMCLang_frBE] = L"fr-BE";
-    m_localeA[eMCLang_frCH] = L"fr-CH";
-    m_localeA[eMCLang_deCH] = L"de-CH";
-    m_localeA[eMCLang_nbNO] = L"nb-NO";
-    m_localeA[eMCLang_enGR] = L"en-GR";
-    m_localeA[eMCLang_enHK] = L"en-HK";
-    m_localeA[eMCLang_enSA] = L"en-SA";
-    m_localeA[eMCLang_enHU] = L"en-HU";
-    m_localeA[eMCLang_enIN] = L"en-IN";
-    m_localeA[eMCLang_enIL] = L"en-IL";
-    m_localeA[eMCLang_enSG] = L"en-SG";
-    m_localeA[eMCLang_enSK] = L"en-SK";
-    m_localeA[eMCLang_enZA] = L"en-ZA";
-    m_localeA[eMCLang_enCZ] = L"en-CZ";
-    m_localeA[eMCLang_enAE] = L"en-AE";
-    m_localeA[eMCLang_esAR] = L"es-AR";
-    m_localeA[eMCLang_esCL] = L"es-CL";
-    m_localeA[eMCLang_esCO] = L"es-CO";
-    m_localeA[eMCLang_esUS] = L"es-US";
-    m_localeA[eMCLang_svSE] = L"sv-SE";
-
-    m_localeA[eMCLang_csCZ] = L"cs-CZ";
-    m_localeA[eMCLang_elGR] = L"el-GR";
-    m_localeA[eMCLang_nnNO] = L"nn-NO";
-    m_localeA[eMCLang_skSK] = L"sk-SK";
-
-    m_localeA[eMCLang_hans] = L"zh-HANS";
-    m_localeA[eMCLang_hant] = L"zh-HANT";
-
-    m_eMCLangA[L"zh-CHT"] = eMCLang_zhCHT;
-    m_eMCLangA[L"cs-CS"] = eMCLang_csCS;
-    m_eMCLangA[L"la-LAS"] = eMCLang_laLAS;
-    m_eMCLangA[L"en-EN"] = eMCLang_null;
-    m_eMCLangA[L"en-US"] = eMCLang_enUS;
-    m_eMCLangA[L"en-GB"] = eMCLang_enGB;
-    m_eMCLangA[L"en-IE"] = eMCLang_enIE;
-    m_eMCLangA[L"en-AU"] = eMCLang_enAU;
-    m_eMCLangA[L"en-NZ"] = eMCLang_enNZ;
-    m_eMCLangA[L"en-CA"] = eMCLang_enCA;
-    m_eMCLangA[L"ja-JP"] = eMCLang_jaJP;
-    m_eMCLangA[L"de-DE"] = eMCLang_deDE;
-    m_eMCLangA[L"de-AT"] = eMCLang_deAT;
-    m_eMCLangA[L"fr-FR"] = eMCLang_frFR;
-    m_eMCLangA[L"fr-CA"] = eMCLang_frCA;
-    m_eMCLangA[L"es-ES"] = eMCLang_esES;
-    m_eMCLangA[L"es-MX"] = eMCLang_esMX;
-    m_eMCLangA[L"it-IT"] = eMCLang_itIT;
-    m_eMCLangA[L"ko-KR"] = eMCLang_koKR;
-    m_eMCLangA[L"pt-PT"] = eMCLang_ptPT;
-    m_eMCLangA[L"pt-BR"] = eMCLang_ptBR;
-    m_eMCLangA[L"ru-RU"] = eMCLang_ruRU;
-    m_eMCLangA[L"nl-NL"] = eMCLang_nlNL;
-    m_eMCLangA[L"fi-FI"] = eMCLang_fiFI;
-    m_eMCLangA[L"sv-SV"] = eMCLang_svSV;
-    m_eMCLangA[L"da-DA"] = eMCLang_daDA;
-    m_eMCLangA[L"no-NO"] = eMCLang_noNO;
-    m_eMCLangA[L"pl-PL"] = eMCLang_plPL;
-    m_eMCLangA[L"tr-TR"] = eMCLang_trTR;
-    m_eMCLangA[L"el-EL"] = eMCLang_elEL;
-
-    m_eMCLangA[L"zh-SG"] = eMCLang_zhSG;
-    m_eMCLangA[L"zh-CN"] = eMCLang_zhCN;
-    m_eMCLangA[L"zh-HK"] = eMCLang_zhHK;
-    m_eMCLangA[L"zh-TW"] = eMCLang_zhTW;
-    m_eMCLangA[L"nl-BE"] = eMCLang_nlBE;
-    m_eMCLangA[L"da-DK"] = eMCLang_daDK;
-    m_eMCLangA[L"fr-BE"] = eMCLang_frBE;
-    m_eMCLangA[L"fr-CH"] = eMCLang_frCH;
-    m_eMCLangA[L"de-CH"] = eMCLang_deCH;
-    m_eMCLangA[L"nb-NO"] = eMCLang_nbNO;
-    m_eMCLangA[L"en-GR"] = eMCLang_enGR;
-    m_eMCLangA[L"en-HK"] = eMCLang_enHK;
-    m_eMCLangA[L"en-SA"] = eMCLang_enSA;
-    m_eMCLangA[L"en-HU"] = eMCLang_enHU;
-    m_eMCLangA[L"en-IN"] = eMCLang_enIN;
-    m_eMCLangA[L"en-IL"] = eMCLang_enIL;
-    m_eMCLangA[L"en-SG"] = eMCLang_enSG;
-    m_eMCLangA[L"en-SK"] = eMCLang_enSK;
-    m_eMCLangA[L"en-ZA"] = eMCLang_enZA;
-    m_eMCLangA[L"en-CZ"] = eMCLang_enCZ;
-    m_eMCLangA[L"en-AE"] = eMCLang_enAE;
-    m_eMCLangA[L"es-AR"] = eMCLang_esAR;
-    m_eMCLangA[L"es-CL"] = eMCLang_esCL;
-    m_eMCLangA[L"es-CO"] = eMCLang_esCO;
-    m_eMCLangA[L"es-US"] = eMCLang_esUS;
-    m_eMCLangA[L"sv-SE"] = eMCLang_svSE;
-
-    m_eMCLangA[L"cs-CZ"] = eMCLang_csCZ;
-    m_eMCLangA[L"el-GR"] = eMCLang_elGR;
-    m_eMCLangA[L"nn-NO"] = eMCLang_nnNO;
-    m_eMCLangA[L"sk-SK"] = eMCLang_skSK;
-
-    m_eMCLangA[L"zh-HANS"] = eMCLang_hans;
-    m_eMCLangA[L"zh-HANT"] = eMCLang_hant;
-
-    m_xcLangA[L"zh-CHT"] = XC_LOCALE_CHINA;
-    m_xcLangA[L"cs-CS"] = XC_LOCALE_CHINA;
-    m_xcLangA[L"en-EN"] = XC_LOCALE_UNITED_STATES;
-    m_xcLangA[L"en-US"] = XC_LOCALE_UNITED_STATES;
-    m_xcLangA[L"en-GB"] = XC_LOCALE_GREAT_BRITAIN;
-    m_xcLangA[L"en-IE"] = XC_LOCALE_IRELAND;
-    m_xcLangA[L"en-AU"] = XC_LOCALE_AUSTRALIA;
-    m_xcLangA[L"en-NZ"] = XC_LOCALE_NEW_ZEALAND;
-    m_xcLangA[L"en-CA"] = XC_LOCALE_CANADA;
-    m_xcLangA[L"ja-JP"] = XC_LOCALE_JAPAN;
-    m_xcLangA[L"de-DE"] = XC_LOCALE_GERMANY;
-    m_xcLangA[L"de-AT"] = XC_LOCALE_AUSTRIA;
-    m_xcLangA[L"fr-FR"] = XC_LOCALE_FRANCE;
-    m_xcLangA[L"fr-CA"] = XC_LOCALE_CANADA;
-    m_xcLangA[L"es-ES"] = XC_LOCALE_SPAIN;
-    m_xcLangA[L"es-MX"] = XC_LOCALE_MEXICO;
-    m_xcLangA[L"it-IT"] = XC_LOCALE_ITALY;
-    m_xcLangA[L"ko-KR"] = XC_LOCALE_KOREA;
-    m_xcLangA[L"pt-PT"] = XC_LOCALE_PORTUGAL;
-    m_xcLangA[L"pt-BR"] = XC_LOCALE_BRAZIL;
-    m_xcLangA[L"ru-RU"] = XC_LOCALE_RUSSIAN_FEDERATION;
-    m_xcLangA[L"nl-NL"] = XC_LOCALE_NETHERLANDS;
-    m_xcLangA[L"fi-FI"] = XC_LOCALE_FINLAND;
-    m_xcLangA[L"sv-SV"] = XC_LOCALE_SWEDEN;
-    m_xcLangA[L"da-DA"] = XC_LOCALE_DENMARK;
-    m_xcLangA[L"no-NO"] = XC_LOCALE_NORWAY;
-    m_xcLangA[L"pl-PL"] = XC_LOCALE_POLAND;
-    m_xcLangA[L"tr-TR"] = XC_LOCALE_TURKEY;
-    m_xcLangA[L"el-EL"] = XC_LOCALE_GREECE;
-    m_xcLangA[L"la-LAS"] = XC_LOCALE_LATIN_AMERICA;
-
-    // New ones for Xbox One
-    m_xcLangA[L"zh-SG"] = XC_LOCALE_SINGAPORE;
-    m_xcLangA[L"Zh-CN"] = XC_LOCALE_CHINA;
-    m_xcLangA[L"zh-HK"] = XC_LOCALE_HONG_KONG;
-    m_xcLangA[L"zh-TW"] = XC_LOCALE_TAIWAN;
-    m_xcLangA[L"nl-BE"] = XC_LOCALE_BELGIUM;
-    m_xcLangA[L"da-DK"] = XC_LOCALE_DENMARK;
-    m_xcLangA[L"fr-BE"] = XC_LOCALE_BELGIUM;
-    m_xcLangA[L"fr-CH"] = XC_LOCALE_SWITZERLAND;
-    m_xcLangA[L"de-CH"] = XC_LOCALE_SWITZERLAND;
-    m_xcLangA[L"nb-NO"] = XC_LOCALE_NORWAY;
-    m_xcLangA[L"en-GR"] = XC_LOCALE_GREECE;
-    m_xcLangA[L"en-HK"] = XC_LOCALE_HONG_KONG;
-    m_xcLangA[L"en-SA"] = XC_LOCALE_SAUDI_ARABIA;
-    m_xcLangA[L"en-HU"] = XC_LOCALE_HUNGARY;
-    m_xcLangA[L"en-IN"] = XC_LOCALE_INDIA;
-    m_xcLangA[L"en-IL"] = XC_LOCALE_ISRAEL;
-    m_xcLangA[L"en-SG"] = XC_LOCALE_SINGAPORE;
-    m_xcLangA[L"en-SK"] = XC_LOCALE_SLOVAK_REPUBLIC;
-    m_xcLangA[L"en-ZA"] = XC_LOCALE_SOUTH_AFRICA;
-    m_xcLangA[L"en-CZ"] = XC_LOCALE_CZECH_REPUBLIC;
-    m_xcLangA[L"en-AE"] = XC_LOCALE_UNITED_ARAB_EMIRATES;
-    m_xcLangA[L"ja-IP"] = XC_LOCALE_JAPAN;
-    m_xcLangA[L"es-AR"] = XC_LOCALE_ARGENTINA;
-    m_xcLangA[L"es-CL"] = XC_LOCALE_CHILE;
-    m_xcLangA[L"es-CO"] = XC_LOCALE_COLOMBIA;
-    m_xcLangA[L"es-US"] = XC_LOCALE_UNITED_STATES;
-    m_xcLangA[L"sv-SE"] = XC_LOCALE_SWEDEN;
-
-    m_xcLangA[L"cs-CZ"] = XC_LOCALE_CZECH_REPUBLIC;
-    m_xcLangA[L"el-GR"] = XC_LOCALE_GREECE;
-    m_xcLangA[L"sk-SK"] = XC_LOCALE_SLOVAK_REPUBLIC;
-
-    m_xcLangA[L"zh-HANS"] = XC_LOCALE_CHINA;
-    m_xcLangA[L"zh-HANT"] = XC_LOCALE_CHINA;
-}
-
+// (moved to manager class)
 void Game::SetTickTMSDLCFiles(bool bVal) {
     // 4J-PB - we need to stop the retrieval of minecraft store images from TMS
     // when we aren't in the DLC, since going in to Play Game will change the

@@ -9,11 +9,14 @@
 
 // using namespace std;
 
+#include "app/common/ArchiveManager.h"
 #include "app/common/BannedListManager.h"
 #include "app/common/DebugOptions.h"
 #include "app/common/IPlatformGame.h"
 #include "app/common/App_structs.h"
+#include "app/common/LocalizationManager.h"
 #include "app/common/SaveManager.h"
+#include "app/common/SkinManager.h"
 #include "app/common/TerrainFeatureManager.h"
 #include "app/common/Audio/Consoles_SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
@@ -60,9 +63,6 @@ class Merchant;
 class CMinecraftAudio;
 
 class Game : public IPlatformGame {
-private:
-    static int s_iHTMLFontSizesA[eHTMLSize_COUNT];
-
 public:
     Game();
 
@@ -72,13 +72,16 @@ public:
     typedef std::vector<PMEMDATA> VMEMFILES;
     typedef std::vector<PNOTIFICATION> VNOTIFICATIONS;
 
-    // storing skin files
-    std::vector<std::wstring> vSkinNames;
+    // storing skin files - delegated to SkinManager
+    std::vector<std::wstring>& vSkinNames = m_skinManager.vSkinNames;
     DLCManager m_dlcManager;
     SaveManager m_saveManager;
     BannedListManager m_bannedListManager;
     TerrainFeatureManager m_terrainFeatureManager;
     DebugOptions m_debugOptions;
+    LocalizationManager m_localizationManager;
+    ArchiveManager m_archiveManager;
+    SkinManager m_skinManager;
 
     // storing credits text from the DLC
     std::vector<std::wstring> m_vCreditText;  // hold the credit text lines so
@@ -198,6 +201,7 @@ public:
     void SetSpecialTutorialCompletionFlag(int iPad, int index);
 
     static const wchar_t* GetString(int iID);
+    StringTable* getStringTable() const { return m_localizationManager.getStringTable(); }
 
     eGameMode GetGameMode() { return m_eGameMode; }
     void SetGameMode(eGameMode eMode) { m_eGameMode = eMode; }
@@ -303,24 +307,44 @@ public:
     void SetGameSettings(int iPad, eGameSetting eVal, unsigned char ucVal);
     unsigned char GetGameSettings(int iPad, eGameSetting eVal);
     unsigned char GetGameSettings(eGameSetting eVal);  // for the primary pad
-    void SetPlayerSkin(int iPad, const std::wstring& name);
-    void SetPlayerSkin(int iPad, std::uint32_t dwSkinId);
-    void SetPlayerCape(int iPad, const std::wstring& name);
-    void SetPlayerCape(int iPad, std::uint32_t dwCapeId);
-    void SetPlayerFavoriteSkin(int iPad, int iIndex, unsigned int uiSkinID);
-    unsigned int GetPlayerFavoriteSkin(int iPad, int iIndex);
-    unsigned char GetPlayerFavoriteSkinsPos(int iPad);
-    void SetPlayerFavoriteSkinsPos(int iPad, int iPos);
-    unsigned int GetPlayerFavoriteSkinsCount(int iPad);
-    void ValidateFavoriteSkins(
-        int iPad);  // check the DLC is available for the skins
+    void SetPlayerSkin(int iPad, const std::wstring& name) {
+        m_skinManager.setPlayerSkin(iPad, name, GameSettingsA);
+    }
+    void SetPlayerSkin(int iPad, std::uint32_t dwSkinId) {
+        m_skinManager.setPlayerSkin(iPad, dwSkinId, GameSettingsA);
+    }
+    void SetPlayerCape(int iPad, const std::wstring& name) {
+        m_skinManager.setPlayerCape(iPad, name, GameSettingsA);
+    }
+    void SetPlayerCape(int iPad, std::uint32_t dwCapeId) {
+        m_skinManager.setPlayerCape(iPad, dwCapeId, GameSettingsA);
+    }
+    void SetPlayerFavoriteSkin(int iPad, int iIndex, unsigned int uiSkinID) {
+        m_skinManager.setPlayerFavoriteSkin(iPad, iIndex, uiSkinID, GameSettingsA);
+    }
+    unsigned int GetPlayerFavoriteSkin(int iPad, int iIndex) {
+        return m_skinManager.getPlayerFavoriteSkin(iPad, iIndex, GameSettingsA);
+    }
+    unsigned char GetPlayerFavoriteSkinsPos(int iPad) {
+        return m_skinManager.getPlayerFavoriteSkinsPos(iPad, GameSettingsA);
+    }
+    void SetPlayerFavoriteSkinsPos(int iPad, int iPos) {
+        m_skinManager.setPlayerFavoriteSkinsPos(iPad, iPos, GameSettingsA);
+    }
+    unsigned int GetPlayerFavoriteSkinsCount(int iPad) {
+        return m_skinManager.getPlayerFavoriteSkinsCount(iPad, GameSettingsA);
+    }
+    void ValidateFavoriteSkins(int iPad) {
+        m_skinManager.validateFavoriteSkins(iPad, GameSettingsA, m_dlcManager);
+    }
 
     // Mash-up pack worlds hide/display
     void HideMashupPackWorld(int iPad, unsigned int iMashupPackID);
     void EnableMashupPackWorlds(int iPad);
     unsigned int GetMashupPackWorlds(int iPad);
 
-    // Minecraft language select
+    // Minecraft language select - implementations remain in Game.cpp
+    // (they access GameSettingsA directly)
     void SetMinecraftLanguage(int iPad, unsigned char ucLanguage);
     unsigned char GetMinecraftLanguage(int iPad);
     void SetMinecraftLocale(int iPad, unsigned char ucLanguage);
@@ -339,11 +363,21 @@ public:
     }
 
 public:
-    std::wstring GetPlayerSkinName(int iPad);
-    std::uint32_t GetPlayerSkinId(int iPad);
-    std::wstring GetPlayerCapeName(int iPad);
-    std::uint32_t GetPlayerCapeId(int iPad);
-    std::uint32_t GetAdditionalModelParts(int iPad);
+    std::wstring GetPlayerSkinName(int iPad) {
+        return m_skinManager.getPlayerSkinName(iPad, GameSettingsA);
+    }
+    std::uint32_t GetPlayerSkinId(int iPad) {
+        return m_skinManager.getPlayerSkinId(iPad, GameSettingsA, m_dlcManager);
+    }
+    std::wstring GetPlayerCapeName(int iPad) {
+        return m_skinManager.getPlayerCapeName(iPad, GameSettingsA);
+    }
+    std::uint32_t GetPlayerCapeId(int iPad) {
+        return m_skinManager.getPlayerCapeId(iPad, GameSettingsA);
+    }
+    std::uint32_t GetAdditionalModelParts(int iPad) {
+        return m_skinManager.getAdditionalModelParts(iPad);
+    }
     void CheckGameSettingsChanged(bool bOverride5MinuteTimer = false,
                                   int iPad = XUSER_INDEX_ANY);
     void ApplyGameSettingsChanged(int iPad);
@@ -430,26 +464,48 @@ public:
     virtual void StoreLaunchData();
     virtual void ExitGame();
 
-    bool isXuidNotch(PlayerUID xuid);
+    bool isXuidNotch(PlayerUID xuid) {
+        return m_skinManager.isXuidNotch(xuid);
+    }
     bool isXuidDeadmau5(PlayerUID xuid);
 
     void AddMemoryTextureFile(const std::wstring& wName, std::uint8_t* pbData,
-                              unsigned int byteCount);
-    void RemoveMemoryTextureFile(const std::wstring& wName);
+                              unsigned int byteCount) {
+        m_skinManager.addMemoryTextureFile(wName, pbData, byteCount);
+    }
+    void RemoveMemoryTextureFile(const std::wstring& wName) {
+        m_skinManager.removeMemoryTextureFile(wName);
+    }
     void GetMemFileDetails(const std::wstring& wName, std::uint8_t** ppbData,
-                           unsigned int* pByteCount);
-    bool IsFileInMemoryTextures(const std::wstring& wName);
+                           unsigned int* pByteCount) {
+        m_skinManager.getMemFileDetails(wName, ppbData, pByteCount);
+    }
+    bool IsFileInMemoryTextures(const std::wstring& wName) {
+        return m_skinManager.isFileInMemoryTextures(wName);
+    }
 
     // Texture Pack Data files (icon, banner, comparison shot & text)
     void AddMemoryTPDFile(int iConfig, std::uint8_t* pbData,
-                          unsigned int byteCount);
-    void RemoveMemoryTPDFile(int iConfig);
-    bool IsFileInTPD(int iConfig);
-    void GetTPD(int iConfig, std::uint8_t** ppbData, unsigned int* pByteCount);
-    int GetTPDSize() { return m_MEM_TPD.size(); }
-    int GetTPConfigVal(wchar_t* pwchDataFile);
+                          unsigned int byteCount) {
+        m_archiveManager.addMemoryTPDFile(iConfig, pbData, byteCount);
+    }
+    void RemoveMemoryTPDFile(int iConfig) {
+        m_archiveManager.removeMemoryTPDFile(iConfig);
+    }
+    bool IsFileInTPD(int iConfig) {
+        return m_archiveManager.isFileInTPD(iConfig);
+    }
+    void GetTPD(int iConfig, std::uint8_t** ppbData, unsigned int* pByteCount) {
+        m_archiveManager.getTPD(iConfig, ppbData, pByteCount);
+    }
+    int GetTPDSize() { return m_archiveManager.getTPDSize(); }
+    int GetTPConfigVal(wchar_t* pwchDataFile) {
+        return m_archiveManager.getTPConfigVal(pwchDataFile);
+    }
 
-    bool DefaultCapeExists();
+    bool DefaultCapeExists() {
+        return m_skinManager.defaultCapeExists();
+    }
     // void InstallDefaultCape(); // attempt  to install the default cape once
     // per game launch
 
@@ -463,15 +519,7 @@ public:
     void AddCreditText(const wchar_t* lpStr);
 
 private:
-    PlayerUID m_xuidNotch;
     std::unordered_map<PlayerUID, std::uint8_t*> m_GTS_Files;
-
-    // for storing memory textures - player skin
-    std::unordered_map<std::wstring, PMEMDATA> m_MEM_Files;
-    // for storing texture pack data files
-    std::unordered_map<int, PMEMDATA> m_MEM_TPD;
-    std::mutex csMemFilesLock;  // For locking access to the above map
-    std::mutex csMemTPDLock;    // For locking access to the above map
 
     VNOTIFICATIONS m_vNotifications;
 
@@ -519,17 +567,21 @@ public:
     // trial, and trying to unlock full
     // version on an upsell
 
-    void loadMediaArchive();
-    void loadStringTable();
-
-protected:
-    ArchiveFile* m_mediaArchive;
-    StringTable* m_stringTable;
+    void loadMediaArchive() { m_archiveManager.loadMediaArchive(); }
+    void loadStringTable() {
+        m_localizationManager.loadStringTable(m_archiveManager.getMediaArchive());
+    }
 
 public:
-    int getArchiveFileSize(const std::wstring& filename);
-    bool hasArchiveFile(const std::wstring& filename);
-    std::vector<uint8_t> getArchiveFile(const std::wstring& filename);
+    int getArchiveFileSize(const std::wstring& filename) {
+        return m_archiveManager.getArchiveFileSize(filename);
+    }
+    bool hasArchiveFile(const std::wstring& filename) {
+        return m_archiveManager.hasArchiveFile(filename);
+    }
+    std::vector<uint8_t> getArchiveFile(const std::wstring& filename) {
+        return m_archiveManager.getArchiveFile(filename);
+    }
 
 private:
     static int BannedLevelDialogReturned(void* pParam, int iPad,
@@ -638,24 +690,29 @@ private:
 
     TimeInfo m_Time;
 
-protected:
-    static const int MAX_TIPS_GAMETIP = 50;
-    static const int MAX_TIPS_TRIVIATIP = 20;
-    static TIPSTRUCT m_GameTipA[MAX_TIPS_GAMETIP];
-    static TIPSTRUCT m_TriviaTipA[MAX_TIPS_TRIVIATIP];
-    static Random* TipRandom;
-
 public:
-    void InitialiseTips();
-    int GetNextTip();
-    int GetHTMLColour(eMinecraftColour colour);
+    void InitialiseTips() { m_localizationManager.initialiseTips(); }
+    int GetNextTip() { return m_localizationManager.getNextTip(); }
+    int GetHTMLColour(eMinecraftColour colour) {
+        return m_localizationManager.getHTMLColour(colour);
+    }
     int GetHTMLColor(eMinecraftColour colour) { return GetHTMLColour(colour); }
-    int GetHTMLFontSize(EHTMLFontSize size);
+    int GetHTMLFontSize(EHTMLFontSize size) {
+        return m_localizationManager.getHTMLFontSize(size);
+    }
     std::wstring FormatHTMLString(int iPad, const std::wstring& desc,
-                                  int shadowColour = 0xFFFFFFFF);
-    std::wstring GetActionReplacement(int iPad, unsigned char ucAction);
-    std::wstring GetVKReplacement(unsigned int uiVKey);
-    std::wstring GetIconReplacement(unsigned int uiIcon);
+                                  int shadowColour = 0xFFFFFFFF) {
+        return m_localizationManager.formatHTMLString(iPad, desc, shadowColour);
+    }
+    std::wstring GetActionReplacement(int iPad, unsigned char ucAction) {
+        return m_localizationManager.getActionReplacement(iPad, ucAction);
+    }
+    std::wstring GetVKReplacement(unsigned int uiVKey) {
+        return m_localizationManager.getVKReplacement(uiVKey);
+    }
+    std::wstring GetIconReplacement(unsigned int uiIcon) {
+        return m_localizationManager.getIconReplacement(uiIcon);
+    }
 
     float getAppTime() { return m_Time.fAppTime; }
     void UpdateTrialPausedTimer() { mfTrialPausedTime += m_Time.fElapsedTime; }
@@ -664,11 +721,6 @@ public:
     static void ExitGameFromRemoteSave(void* lpParameter);
     static int ExitGameFromRemoteSaveDialogReturned(
         void* pParam, int iPad, C4JStorage::EMessageResult result);
-
-private:
-    int m_TipIDA[MAX_TIPS_GAMETIP + MAX_TIPS_TRIVIATIP];
-    unsigned int m_uiCurrentTip;
-    static int TipsSortFunction(const void* a, const void* b);
 
     // XML
 public:
@@ -905,12 +957,7 @@ private:
     bool m_bTickTMSDLCFiles;
     std::mutex csDLCDownloadQueue;
     std::mutex csTMSPPDownloadQueue;
-    std::mutex csAdditionalModelParts;
-    std::mutex csAdditionalSkinBoxes;
-    std::mutex csAnimOverrideBitmask;
     bool m_bCorruptSaveDeleted;
-
-    std::uint32_t m_dwAdditionalModelParts[XUSER_MAX_COUNT];
 
     std::uint8_t*& m_pBannedListFileBuffer = m_bannedListManager.m_pBannedListFileBuffer;
     unsigned int& m_dwBannedListFileSize = m_bannedListManager.m_dwBannedListFileSize;
@@ -928,17 +975,33 @@ public:
 
     // Storing additional model parts per skin texture
     void SetAdditionalSkinBoxes(std::uint32_t dwSkinID, SKIN_BOX* SkinBoxA,
-                                unsigned int dwSkinBoxC);
+                                unsigned int dwSkinBoxC) {
+        m_skinManager.setAdditionalSkinBoxes(dwSkinID, SkinBoxA, dwSkinBoxC);
+    }
     std::vector<ModelPart*>* SetAdditionalSkinBoxes(
-        std::uint32_t dwSkinID, std::vector<SKIN_BOX*>* pvSkinBoxA);
-    std::vector<ModelPart*>* GetAdditionalModelParts(std::uint32_t dwSkinID);
-    std::vector<SKIN_BOX*>* GetAdditionalSkinBoxes(std::uint32_t dwSkinID);
+        std::uint32_t dwSkinID, std::vector<SKIN_BOX*>* pvSkinBoxA) {
+        return m_skinManager.setAdditionalSkinBoxes(dwSkinID, pvSkinBoxA);
+    }
+    std::vector<ModelPart*>* GetAdditionalModelParts(std::uint32_t dwSkinID) {
+        return m_skinManager.getAdditionalModelParts(dwSkinID);
+    }
+    std::vector<SKIN_BOX*>* GetAdditionalSkinBoxes(std::uint32_t dwSkinID) {
+        return m_skinManager.getAdditionalSkinBoxes(dwSkinID);
+    }
     void SetAnimOverrideBitmask(std::uint32_t dwSkinID,
-                                unsigned int uiAnimOverrideBitmask);
-    unsigned int GetAnimOverrideBitmask(std::uint32_t dwSkinID);
+                                unsigned int uiAnimOverrideBitmask) {
+        m_skinManager.setAnimOverrideBitmask(dwSkinID, uiAnimOverrideBitmask);
+    }
+    unsigned int GetAnimOverrideBitmask(std::uint32_t dwSkinID) {
+        return m_skinManager.getAnimOverrideBitmask(dwSkinID);
+    }
 
-    static std::uint32_t getSkinIdFromPath(const std::wstring& skin);
-    static std::wstring getSkinPathFromId(std::uint32_t skinId);
+    static std::uint32_t getSkinIdFromPath(const std::wstring& skin) {
+        return SkinManager::getSkinIdFromPath(skin);
+    }
+    static std::wstring getSkinPathFromId(std::uint32_t skinId) {
+        return SkinManager::getSkinPathFromId(skinId);
+    }
 
     int LoadLocalTMSFile(wchar_t* wchTMSFile) override = 0;
     int LoadLocalTMSFile(wchar_t* wchTMSFile,
@@ -961,39 +1024,37 @@ public:
     void ClearBanList(int iPad) { m_bannedListManager.clearBanList(iPad); }
 
     std::uint32_t GetRequiredTexturePackID() {
-        return m_dwRequiredTexturePackID;
+        return m_archiveManager.getRequiredTexturePackID();
     }
     void SetRequiredTexturePackID(std::uint32_t texturePackId) {
-        m_dwRequiredTexturePackID = texturePackId;
+        m_archiveManager.setRequiredTexturePackID(texturePackId);
     }
 
     virtual void GetFileFromTPD(eTPDFileType eType, std::uint8_t* pbData,
                                 unsigned int byteCount, std::uint8_t** ppbData,
                                 unsigned int* pByteCount) {
-        *ppbData = nullptr;
-        *pByteCount = 0;
+        m_archiveManager.getFileFromTPD(eType, pbData, byteCount, ppbData,
+                                        pByteCount);
     }
 
     // XTITLE_DEPLOYMENT_TYPE getDeploymentType() { return
     // m_titleDeploymentType; }
 
 private:
-    // vector of additional skin model parts, indexed by the skin texture id
-    std::unordered_map<std::uint32_t, std::vector<ModelPart*>*>
-        m_AdditionalModelParts;
-    std::unordered_map<std::uint32_t, std::vector<SKIN_BOX*>*>
-        m_AdditionalSkinBoxes;
-    std::unordered_map<std::uint32_t, unsigned int> m_AnimOverrides;
-
     bool m_bResetNether;
-    std::uint32_t m_dwRequiredTexturePackID;
 
     // 4J-PB - language and locale functions
 public:
-    void LocaleAndLanguageInit();
-    void getLocale(std::vector<std::wstring>& vecWstrLocales);
-    int get_eMCLang(wchar_t* pwchLocale);
-    int get_xcLang(wchar_t* pwchLocale);
+    void LocaleAndLanguageInit() { m_localizationManager.localeAndLanguageInit(); }
+    void getLocale(std::vector<std::wstring>& vecWstrLocales) {
+        m_localizationManager.getLocale(vecWstrLocales);
+    }
+    int get_eMCLang(wchar_t* pwchLocale) {
+        return m_localizationManager.get_eMCLang(pwchLocale);
+    }
+    int get_xcLang(wchar_t* pwchLocale) {
+        return m_localizationManager.get_xcLang(pwchLocale);
+    }
 
     void SetTickTMSDLCFiles(bool bVal);
 
@@ -1002,9 +1063,6 @@ public:
                              std::wstring mountPoint = L"TPACK:");
 
 private:
-    std::unordered_map<int, std::wstring> m_localeA;
-    std::unordered_map<std::wstring, int> m_eMCLangA;
-    std::unordered_map<std::wstring, int> m_xcLangA;
     std::wstring getRootPath(std::uint32_t packId, bool allowOverride,
                              bool bAddDataFolder, std::wstring mountPoint);
 

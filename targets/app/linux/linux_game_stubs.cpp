@@ -5,6 +5,4 @@
 
 void Display::update() {}
 
-int Game::GetTPConfigVal(wchar_t* pwchDataFile) { return 0; }
-
 #endif
