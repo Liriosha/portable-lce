@@ -382,13 +382,13 @@ typedef struct _SignInInfo {
 } SignInInfo;
 
 // Credits
-typedef struct {
+struct SCreditTextItemDef {
     const wchar_t* m_Text;  // Should contain string, optionally with %s to add
                             // in translated string ... e.g. "Andy West - %s"
     int m_iStringID[2];  // May be NO_TRANSLATED_STRING if we do not require to
                          // add any translated string.
     ECreditTextTypes m_eType;
-} SCreditTextItemDef;
+};
 
 // Message box
 typedef struct _MessageBoxInfo {
