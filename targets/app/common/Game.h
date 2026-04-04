@@ -9,8 +9,12 @@
 
 // using namespace std;
 
+#include "app/common/BannedListManager.h"
+#include "app/common/DebugOptions.h"
 #include "app/common/IPlatformGame.h"
 #include "app/common/App_structs.h"
+#include "app/common/SaveManager.h"
+#include "app/common/TerrainFeatureManager.h"
 #include "app/common/Audio/Consoles_SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/GameRules/ConsoleGameRulesConstants.h"
@@ -71,6 +75,10 @@ public:
     // storing skin files
     std::vector<std::wstring> vSkinNames;
     DLCManager m_dlcManager;
+    SaveManager m_saveManager;
+    BannedListManager m_bannedListManager;
+    TerrainFeatureManager m_terrainFeatureManager;
+    DebugOptions m_debugOptions;
 
     // storing credits text from the DLC
     std::vector<std::wstring> m_vCreditText;  // hold the credit text lines so
@@ -242,26 +250,36 @@ public:
 
     // 4J Stu - Functions used for Minecon and other promo work
     bool GetLoadSavesFromFolderEnabled() {
-        return m_bLoadSavesFromFolderEnabled;
+        return m_debugOptions.getLoadSavesFromFolderEnabled();
     }
     void SetLoadSavesFromFolderEnabled(bool bVal) {
-        m_bLoadSavesFromFolderEnabled = bVal;
+        m_debugOptions.setLoadSavesFromFolderEnabled(bVal);
     }
 
     // 4J Stu - Useful for debugging
-    bool GetWriteSavesToFolderEnabled() { return m_bWriteSavesToFolderEnabled; }
-    void SetWriteSavesToFolderEnabled(bool bVal) {
-        m_bWriteSavesToFolderEnabled = bVal;
+    bool GetWriteSavesToFolderEnabled() {
+        return m_debugOptions.getWriteSavesToFolderEnabled();
     }
-    bool GetMobsDontAttackEnabled() { return m_bMobsDontAttack; }
-    void SetMobsDontAttackEnabled(bool bVal) { m_bMobsDontAttack = bVal; }
-    bool GetUseDPadForDebug() { return m_bUseDPadForDebug; }
-    void SetUseDPadForDebug(bool bVal) { m_bUseDPadForDebug = bVal; }
-    bool GetMobsDontTickEnabled() { return m_bMobsDontTick; }
-    void SetMobsDontTickEnabled(bool bVal) { m_bMobsDontTick = bVal; }
+    void SetWriteSavesToFolderEnabled(bool bVal) {
+        m_debugOptions.setWriteSavesToFolderEnabled(bVal);
+    }
+    bool GetMobsDontAttackEnabled() {
+        return m_debugOptions.getMobsDontAttack();
+    }
+    void SetMobsDontAttackEnabled(bool bVal) {
+        m_debugOptions.setMobsDontAttack(bVal);
+    }
+    bool GetUseDPadForDebug() { return m_debugOptions.getUseDPadForDebug(); }
+    void SetUseDPadForDebug(bool bVal) {
+        m_debugOptions.setUseDPadForDebug(bVal);
+    }
+    bool GetMobsDontTickEnabled() { return m_debugOptions.getMobsDontTick(); }
+    void SetMobsDontTickEnabled(bool bVal) {
+        m_debugOptions.setMobsDontTick(bVal);
+    }
 
-    bool GetFreezePlayers() { return m_bFreezePlayers; }
-    void SetFreezePlayers(bool bVal) { m_bFreezePlayers = bVal; }
+    bool GetFreezePlayers() { return m_debugOptions.getFreezePlayers(); }
+    void SetFreezePlayers(bool bVal) { m_debugOptions.setFreezePlayers(bVal); }
 
     // debug -0 show safe area
     void ShowSafeArea(bool show) {}
@@ -364,7 +382,7 @@ public:
     void SetLiveLinkRequired(bool required) { m_bLiveLinkRequired = required; }
 
 #if defined(_DEBUG_MENUS_ENABLED)
-    bool DebugSettingsOn() { return m_bDebugOptions; }
+    bool DebugSettingsOn() { return m_debugOptions.settingsOn(); }
     bool DebugArtToolsOn();
 #else
     bool DebugSettingsOn() { return false; }
@@ -465,13 +483,25 @@ public:
 public:
     // BAN LIST
     void AddLevelToBannedLevelList(int iPad, PlayerUID xuid, char* pszLevelName,
-                                   bool bWriteToTMS);
-    bool IsInBannedLevelList(int iPad, PlayerUID xuid, char* pszLevelName);
+                                   bool bWriteToTMS) {
+        m_bannedListManager.addLevel(iPad, xuid, pszLevelName, bWriteToTMS);
+    }
+    bool IsInBannedLevelList(int iPad, PlayerUID xuid, char* pszLevelName) {
+        return m_bannedListManager.isInList(iPad, xuid, pszLevelName);
+    }
     void RemoveLevelFromBannedLevelList(int iPad, PlayerUID xuid,
-                                        char* pszLevelName);
-    void InvalidateBannedList(int iPad);
-    void SetUniqueMapName(char* pszUniqueMapName);
-    char* GetUniqueMapName(void);
+                                        char* pszLevelName) {
+        m_bannedListManager.removeLevel(iPad, xuid, pszLevelName);
+    }
+    void InvalidateBannedList(int iPad) {
+        m_bannedListManager.invalidate(iPad);
+    }
+    void SetUniqueMapName(char* pszUniqueMapName) {
+        m_bannedListManager.setUniqueMapName(pszUniqueMapName);
+    }
+    char* GetUniqueMapName(void) {
+        return m_bannedListManager.getUniqueMapName();
+    }
 
 public:
     bool GetResourcesLoaded() { return m_bResourcesLoaded; }
@@ -507,8 +537,6 @@ private:
     static int TexturePackDialogReturned(void* pParam, int iPad,
                                          C4JStorage::EMessageResult result);
 
-    VBANNEDLIST* m_vBannedListA[XUSER_MAX_COUNT];
-
     void HandleButtonPresses(int iPad);
 
     bool m_bResourcesLoaded;
@@ -536,15 +564,7 @@ private:
     // gamedefined data per player for settings
     GAME_SETTINGS* GameSettingsA[XUSER_MAX_COUNT];
 
-    // For promo work
-    bool m_bLoadSavesFromFolderEnabled;
-
-    // For debugging
-    bool m_bWriteSavesToFolderEnabled;
-    bool m_bMobsDontAttack;
-    bool m_bUseDPadForDebug;
-    bool m_bMobsDontTick;
-    bool m_bFreezePlayers;
+    // Debug options now in m_debugOptions
 
     // 4J : WESTY : For taking screen shots.
     // bool m_bInterfaceRenderingOff;
@@ -604,7 +624,7 @@ private:
         void* pParam, int iPad, C4JStorage::EMessageResult result);
 
     JoinFromInviteData m_InviteData;
-    bool m_bDebugOptions;  // toggle debug things on or off
+    // m_bDebugOptions moved to m_debugOptions
 
     // Trial timer
     float m_fTrialTimerStart, mfTrialPausedTime;
@@ -653,12 +673,17 @@ private:
     // XML
 public:
     // Hold a vector of terrain feature positions
-    void AddTerrainFeaturePosition(_eTerrainFeatureType, int, int);
-    void ClearTerrainFeaturePosition();
-    _eTerrainFeatureType IsTerrainFeature(int x, int z);
+    void AddTerrainFeaturePosition(_eTerrainFeatureType eType, int x, int z) {
+        m_terrainFeatureManager.add(eType, x, z);
+    }
+    void ClearTerrainFeaturePosition() { m_terrainFeatureManager.clear(); }
+    _eTerrainFeatureType IsTerrainFeature(int x, int z) {
+        return m_terrainFeatureManager.isFeature(x, z);
+    }
     bool GetTerrainFeaturePosition(_eTerrainFeatureType eType, int* pX,
-                                   int* pZ);
-    std::vector<FEATURE_DATA*> m_vTerrainFeatures;
+                                   int* pZ) {
+        return m_terrainFeatureManager.getPosition(eType, pX, pZ);
+    }
 
     static int32_t RegisterMojangData(wchar_t*, PlayerUID, wchar_t*, wchar_t*);
     MOJANG_DATA* GetMojangDataForXuid(PlayerUID xuid);
@@ -729,28 +754,22 @@ public:
     // void OverrideFontRenderer(bool set, bool immediate = true);
     //	void ToggleFontRenderer() {
     // OverrideFontRenderer(!m_bFontRendererOverridden,false); }
-    BANNEDLIST BannedListA[XUSER_MAX_COUNT];
-
-private:
-    // 	XUI_FontRenderer *m_fontRenderer;
-    // 	bool m_bFontRendererOverridden;
-    // 	bool m_bOverrideFontRenderer;
-
-    bool m_bRead_BannedListA[XUSER_MAX_COUNT];
-    char m_pszUniqueMapName[14];
-    bool m_BanListCheck[XUSER_MAX_COUNT];
+    BANNEDLIST (&BannedListA)[XUSER_MAX_COUNT] = m_bannedListManager.BannedListA;
 
 public:
-    void SetBanListCheck(int iPad, bool bVal) { m_BanListCheck[iPad] = bVal; }
-    bool GetBanListCheck(int iPad) { return m_BanListCheck[iPad]; }
+    void SetBanListCheck(int iPad, bool bVal) {
+        m_bannedListManager.setBanListCheck(iPad, bVal);
+    }
+    bool GetBanListCheck(int iPad) {
+        return m_bannedListManager.getBanListCheck(iPad);
+    }
     // AUTOSAVE
 public:
     void SetAutosaveTimerTime(void);
-    bool AutosaveDue(void);
-    int64_t SecondsToAutosave();
+    bool AutosaveDue(void) { return m_saveManager.autosaveDue(); }
+    int64_t SecondsToAutosave() { return m_saveManager.secondsToAutosave(); }
 
 private:
-    time_util::time_point m_uiAutosaveTimer;
     unsigned int m_uiOpacityCountDown[XUSER_MAX_COUNT];
 
     // DLC
@@ -870,12 +889,10 @@ public:
     void SetCorruptSaveDeleted(bool bVal) { m_bCorruptSaveDeleted = bVal; }
     bool GetCorruptSaveDeleted(void) { return m_bCorruptSaveDeleted; }
 
-    void lockSaveNotification();
-    void unlockSaveNotification();
+    void lockSaveNotification() { m_saveManager.lock(); }
+    void unlockSaveNotification() { m_saveManager.unlock(); }
 
 private:
-    std::mutex m_saveNotificationMutex;
-    int m_saveNotificationDepth;
     // Download Status
 
     // Request current_download;
@@ -895,8 +912,8 @@ private:
 
     std::uint32_t m_dwAdditionalModelParts[XUSER_MAX_COUNT];
 
-    std::uint8_t* m_pBannedListFileBuffer;
-    unsigned int m_dwBannedListFileSize;
+    std::uint8_t*& m_pBannedListFileBuffer = m_bannedListManager.m_pBannedListFileBuffer;
+    unsigned int& m_dwBannedListFileSize = m_bannedListManager.m_dwBannedListFileSize;
 
 public:
     unsigned int m_dwDLCFileSize;
@@ -935,14 +952,13 @@ public:
     virtual bool GetTMSDLCInfoRead() { return true; }
     virtual bool GetTMSXUIDsFileRead() { return true; }
 
-    bool GetBanListRead(int iPad) { return m_bRead_BannedListA[iPad]; }
+    bool GetBanListRead(int iPad) {
+        return m_bannedListManager.getBanListRead(iPad);
+    }
     void SetBanListRead(int iPad, bool bVal) {
-        m_bRead_BannedListA[iPad] = bVal;
+        m_bannedListManager.setBanListRead(iPad, bVal);
     }
-    void ClearBanList(int iPad) {
-        BannedListA[iPad].pBannedList = nullptr;
-        BannedListA[iPad].byteCount = 0;
-    }
+    void ClearBanList(int iPad) { m_bannedListManager.clearBanList(iPad); }
 
     std::uint32_t GetRequiredTexturePackID() {
         return m_dwRequiredTexturePackID;

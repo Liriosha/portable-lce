@@ -598,7 +598,7 @@ int main(int argc, const char* argv[]) {
         &app.m_dlcManager,
         &app.m_gameRules,
         &app.vSkinNames,
-        &app.m_vTerrainFeatures
+        app.m_terrainFeatureManager.features()
     );
     static GameMenuService menuService(app);
     GameServices::initMenuService(&menuService);

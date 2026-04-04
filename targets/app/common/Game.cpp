@@ -149,9 +149,6 @@ Game::Game() {
         DebugPrintf("Player at index %d has guest number %d\n", i,
                     m_currentSigninInfo[i].dwGuestNumber);
 
-        m_bRead_BannedListA[i] = false;
-        SetBanListCheck(i, false);
-
         m_uiOpacityCountDown[i] = 0;
     }
     m_eGlobalXuiAction = eAppAction_Idle;
@@ -164,8 +161,6 @@ Game::Game() {
 
     m_bIntroRunning = false;
     m_eGameMode = eMode_Singleplayer;
-    m_bLoadSavesFromFolderEnabled = false;
-    m_bWriteSavesToFolderEnabled = false;
     // m_bInterfaceRenderingOff = false;
     // m_bHandRenderingOff = false;
     m_bTutorialMode = false;
@@ -173,18 +168,6 @@ Game::Game() {
     m_bLiveLinkRequired = false;
     m_bChangingSessionType = false;
     m_bReallyChangingSessionType = false;
-
-#if defined(_DEBUG_MENUS_ENABLED)
-
-#if defined(_CONTENT_PACKAGE)
-    m_bDebugOptions =
-        false;  // make them off by default in a content package build
-#else
-    m_bDebugOptions = true;
-#endif
-#else
-    m_bDebugOptions = false;
-#endif
 
     // memset(m_PreviewBuffer, 0, sizeof(XSOCIAL_PREVIEWIMAGE)*XUSER_MAX_COUNT);
 
@@ -197,17 +180,12 @@ Game::Game() {
 
     m_pDLCFileBuffer = nullptr;
     m_dwDLCFileSize = 0;
-    m_pBannedListFileBuffer = nullptr;
-    m_dwBannedListFileSize = 0;
-
     m_bDefaultCapeInstallAttempted = false;
     m_bDLCInstallProcessCompleted = false;
     m_bDLCInstallPending = false;
     m_iTotalDLC = 0;
     m_iTotalDLCInstalled = 0;
     mfTrialPausedTime = 0.0f;
-    m_uiAutosaveTimer = {};
-    memset(m_pszUniqueMapName, 0, 14);
 
     m_bNewDLCAvailable = false;
     m_bSeenNewDLCTip = false;
@@ -226,21 +204,9 @@ Game::Game() {
     m_bAllDLCContentRetrieved = true;
     m_bAllTMSContentRetrieved = true;
     m_bTickTMSDLCFiles = true;
-    m_saveNotificationDepth = 0;
-
     m_dwRequiredTexturePackID = 0;
 
     m_bResetNether = false;
-
-#if defined(_CONTENT_PACAKGE)
-    m_bUseDPadForDebug = false;
-#else
-    m_bUseDPadForDebug = true;
-#endif
-
-    for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-        m_vBannedListA[i] = new std::vector<PBANNEDLISTDATA>;
-    }
 
     LocaleAndLanguageInit();
 }
@@ -4127,16 +4093,15 @@ void Game::NotificationsCallback(void* pParam,
 
 #if defined(_DEBUG_MENUS_ENABLED)
 bool Game::DebugArtToolsOn() {
-    return DebugSettingsOn() &&
-           (GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
-            (1L << eDebugSetting_ArtTools)) != 0;
+    return m_debugOptions.debugArtToolsOn(
+        GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()));
 }
 #endif
 
 void Game::SetDebugSequence(const char* pchSeq) {
     InputManager.SetDebugSequence(pchSeq, [this]() -> int {
         // printf("sequence matched\n");
-        m_bDebugOptions = !m_bDebugOptions;
+        m_debugOptions.setDebugOptions(!m_debugOptions.settingsOn());
 
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (app.DebugSettingsOn()) {
@@ -5521,43 +5486,6 @@ DLC_INFO* Game::GetDLCInfoForFullOfferID(uint64_t ullOfferID_Full) {
         return nullptr;
 }
 
-void Game::lockSaveNotification() {
-    std::lock_guard<std::mutex> lock(m_saveNotificationMutex);
-    if (m_saveNotificationDepth++ == 0) {
-        if (g_NetworkManager
-                .IsInSession())  // this can be triggered from the front end if
-                                 // we're downloading a save
-        {
-            MinecraftServer::getInstance()->broadcastStartSavingPacket();
-
-            if (g_NetworkManager.IsLocalGame() &&
-                g_NetworkManager.GetPlayerCount() == 1) {
-                app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
-                                       eXuiServerAction_PauseServer,
-                                       (void*)true);
-            }
-        }
-    }
-}
-
-void Game::unlockSaveNotification() {
-    std::lock_guard<std::mutex> lock(m_saveNotificationMutex);
-    if (--m_saveNotificationDepth == 0) {
-        if (g_NetworkManager
-                .IsInSession())  // this can be triggered from the front end if
-                                 // we're downloading a save
-        {
-            MinecraftServer::getInstance()->broadcastStopSavingPacket();
-
-            if (g_NetworkManager.IsLocalGame() &&
-                g_NetworkManager.GetPlayerCount() == 1) {
-                app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
-                                       eXuiServerAction_PauseServer,
-                                       (void*)false);
-            }
-        }
-    }
-}
 
 int Game::RemoteSaveThreadProc(void* lpParameter) {
     // The game should be stopped while we are doing this, but the connections
@@ -5644,120 +5572,6 @@ void Game::SetSpecialTutorialCompletionFlag(int iPad, int index) {
     }
 }
 
-// BANNED LIST FUNCTIONS
-
-void Game::SetUniqueMapName(char* pszUniqueMapName) {
-    memcpy(m_pszUniqueMapName, pszUniqueMapName, 14);
-}
-
-char* Game::GetUniqueMapName(void) { return m_pszUniqueMapName; }
-
-void Game::InvalidateBannedList(int iPad) {
-    if (m_bRead_BannedListA[iPad] == true) {
-        m_bRead_BannedListA[iPad] = false;
-        SetBanListCheck(iPad, false);
-        m_vBannedListA[iPad]->clear();
-
-        if (BannedListA[iPad].pBannedList) {
-            delete[] BannedListA[iPad].pBannedList;
-            BannedListA[iPad].pBannedList = nullptr;
-        }
-    }
-}
-
-void Game::AddLevelToBannedLevelList(int iPad, PlayerUID xuid,
-                                              char* pszLevelName,
-                                              bool bWriteToTMS) {
-    // we will have retrieved the banned level list from TMS, so add this one to
-    // it and write it back to TMS
-
-    BANNEDLISTDATA* pBannedListData = new BANNEDLISTDATA;
-    memset(pBannedListData, 0, sizeof(BANNEDLISTDATA));
-
-    memcpy(&pBannedListData->xuid, &xuid, sizeof(PlayerUID));
-    strcpy(pBannedListData->pszLevelName, pszLevelName);
-    m_vBannedListA[iPad]->push_back(pBannedListData);
-
-    if (bWriteToTMS) {
-        const std::size_t bannedListCount = m_vBannedListA[iPad]->size();
-        const unsigned int dataBytes =
-            static_cast<unsigned int>(sizeof(BANNEDLISTDATA) * bannedListCount);
-        PBANNEDLISTDATA pBannedList = new BANNEDLISTDATA[bannedListCount];
-        int iCount = 0;
-        for (auto it = m_vBannedListA[iPad]->begin();
-             it != m_vBannedListA[iPad]->end(); ++it) {
-            PBANNEDLISTDATA pData = *it;
-            memcpy(&pBannedList[iCount++], pData, sizeof(BANNEDLISTDATA));
-        }
-
-        // 4J-PB - write to TMS++ now
-
-        // bool
-        // bRes=StorageManager.WriteTMSFile(iPad,C4JStorage::eGlobalStorage_TitleUser,L"BannedList",(std::uint8_t*)pBannedList,
-        // dwDataBytes);
-
-        delete[] pBannedList;
-    }
-    // update telemetry too
-}
-
-bool Game::IsInBannedLevelList(int iPad, PlayerUID xuid,
-                                        char* pszLevelName) {
-    for (auto it = m_vBannedListA[iPad]->begin();
-         it != m_vBannedListA[iPad]->end(); ++it) {
-        PBANNEDLISTDATA pData = *it;
-        if (IsEqualXUID(pData->xuid, xuid) &&
-            (strcmp(pData->pszLevelName, pszLevelName) == 0)) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void Game::RemoveLevelFromBannedLevelList(int iPad, PlayerUID xuid,
-                                                   char* pszLevelName) {
-    // bool bFound=false;
-    // bool bRes;
-
-    // we will have retrieved the banned level list from TMS, so remove this one
-    // from it and write it back to TMS
-    for (auto it = m_vBannedListA[iPad]->begin();
-         it != m_vBannedListA[iPad]->end();) {
-        PBANNEDLISTDATA pBannedListData = *it;
-
-        if (pBannedListData != nullptr) {
-            if (IsEqualXUID(pBannedListData->xuid, xuid) &&
-                (strcmp(pBannedListData->pszLevelName, pszLevelName) == 0)) {
-                // match found, so remove this entry
-                it = m_vBannedListA[iPad]->erase(it);
-            } else {
-                ++it;
-            }
-        } else {
-            ++it;
-        }
-    }
-
-    const std::size_t bannedListCount = m_vBannedListA[iPad]->size();
-    const unsigned int dataBytes =
-        static_cast<unsigned int>(sizeof(BANNEDLISTDATA) * bannedListCount);
-    if (dataBytes == 0) {
-        // wipe the file
-    } else {
-        PBANNEDLISTDATA pBannedList =
-            (BANNEDLISTDATA*)(new std::uint8_t[dataBytes]);
-
-        for (std::size_t i = 0; i < bannedListCount; ++i) {
-            PBANNEDLISTDATA pBannedListData = m_vBannedListA[iPad]->at(i);
-
-            memcpy(&pBannedList[i], pBannedListData, sizeof(BANNEDLISTDATA));
-        }
-        delete[] pBannedList;
-    }
-
-    // update telemetry too
-}
 
 // function to add credits for the DLC packs
 void Game::AddCreditText(const wchar_t* lpStr) {
@@ -6327,62 +6141,6 @@ unsigned int Game::CreateImageTextData(std::uint8_t* textMetadata,
     return iTextMetadataBytes;
 }
 
-void Game::AddTerrainFeaturePosition(_eTerrainFeatureType eFeatureType,
-                                              int x, int z) {
-    // check we don't already have this in
-    for (auto it = m_vTerrainFeatures.begin(); it < m_vTerrainFeatures.end();
-         ++it) {
-        FEATURE_DATA* pFeatureData = *it;
-
-        if ((pFeatureData->eTerrainFeature == eFeatureType) &&
-            (pFeatureData->x == x) && (pFeatureData->z == z))
-            return;
-    }
-
-    FEATURE_DATA* pFeatureData = new FEATURE_DATA;
-    pFeatureData->eTerrainFeature = eFeatureType;
-    pFeatureData->x = x;
-    pFeatureData->z = z;
-
-    m_vTerrainFeatures.push_back(pFeatureData);
-}
-
-_eTerrainFeatureType Game::IsTerrainFeature(int x, int z) {
-    for (auto it = m_vTerrainFeatures.begin(); it < m_vTerrainFeatures.end();
-         ++it) {
-        FEATURE_DATA* pFeatureData = *it;
-
-        if ((pFeatureData->x == x) && (pFeatureData->z == z))
-            return pFeatureData->eTerrainFeature;
-    }
-
-    return eTerrainFeature_None;
-}
-
-bool Game::GetTerrainFeaturePosition(_eTerrainFeatureType eType,
-                                              int* pX, int* pZ) {
-    for (auto it = m_vTerrainFeatures.begin(); it < m_vTerrainFeatures.end();
-         ++it) {
-        FEATURE_DATA* pFeatureData = *it;
-
-        if (pFeatureData->eTerrainFeature == eType) {
-            *pX = pFeatureData->x;
-            *pZ = pFeatureData->z;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void Game::ClearTerrainFeaturePosition() {
-    FEATURE_DATA* pFeatureData;
-    while (m_vTerrainFeatures.size() > 0) {
-        pFeatureData = m_vTerrainFeatures.back();
-        m_vTerrainFeatures.pop_back();
-        delete pFeatureData;
-    }
-}
 
 void Game::UpdatePlayerInfo(std::uint8_t networkSmallId,
                                      int16_t playerColourIndex,
@@ -7172,17 +6930,7 @@ int Game::GetDLCInfoTexturesOffersCount() {
 // AUTOSAVE
 void Game::SetAutosaveTimerTime(void) {
     int settingValue = GetGameSettings(ProfileManager.GetPrimaryPad(), eGameSetting_Autosave);
-    m_uiAutosaveTimer =
-        time_util::clock::now() +
-        std::chrono::minutes(settingValue * 15);
-}  // value x 15 to get mins
-
-bool Game::AutosaveDue(void) {
-    return (time_util::clock::now() > m_uiAutosaveTimer);
-}
-
-int64_t Game::SecondsToAutosave() {
-    return std::chrono::duration_cast<std::chrono::seconds>(m_uiAutosaveTimer - time_util::clock::now()).count();
+    m_saveManager.setAutosaveTimerTime(settingValue);
 }
 
 void Game::SetTrialTimerStart(void) {
