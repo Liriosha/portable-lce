@@ -14,7 +14,7 @@
 #include "GameRenderer.h"
 #include "app/common/App_enums.h"
 #include "app/common/Colours/ColourTable.h"
-#include "app/common/FrameProfiler.h"
+#include "util/FrameProfiler.h"
 #include "Tesselator.h"
 #include "minecraft/Direction.h"
 #include "minecraft/Facing.h"

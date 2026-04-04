@@ -7,7 +7,7 @@
 
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "StitchSlot.h"
 #include "StitchedTexture.h"
 #include "Stitcher.h"

@@ -8,7 +8,7 @@
 #include "app/common/App_enums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/XboxStubs.h"
+#include "platform/XboxStubs.h"
 
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Font.h"

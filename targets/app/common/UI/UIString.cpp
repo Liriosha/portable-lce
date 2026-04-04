@@ -1,7 +1,7 @@
 #include "UIString.h"
 
 #include "app/linux/LinuxGame.h"
-#include "app/common/XboxStubs.h"
+#include "platform/XboxStubs.h"
 #include "util/StringHelpers.h"
 
 bool UIString::setCurrentLanguage() {

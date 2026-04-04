@@ -21,7 +21,7 @@
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/FrameProfiler.h"
+#include "util/FrameProfiler.h"
 #include "java/Random.h"
 #include "minecraft/Direction.h"
 #include "minecraft/Facing.h"

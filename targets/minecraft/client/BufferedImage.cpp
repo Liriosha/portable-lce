@@ -1,4 +1,4 @@
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 
 #include <string.h>
 

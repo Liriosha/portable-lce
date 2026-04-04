@@ -3,7 +3,7 @@
 #include <GL/gl.h>
 
 #include "platform/sdl2/Render.h"
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 #include "java/FloatBuffer.h"
 #include "minecraft/world/phys/Vec3.h"
 

@@ -5,9 +5,9 @@
 #if !defined(__linux__)
 #include <qnet.h>
 #endif
-#include "app/common/NetTypes.h"
-#include "app/common/SkinBox.h"
-#include "app/common/XboxStubs.h"
+#include "platform/NetTypes.h"
+#include "minecraft/client/SkinBox.h"
+#include "platform/XboxStubs.h"
 #include "NetworkPlayerInterface.h"
 #include "SessionInfo.h"
 #include "platform/C4JThread.h"

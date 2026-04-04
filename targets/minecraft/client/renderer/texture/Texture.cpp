@@ -7,7 +7,7 @@
 
 #include "platform/sdl2/Render.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "TextureManager.h"
 #include "java/Buffer.h"
 #include "java/ByteBuffer.h"

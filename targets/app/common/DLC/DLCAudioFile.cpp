@@ -10,7 +10,7 @@
 #include "DLCManager.h"
 #include "app/common/DLC/DLCFile.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/XboxStubs.h"
+#include "platform/XboxStubs.h"
 #if defined(_WINDOWS64)
 #include "app/windows/XML/ATGXmlParser.h"
 #include "app/windows/XML/xmlFilesCallback.h"

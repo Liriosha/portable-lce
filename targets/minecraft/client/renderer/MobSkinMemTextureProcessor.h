@@ -1,5 +1,5 @@
 #pragma once
-#include "app/common/MemTextureProcessor.h"
+#include "minecraft/client/renderer/MemTextureProcessor.h"
 
 class MobSkinMemTextureProcessor : public MemTextureProcessor {
 private:

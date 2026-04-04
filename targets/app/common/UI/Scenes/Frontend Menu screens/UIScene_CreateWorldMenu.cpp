@@ -25,7 +25,7 @@
 #include "app/common/UI/UILayer.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 #include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Options.h"

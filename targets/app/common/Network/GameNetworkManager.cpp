@@ -26,7 +26,7 @@
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "Socket.h"
-#include "app/common/XboxStubs.h"
+#include "platform/XboxStubs.h"
 #include "util/StringHelpers.h"
 #include "platform/PlatformServices.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"

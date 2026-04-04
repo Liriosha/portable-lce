@@ -11,7 +11,7 @@
 #include "AbstractContainerScreen.h"
 #include "app/common/UI/All Platforms/IUIScene_CreativeMenu.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/gui/Screen.h"

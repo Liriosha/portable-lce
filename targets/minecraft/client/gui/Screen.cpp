@@ -8,7 +8,7 @@
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Screen.h"
 #include "minecraft/client/gui/particle/GuiParticles.h"

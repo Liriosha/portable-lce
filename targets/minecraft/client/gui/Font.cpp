@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "platform/sdl2/Render.h"
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "util/StringHelpers.h"
 #include "java/Random.h"
 #include "minecraft/SharedConstants.h"

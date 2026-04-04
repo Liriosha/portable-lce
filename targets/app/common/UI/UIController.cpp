@@ -35,9 +35,9 @@
 #endif
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "UIFontData.h"
-#include "app/common/XboxStubs.h"
+#include "platform/XboxStubs.h"
 #include "platform/C4JThread.h"
 #include "util/Timer.h"
 

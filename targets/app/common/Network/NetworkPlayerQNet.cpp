@@ -2,7 +2,7 @@
 
 #include <limits.h>
 
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 #include "java/System.h"
 
 NetworkPlayerQNet::NetworkPlayerQNet(IQNetPlayer* qnetPlayer) {

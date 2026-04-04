@@ -21,7 +21,7 @@
 #include "app/common/UI/UIScene.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 #include "java/File.h"
 #include "java/InputOutputStream/FileInputStream.h"
 #include "minecraft/client/Minecraft.h"

@@ -4,7 +4,7 @@ simdutf_dep = dependency('simdutf',
 )
 
 lib_util = static_library('util',
-  files('StringHelpers.cpp'),
+  files('StringHelpers.cpp', 'FrameProfiler.cpp'),
   dependencies: [simdutf_dep],
   include_directories : include_directories('.', '..'),
   cpp_args : global_cpp_args + global_cpp_defs,

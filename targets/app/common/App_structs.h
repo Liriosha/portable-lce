@@ -7,9 +7,9 @@
 #include "app/common/App_enums.h"
 #include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
-#include "app/common/NetTypes.h"
-#include "app/common/SkinBox.h"
-#include "app/common/XboxStubs.h"
+#include "platform/NetTypes.h"
+#include "minecraft/client/SkinBox.h"
+#include "platform/XboxStubs.h"
 
 typedef struct {
     wchar_t* wchFilename;

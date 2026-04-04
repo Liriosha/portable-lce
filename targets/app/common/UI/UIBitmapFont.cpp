@@ -5,7 +5,7 @@
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
 #include "app/linux/Iggy/include/rrCore.h"
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "UIFontData.h"
 
 /////////////////////////////

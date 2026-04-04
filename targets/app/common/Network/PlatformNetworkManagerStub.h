@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "platform/PlatformTypes.h"
-#include "app/common/NetTypes.h"
-#include "app/common/SkinBox.h"
-#include "app/common/XboxStubs.h"
+#include "platform/NetTypes.h"
+#include "minecraft/client/SkinBox.h"
+#include "platform/XboxStubs.h"
 #include "NetworkPlayerInterface.h"
 #include "platform/IPlatformNetwork.h"
 #include "SessionInfo.h"

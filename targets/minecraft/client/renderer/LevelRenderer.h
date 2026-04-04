@@ -1,7 +1,7 @@
 #pragma once
-#include "app/common/NetTypes.h"
-#include "app/common/SkinBox.h"
-#include "app/common/XboxStubs.h"
+#include "platform/NetTypes.h"
+#include "minecraft/client/SkinBox.h"
+#include "platform/XboxStubs.h"
 #include "OffsettedRenderList.h"
 #include "platform/C4JThread.h"
 #include "util/Definitions.h"

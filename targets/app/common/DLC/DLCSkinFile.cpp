@@ -7,8 +7,8 @@
 #include "DLCManager.h"
 #include "app/common/DLC/DLCFile.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/SkinBox.h"
-#include "app/common/XboxStubs.h"
+#include "minecraft/client/SkinBox.h"
+#include "platform/XboxStubs.h"
 
 DLCSkinFile::DLCSkinFile(const std::wstring& path)
     : DLCFile(DLCManager::e_DLCType_Skin, path) {

@@ -1,6 +1,6 @@
 #include "EditBox.h"
 
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/gui/Screen.h"
 

@@ -1,7 +1,7 @@
 #ifdef __linux__
 
 #include "app/common/Game.h"
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 
 void Display::update() {}
 

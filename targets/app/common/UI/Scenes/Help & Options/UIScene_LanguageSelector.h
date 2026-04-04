@@ -8,9 +8,9 @@
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/rrCore.h"
-#include "app/common/NetTypes.h"
-#include "app/common/SkinBox.h"
-#include "app/common/XboxStubs.h"
+#include "platform/NetTypes.h"
+#include "minecraft/client/SkinBox.h"
+#include "platform/XboxStubs.h"
 
 class UILayer;
 

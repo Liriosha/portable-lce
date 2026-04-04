@@ -9,7 +9,7 @@
 #include "app/common/UI/Controls/UIControl_PlayerList.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/rrCore.h"
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 
 class INetworkPlayer;
 class UILayer;

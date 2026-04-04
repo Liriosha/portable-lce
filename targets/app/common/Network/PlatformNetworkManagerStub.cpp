@@ -9,7 +9,7 @@
 #include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 #include "NetworkPlayerQNet.h"
 #include "Socket.h"
 #include "platform/C4JThread.h"

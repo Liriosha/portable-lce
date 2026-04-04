@@ -6,8 +6,8 @@
 
 #include "platform/PlatformTypes.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/NetTypes.h"
-#include "app/common/XboxStubs.h"
+#include "platform/NetTypes.h"
+#include "platform/XboxStubs.h"
 
 class INVITE_INFO;
 

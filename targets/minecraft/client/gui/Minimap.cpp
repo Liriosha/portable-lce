@@ -11,7 +11,7 @@
 #include "Font.h"
 #include "app/common/App_enums.h"
 #include "app/common/Colours/ColourTable.h"
-#include "app/common/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/Textures.h"

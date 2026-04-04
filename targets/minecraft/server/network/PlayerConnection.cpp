@@ -16,7 +16,7 @@
 #include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/common/Network/Socket.h"
 #include "app/linux/LinuxGame.h"
-#include "app/common/SkinBox.h"
+#include "minecraft/client/SkinBox.h"
 #include "ServerConnection.h"
 #include "java/Class.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"

@@ -1,7 +1,7 @@
 #ifdef __linux__
 
 #include "platform/sdl2/Render.h"
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 
 #include "java/ByteBuffer.h"
 #include "java/FloatBuffer.h"

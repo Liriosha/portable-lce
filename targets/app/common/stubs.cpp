@@ -1,5 +1,5 @@
 
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 
 #include "app/linux/LinuxGame.h"
 #if defined(__linux__)

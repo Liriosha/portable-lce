@@ -1,7 +1,7 @@
 #include "StatsScreen.h"
 
 #include "app/common/Audio/SoundEngine.h"
-#include "app/common/stubs.h"
+#include "platform/stubs.h"
 #include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Button.h"

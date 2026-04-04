@@ -13,7 +13,7 @@
 #include "platform/IPlatformNetwork.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 #include "PlayerConnection.h"
 #include "ServerConnection.h"
 #include "java/Random.h"

@@ -18,9 +18,9 @@
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/BufferedImage.h"
-#include "app/common/FrameProfiler.h"
-#include "app/common/stubs.h"
+#include "minecraft/client/BufferedImage.h"
+#include "util/FrameProfiler.h"
+#include "platform/stubs.h"
 #include "Tesselator.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 

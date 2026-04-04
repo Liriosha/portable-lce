@@ -20,7 +20,7 @@
 #include "app/common/Tutorial/TutorialEnum.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/common/NetTypes.h"
+#include "platform/NetTypes.h"
 #include "MinecraftServer.h"
 #include "Settings.h"
 #include "minecraft/world/entity/player/SkinTypes.h"
