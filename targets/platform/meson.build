@@ -35,7 +35,7 @@ sdl2_sources = files(
 lib_platform_sdl2 = static_library('platform_sdl2',
   sdl2_sources,
   include_directories: [platform_inc, include_directories('sdl2')],
-  dependencies: [_sdl2, _gl, _threads, glm_dep, stb_dep],
+  dependencies: [_sdl2, _gl, _threads, glm_dep, stb_dep, tracy_client_dep],
   cpp_args: _defs + global_cpp_args + global_cpp_defs,
 )
 
@@ -44,7 +44,7 @@ lib_platform_sdl2 = static_library('platform_sdl2',
 render_dep = declare_dependency(
   link_with: lib_platform_sdl2,
   include_directories: [platform_inc, include_directories('sdl2')],
-  dependencies: [_sdl2, _gl, _threads, glm_dep],
+  dependencies: [_sdl2, _gl, _threads, glm_dep, tracy_client_dep],
 )
 input_dep = render_dep
 profile_dep = render_dep

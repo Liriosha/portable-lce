@@ -1,3 +1,6 @@
+#ifdef TRACY_ENABLE
+#include <tracy/Tracy.hpp>
+#endif
 #include "RegionFileCache.h"
 
 #include <utility>
@@ -14,7 +17,7 @@ class DataOutputStream;
 RegionFileCache RegionFileCache::s_defaultCache;
 
 bool RegionFileCache::useSplitSaves(ESavePlatform platform) {
-    switch (platform) {
+    ZoneScopedN("RegionFileCache::useSplitSaves");    switch (platform) {
         case SAVE_FILE_PLATFORM_XBONE:
         case SAVE_FILE_PLATFORM_PS4:
             return true;
@@ -27,7 +30,7 @@ RegionFile* RegionFileCache::_getRegionFile(
     ConsoleSaveFile* saveFile, const std::wstring& prefix, int chunkX,
     int chunkZ)  // 4J - TODO was synchronized
 {
-    // 4J Jev - changed back to use of the File class.
+    ZoneScopedN("RegionFileCache::_getRegionFile");    // 4J Jev - changed back to use of the File class.
     // char file[MAX_PATH_SIZE];
     // sprintf(file,"%s\\region\\r.%d.%d.mcr",basePath,chunkX >> 5,chunkZ >> 5);
 
@@ -71,7 +74,7 @@ if (!regionDir.exists())
 
 void RegionFileCache::_clear()  // 4J - TODO was synchronized
 {
-    auto itEnd = cache.end();
+    ZoneScopedN("RegionFileCache::_clear");    auto itEnd = cache.end();
     for (auto it = cache.begin(); it != itEnd; it++) {
         // 4J - removed try/catch
         //        try {
@@ -90,14 +93,14 @@ void RegionFileCache::_clear()  // 4J - TODO was synchronized
 int RegionFileCache::_getSizeDelta(ConsoleSaveFile* saveFile,
                                    const std::wstring& prefix, int chunkX,
                                    int chunkZ) {
-    RegionFile* r = _getRegionFile(saveFile, prefix, chunkX, chunkZ);
+                                       ZoneScopedN("RegionFileCache::_getSizeDelta");    RegionFile* r = _getRegionFile(saveFile, prefix, chunkX, chunkZ);
     return r->getSizeDelta();
 }
 
 DataInputStream* RegionFileCache::_getChunkDataInputStream(
     ConsoleSaveFile* saveFile, const std::wstring& prefix, int chunkX,
     int chunkZ) {
-    RegionFile* r = _getRegionFile(saveFile, prefix, chunkX, chunkZ);
+        ZoneScopedN("RegionFileCache::_getChunkDataInputStream");    RegionFile* r = _getRegionFile(saveFile, prefix, chunkX, chunkZ);
     if (useSplitSaves(saveFile->getSavePlatform())) {
         return r->getChunkDataInputStream(chunkX & 15, chunkZ & 15);
     } else {
@@ -108,7 +111,7 @@ DataInputStream* RegionFileCache::_getChunkDataInputStream(
 DataOutputStream* RegionFileCache::_getChunkDataOutputStream(
     ConsoleSaveFile* saveFile, const std::wstring& prefix, int chunkX,
     int chunkZ) {
-    RegionFile* r = _getRegionFile(saveFile, prefix, chunkX, chunkZ);
+        ZoneScopedN("RegionFileCache::_getChunkDataOutputStream");    RegionFile* r = _getRegionFile(saveFile, prefix, chunkX, chunkZ);
     if (useSplitSaves(saveFile->getSavePlatform())) {
         return r->getChunkDataOutputStream(chunkX & 15, chunkZ & 15);
     } else {

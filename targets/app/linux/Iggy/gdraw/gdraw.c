@@ -13,16 +13,36 @@
 #include "app/linux/Iggy/include/iggy.h"
 #include "SDL_video.h"
 
+#ifdef TRACY_ENABLE
+  #include <tracy/TracyC.h>
+#else
+  #define TracyCAlloc(ptr, size)
+  #define TracyCFree(ptr)
+  #define TracyCZone(ctx, active)
+  #define TracyCZoneN(ctx, name, active)
+  #define TracyCZoneEnd(ctx)
+#endif
+
 #ifndef _ENABLEIGGY
 void* IggyGDrawMallocAnnotated(SINTa size, const char* file, int line) {
+    TracyCZoneN(iggy_malloc, "IggyGDrawMallocAnnotated", 1);
     (void)file;
     (void)line;
-    return malloc((size_t)size);
+    void* ptr = malloc((size_t)size);
+    if (ptr) TracyCAlloc(ptr, (size_t)size);
+    TracyCZoneEnd(iggy_malloc);
+    return ptr;
 }
 
-void IggyGDrawFree(void* ptr) { free(ptr); }
+void IggyGDrawFree(void* ptr) {
+    TracyCZoneN(iggy_free, "IggyGDrawFree", 1);
+    if (ptr) TracyCFree(ptr);
+    free(ptr);
+    TracyCZoneEnd(iggy_free);
+}
 
 void IggyGDrawSendWarning(Iggy* f, char const* message, ...) {
+    TracyCZoneN(iggy_warn, "IggyGDrawSendWarning", 1);
     (void)f;
     va_list args;
     va_start(args, message);
@@ -30,15 +50,19 @@ void IggyGDrawSendWarning(Iggy* f, char const* message, ...) {
     vfprintf(stderr, message, args);
     fprintf(stderr, "\n");
     va_end(args);
+    TracyCZoneEnd(iggy_warn);
 }
 
 void IggyDiscardVertexBufferCallback(void* owner, void* buf) {
+    TracyCZoneN(iggy_discard_vb, "IggyDiscardVertexBufferCallback", 1);
     (void)owner;
     (void)buf;
+    TracyCZoneEnd(iggy_discard_vb);
 }
 #endif
 
 static void* get_gl_proc(const char* name) {
+    TracyCZoneN(gdraw_get_gl_proc, "get_gl_proc", 1);
     void* p = SDL_GL_GetProcAddress(name);
     if (!p) p = dlsym(RTLD_DEFAULT, name);
     if (!p) {
@@ -53,6 +77,7 @@ static void* get_gl_proc(const char* name) {
             if (!p) p = dlsym(RTLD_DEFAULT, buf);
         }
     }
+    TracyCZoneEnd(gdraw_get_gl_proc);
     return p;
 }
 
@@ -184,7 +209,8 @@ static gdraw_texsubimage2d_fn gdraw_real_texsubimage2d = NULL;
     } while (0)
 
 static void load_extensions(void) {
-// gl_shared requires ts shit ugh
+    TracyCZoneN(gdraw_load_extensions, "load_extensions", 1);
+    // gl_shared requires ts shit ugh
 #define GLE(id, import, procname) \
     gl##id = (PFNGL##procname##PROC)get_gl_proc("gl" import);
     GDRAW_GL_EXTENSION_LIST
@@ -224,7 +250,6 @@ static void load_extensions(void) {
         "glEnableVertexAttribArray");
     TRY(glDisableVertexAttribArray, "glDisableVertexAttribArrayARB",
         "glDisableVertexAttribArray");
-
     TRY(glGenRenderbuffers, "glGenRenderbuffersEXT", "glGenRenderbuffers");
     TRY(glDeleteRenderbuffers, "glDeleteRenderbuffersEXT",
         "glDeleteRenderbuffers");
@@ -273,6 +298,7 @@ static void load_extensions(void) {
         gdraw_glGenVertexArrays(1, &gdraw_vao);
         gdraw_glBindVertexArray(gdraw_vao);
     }
+    TracyCZoneEnd(gdraw_load_extensions);
 }
 
 #undef TRY
@@ -314,23 +340,31 @@ static struct {
 static int gdraw_shader_type_count = 0;
 
 static GLenum gdraw_get_shader_type(GLuint shader) {
-    for (int i = 0; i < gdraw_shader_type_count; i++)
-        if (gdraw_shader_types[i].handle == shader)
+    TracyCZoneN(gdraw_get_shader_type, "gdraw_get_shader_type", 1);
+    for (int i = 0; i < gdraw_shader_type_count; i++) {
+        if (gdraw_shader_types[i].handle == shader) {
+            TracyCZoneEnd(gdraw_get_shader_type);
             return gdraw_shader_types[i].type;
+        }
+    }
+    TracyCZoneEnd(gdraw_get_shader_type);
     return GL_FRAGMENT_SHADER;
 }
 
 static GLuint gdraw_CreateShaderTracked(GLenum type) {
+    TracyCZoneN(gdraw_create_shader_tracked, "gdraw_CreateShaderTracked", 1);
     GLuint h = gdraw_real_createshader(type);
     if (h && gdraw_shader_type_count < GDRAW_MAX_SHADERS) {
         gdraw_shader_types[gdraw_shader_type_count].handle = h;
         gdraw_shader_types[gdraw_shader_type_count].type = type;
         gdraw_shader_type_count++;
     }
+    TracyCZoneEnd(gdraw_create_shader_tracked);
     return h;
 }
 
 static void gdraw_CompileShaderAndLog(GLuint shader) {
+    TracyCZoneN(gdraw_compile_shader, "gdraw_CompileShaderAndLog", 1);
     GLint status = 0;
     gdraw_real_compileshader(shader);
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
@@ -342,9 +376,11 @@ static void gdraw_CompileShaderAndLog(GLuint shader) {
         fprintf(stderr, "[GDraw GLSL] compile FAILED shader=%u:\n%s\n", shader,
                 log);
     }
+    TracyCZoneEnd(gdraw_compile_shader);
 }
 
 static void gdraw_LinkProgramAndLog(GLuint program) {
+    TracyCZoneN(gdraw_link_program, "gdraw_LinkProgramAndLog", 1);
     GLint status = 0;
     gdraw_real_linkprogram(program);
     glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -356,6 +392,7 @@ static void gdraw_LinkProgramAndLog(GLuint program) {
         fprintf(stderr, "[GDraw GLSL] link FAILED program=%u:\n%s\n", program,
                 log);
     }
+    TracyCZoneEnd(gdraw_link_program);
 }
 
 #undef glCreateShader
@@ -363,6 +400,7 @@ static void gdraw_LinkProgramAndLog(GLuint program) {
 
 // This is the part that turns the old ugly shaders to 330
 static char* gdraw_strreplace(char* src, const char* find, const char* rep) {
+    TracyCZoneN(gdraw_strreplace_zone, "gdraw_strreplace", 1);
     char* result;
     char* pos;
     char* base = src;
@@ -375,7 +413,10 @@ static char* gdraw_strreplace(char* src, const char* find, const char* rep) {
         count++;
         tmp += find_len;
     }
-    if (!count) return src;
+    if (!count) {
+        TracyCZoneEnd(gdraw_strreplace_zone);
+        return src;
+    }
 
     size_t src_len = strlen(src);
     ptrdiff_t delta = (ptrdiff_t)rep_len - (ptrdiff_t)find_len;
@@ -385,7 +426,10 @@ static char* gdraw_strreplace(char* src, const char* find, const char* rep) {
     else
         new_len -= (size_t)(-delta) * count;
     result = (char*)malloc(new_len);
-    if (!result) return src;
+    if (!result) {
+        TracyCZoneEnd(gdraw_strreplace_zone);
+        return src;
+    }
 
     tmp = result;
     while ((pos = strstr(src, find))) {
@@ -398,12 +442,14 @@ static char* gdraw_strreplace(char* src, const char* find, const char* rep) {
     }
     memcpy(tmp, src, strlen(src) + 1);
     free(base);
+    TracyCZoneEnd(gdraw_strreplace_zone);
     return result;
 }
 
 static void gdraw_ShaderSourceUpgraded(GLuint shader, GLsizei count,
                                        const GLchar** strings,
                                        const GLint* lengths) {
+    TracyCZoneN(gdraw_shader_source_upgrade, "gdraw_ShaderSourceUpgraded", 1);
     size_t total = 0;
     for (int i = 0; i < count; i++)
         total += lengths ? (lengths[i] >= 0 ? (size_t)lengths[i]
@@ -413,6 +459,7 @@ static void gdraw_ShaderSourceUpgraded(GLuint shader, GLsizei count,
     char* src = (char*)malloc(total + 1);
     if (!src) {
         gdraw_real_shadersource(shader, count, strings, lengths);
+        TracyCZoneEnd(gdraw_shader_source_upgrade);
         return;
     }
 
@@ -469,6 +516,7 @@ static void gdraw_ShaderSourceUpgraded(GLuint shader, GLsizei count,
     if (!patched) {
         free(src);
         gdraw_real_shadersource(shader, count, strings, lengths);
+        TracyCZoneEnd(gdraw_shader_source_upgrade);
         return;
     }
     strcpy(patched, header);
@@ -478,6 +526,7 @@ static void gdraw_ShaderSourceUpgraded(GLuint shader, GLsizei count,
     const GLchar* patched_ptr = (const GLchar*)patched;
     gdraw_real_shadersource(shader, 1, &patched_ptr, NULL);
     free(patched);
+    TracyCZoneEnd(gdraw_shader_source_upgrade);
 }
 
 #undef glShaderSource
@@ -486,6 +535,7 @@ static void gdraw_ShaderSourceUpgraded(GLuint shader, GLsizei count,
 // Remap all the deprecated internal formats to their modern equivalents
 // (idk why but just the word "swizzle" is cracking me up)
 static void gdraw_apply_swizzle(GLenum internal_fmt) {
+    TracyCZoneN(gdraw_apply_swizzle, "gdraw_apply_swizzle", 1);
     if (internal_fmt == 0x1906 /* GL_ALPHA */ || internal_fmt == GL_RED) {
         GLint sw[4] = {GL_ZERO, GL_ZERO, GL_ZERO, GL_RED};
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, sw);
@@ -496,34 +546,49 @@ static void gdraw_apply_swizzle(GLenum internal_fmt) {
         GLint sw[4] = {GL_RED, GL_RED, GL_RED, GL_GREEN};
         glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, sw);
     }
+    TracyCZoneEnd(gdraw_apply_swizzle);
 }
 
 static GLenum gdraw_remap_fmt(GLenum fmt) {
+    TracyCZoneN(gdraw_remap_fmt, "gdraw_remap_fmt", 1);
+    GLenum result = fmt;
     switch (fmt) {
         case 0x1906:
-            return GL_RED;  // GL_ALPHA
+            result = GL_RED;  // GL_ALPHA
+            break;
         case 0x1909:
-            return GL_RED;  // GL_LUMINANCE
+            result = GL_RED;  // GL_LUMINANCE
+            break;
         case 0x190A:
-            return GL_RG;  // GL_LUMINANCE_ALPHA
+            result = GL_RG;  // GL_LUMINANCE_ALPHA
+            break;
         case 0x8033:
-            return GL_RG;  // GL_LUMINANCE4_ALPHA4
+            result = GL_RG;  // GL_LUMINANCE4_ALPHA4
+            break;
         case 0x8045:
-            return GL_R8;  // GL_LUMINANCE8
+            result = GL_R8;  // GL_LUMINANCE8
+            break;
         case 0x8048:
-            return GL_RG8;  // GL_LUMINANCE8_ALPHA8
+            result = GL_RG8;  // GL_LUMINANCE8_ALPHA8
+            break;
         case 0x804F:
-            return GL_R8;  // GL_INTENSITY4
+            result = GL_R8;  // GL_INTENSITY4
+            break;
         case 0x8050:
-            return GL_R8;  // GL_INTENSITY8
+            result = GL_R8;  // GL_INTENSITY8
+            break;
         default:
-            return fmt;
+            result = fmt;
+            break;
     }
+    TracyCZoneEnd(gdraw_remap_fmt);
+    return result;
 }
 
 static void gdraw_TexImage2D(GLenum target, GLint level, GLint ifmt, GLsizei w,
                              GLsizei h, GLint border, GLenum fmt, GLenum type,
                              const void* data) {
+    TracyCZoneN(gdraw_teximage2d, "gdraw_TexImage2D", 1);
     // ES strictly requires explicitly sized formats & stuff
     if (ifmt == GL_RGBA && data == NULL) ifmt = GL_RGBA8;
 
@@ -532,14 +597,17 @@ static void gdraw_TexImage2D(GLenum target, GLint level, GLint ifmt, GLsizei w,
     gdraw_real_teximage2d(target, level, (GLint)new_ifmt, w, h, border, new_fmt,
                           type, data);
     if (new_ifmt != (GLenum)ifmt) gdraw_apply_swizzle((GLenum)ifmt);
+    TracyCZoneEnd(gdraw_teximage2d);
 }
 
 static void gdraw_TexSubImage2D(GLenum target, GLint level, GLint xoff,
                                 GLint yoff, GLsizei w, GLsizei h, GLenum fmt,
                                 GLenum type, const void* data) {
+    TracyCZoneN(gdraw_texsubimage2d, "gdraw_TexSubImage2D", 1);
     GLenum new_fmt = gdraw_remap_fmt(fmt);
     gdraw_real_texsubimage2d(target, level, xoff, yoff, w, h, new_fmt, type,
                              data);
+    TracyCZoneEnd(gdraw_texsubimage2d);
 }
 
 #undef glTexImage2D
@@ -552,6 +620,7 @@ static void gdraw_ClientVertexAttribPointer(GLuint index, GLint size,
                                             GLenum type, GLboolean normalized,
                                             GLsizei stride,
                                             const void* pointer) {
+    TracyCZoneN(gdraw_vertex_attrib_pointer, "gdraw_ClientVertexAttribPointer", 1);
     if (gdraw_glBindVertexArray && gdraw_vao) {
         GLint current_vao = 0;
         glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &current_vao);
@@ -565,11 +634,13 @@ static void gdraw_ClientVertexAttribPointer(GLuint index, GLint size,
     if (current_vbo != 0 && current_vbo != (GLint)gdraw_screenvbo) {
         // no touchies
         gdraw_real_vtxattrib(index, size, type, normalized, stride, pointer);
+        TracyCZoneEnd(gdraw_vertex_attrib_pointer);
         return;
     }
 
     if (pointer == NULL) {
         gdraw_real_vtxattrib(index, size, type, normalized, stride, pointer);
+        TracyCZoneEnd(gdraw_vertex_attrib_pointer);
         return;
     }
 
@@ -597,6 +668,7 @@ static void gdraw_ClientVertexAttribPointer(GLuint index, GLint size,
         gdraw_real_vtxattrib(index, size, type, normalized, stride,
                              (const void*)offset);
     }
+    TracyCZoneEnd(gdraw_vertex_attrib_pointer);
 }
 
 #undef glVertexAttribPointer
@@ -605,6 +677,7 @@ static void gdraw_ClientVertexAttribPointer(GLuint index, GLint size,
 // fake ibo
 static void hooked_glDrawElements(GLenum mode, GLsizei count, GLenum type,
                                   const void* indices) {
+    TracyCZoneN(gdraw_draw_elements, "hooked_glDrawElements", 1);
     GLint current_ibo = 0;
     glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &current_ibo);
 
@@ -622,12 +695,14 @@ static void hooked_glDrawElements(GLenum mode, GLsizei count, GLenum type,
     } else {
         gdraw_real_drawelements(mode, count, type, indices);
     }
+    TracyCZoneEnd(gdraw_draw_elements);
 }
 
 #define glDrawElements hooked_glDrawElements
 
 // dummy shader for glUseProgram(0) safety
 static void gdraw_UseProgramSafe(GLuint program) {
+    TracyCZoneN(gdraw_use_program_safe, "gdraw_UseProgramSafe", 1);
     if (!program) {
         if (!gdraw_null_program && gdraw_real_useprogram) {
             const char* vs =
@@ -648,9 +723,11 @@ static void gdraw_UseProgramSafe(GLuint program) {
             glDeleteShader(f);
         }
         gdraw_real_useprogram(gdraw_null_program);
+        TracyCZoneEnd(gdraw_use_program_safe);
         return;
     }
     gdraw_real_useprogram(program);
+    TracyCZoneEnd(gdraw_use_program_safe);
 }
 
 #undef glUseProgram
@@ -663,6 +740,8 @@ static void gdraw_UseProgramSafe(GLuint program) {
 static void gdraw_FramebufferRenderbufferSafe(GLenum target, GLenum attachment,
                                               GLenum renderbuffertarget,
                                               GLuint renderbuffer) {
+    TracyCZoneN(gdraw_framebuffer_renderbuffer_safe,
+                "gdraw_FramebufferRenderbufferSafe", 1);
     static GLuint last_depth_rb = 0;
 
     if (attachment == GL_DEPTH_ATTACHMENT) {
@@ -684,6 +763,7 @@ static void gdraw_FramebufferRenderbufferSafe(GLenum target, GLenum attachment,
         (glFramebufferRenderbuffer)(target, attachment, renderbuffertarget,
                                     renderbuffer);
     }
+    TracyCZoneEnd(gdraw_framebuffer_renderbuffer_safe);
 }
 #define glFramebufferRenderbuffer_SAFE gdraw_FramebufferRenderbufferSafe
 #define glFramebufferRenderbuffer glFramebufferRenderbuffer_SAFE
@@ -694,14 +774,22 @@ static void gdraw_FramebufferRenderbufferSafe(GLenum target, GLenum attachment,
 #define glVertexAttribPointer gdraw_real_vtxattrib
 
 static int hasext_core(const char* name) {
+    TracyCZoneN(gdraw_hasext_core, "hasext_core", 1);
     GLint n = 0;
-    if (!gdraw_glGetStringi) return 0;
+    if (!gdraw_glGetStringi) {
+        TracyCZoneEnd(gdraw_hasext_core);
+        return 0;
+    }
     glGetIntegerv(GL_NUM_EXTENSIONS, &n);
     for (GLint i = 0; i < n; i++) {
         const char* e =
             (const char*)gdraw_glGetStringi(GL_EXTENSIONS, (GLuint)i);
-        if (e && strcmp(e, name) == 0) return 1;
+        if (e && strcmp(e, name) == 0) {
+            TracyCZoneEnd(gdraw_hasext_core);
+            return 1;
+        }
     }
+    TracyCZoneEnd(gdraw_hasext_core);
     return 0;
 }
 
@@ -711,6 +799,7 @@ static void RADLINK hooked_DrawIndexedTriangles(GDrawRenderState* r,
                                                 GDrawPrimitive* prim,
                                                 GDrawVertexBuffer* buf,
                                                 GDrawStats* stats) {
+    TracyCZoneN(gdraw_draw_indexed_triangles, "hooked_DrawIndexedTriangles", 1);
     if (buf == NULL && prim != NULL && prim->vertices != NULL) {
         size_t stride = 8;
         if (prim->vertex_format == GDRAW_vformat_v2aa)
@@ -725,29 +814,35 @@ static void RADLINK hooked_DrawIndexedTriangles(GDrawRenderState* r,
     }
     gdraw_screenvbo_base = NULL;  // Force VBO re-upload for each primitive
     real_DrawIndexedTriangles(r, prim, buf, stats);
+    TracyCZoneEnd(gdraw_draw_indexed_triangles);
 }
 
 static gdraw_filter_quad* real_FilterQuad = NULL;
 
 static void RADLINK hooked_FilterQuad(GDrawRenderState* r, S32 x0, S32 y0,
                                       S32 x1, S32 y1, GDrawStats* stats) {
+    TracyCZoneN(gdraw_filter_quad, "hooked_FilterQuad", 1);
     gdraw_expected_vbo_size = 4 * 20;  // 4 vertices, max stride
     gdraw_screenvbo_base = NULL;
     real_FilterQuad(r, x0, y0, x1, y1, stats);
+    TracyCZoneEnd(gdraw_filter_quad);
 }
 
 static gdraw_rendering_begin* real_RenderingBegin = NULL;
 
 // stupid hack
 static void RADLINK hooked_RenderingBegin(void) {
+    TracyCZoneN(gdraw_rendering_begin, "hooked_RenderingBegin", 1);
     if (real_RenderingBegin) real_RenderingBegin();
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     OPENGL_CHECK_SITE("hooked_RenderingBegin:post_state");
+    TracyCZoneEnd(gdraw_rendering_begin);
 }
 
 // Creating the context
 GDrawFunctions* gdraw_GL_CreateContext(S32 w, S32 h, S32 msaa_samples) {
+    TracyCZoneN(gdraw_create_context, "gdraw_GL_CreateContext", 1);
     static const TextureFormatDesc tex_formats[] = {
         {IFT_FORMAT_rgba_8888, 1, 1, 4, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE},
         {IFT_FORMAT_rgba_4444_LE, 1, 1, 2, GL_RGBA4, GL_RGBA,
@@ -779,6 +874,7 @@ GDrawFunctions* gdraw_GL_CreateContext(S32 w, S32 h, S32 msaa_samples) {
     if (major < 3) {
         fprintf(stderr, "[GDraw] GL 3.0 or higher required (got %d.%d)\n",
                 major, minor);
+        TracyCZoneEnd(gdraw_create_context);
         return NULL;
     }
 
@@ -788,7 +884,10 @@ GDrawFunctions* gdraw_GL_CreateContext(S32 w, S32 h, S32 msaa_samples) {
         gdraw_glBindVertexArray(gdraw_vao);
 
     GDrawFunctions* funcs = create_context(w, h);
-    if (!funcs) return NULL;
+    if (!funcs) {
+        TracyCZoneEnd(gdraw_create_context);
+        return NULL;
+    }
 
     // hook the vtable entries for VBO reset and render state
     real_DrawIndexedTriangles = funcs->DrawIndexedTriangles;
@@ -820,21 +919,26 @@ GDrawFunctions* gdraw_GL_CreateContext(S32 w, S32 h, S32 msaa_samples) {
     opengl_check();
     fprintf(stderr, "[GDraw] Context created successfully (%dx%d, msaa=%d)\n",
             w, h, msaa_samples);
+    TracyCZoneEnd(gdraw_create_context);
     return funcs;
 }
 
 // Custom draw callbacks
 void gdraw_GL_BeginCustomDraw_4J(IggyCustomDrawCallbackRegion* region,
                                  F32* matrix) {
+    TracyCZoneN(gdraw_begin_custom_draw, "gdraw_GL_BeginCustomDraw_4J", 1);
     // rebind vbo
     if (gdraw_glBindVertexArray && gdraw_vao)
         gdraw_glBindVertexArray(gdraw_vao);
     clear_renderstate();
     gdraw_GetObjectSpaceMatrix(matrix, region->o2w, gdraw->projection,
                                depth_from_id(0), 0);
+    TracyCZoneEnd(gdraw_begin_custom_draw);
 }
 
 void gdraw_GL_CalculateCustomDraw_4J(IggyCustomDrawCallbackRegion* region,
                                      F32* matrix) {
+    TracyCZoneN(gdraw_calc_custom_draw, "gdraw_GL_CalculateCustomDraw_4J", 1);
     gdraw_GetObjectSpaceMatrix(matrix, region->o2w, gdraw->projection, 0.0f, 0);
+    TracyCZoneEnd(gdraw_calc_custom_draw);
 }

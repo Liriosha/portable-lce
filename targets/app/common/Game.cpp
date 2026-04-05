@@ -125,6 +125,7 @@ int Game::s_iHTMLFontSizesA[eHTMLSize_COUNT] = {
     20, 13, 20, 26};
 
 Game::Game() {
+    ZoneScopedN("Game::Game");
     if (GAME_SETTINGS_PROFILE_DATA_BYTES != sizeof(GAME_SETTINGS)) {
         // 4J Stu - See comment for GAME_SETTINGS_PROFILE_DATA_BYTES in
         // Xbox_App.h
@@ -250,6 +251,7 @@ Game::Game() {
 }
 
 void Game::DebugPrintf(const char* szFormat, ...) {
+    ZoneScopedN("Game::DebugPrintf");
 #if !defined(_FINAL_BUILD)
     char buf[1024];
     va_list ap;
@@ -261,6 +263,7 @@ void Game::DebugPrintf(const char* szFormat, ...) {
 }
 
 void Game::DebugPrintf(int user, const char* szFormat, ...) {
+    ZoneScopedN("Game::DebugPrintf");
 #if !defined(_FINAL_BUILD)
     if (user == USER_NONE) return;
     char buf[1024];
@@ -276,12 +279,14 @@ void Game::DebugPrintf(int user, const char* szFormat, ...) {
 }
 
 const wchar_t* Game::GetString(int iID) {
+    ZoneScopedN("Game::GetString");
     // return L"Değişiklikler ve Yenilikler";
     // return L"ÕÕÕÕÖÖÖÖ";
     return app.m_stringTable->getString(iID);
 }
 
 void Game::SetAction(int iPad, eXuiAction action, void* param) {
+    ZoneScopedN("Game::SetAction");
     if ((m_eXuiAction[iPad] == eAppAction_ReloadTexturePack) &&
         (action == eAppAction_EthernetDisconnected)) {
         app.DebugPrintf(
@@ -310,12 +315,14 @@ bool Game::IsAppPaused() { return m_bIsAppPaused; }
 void Game::SetAppPaused(bool val) { m_bIsAppPaused = val; }
 
 void Game::HandleButtonPresses() {
+    ZoneScopedN("Game::HandleButtonPresses");
     for (int i = 0; i < 4; i++) {
         HandleButtonPresses(i);
     }
 }
 
 void Game::HandleButtonPresses(int iPad) {
+    ZoneScopedN("Game::HandleButtonPresses");
     // 		// test an update of the profile data
     // 		void *pData=ProfileManager.GetGameDefinedProfileData(iPad);
     //
@@ -332,6 +339,7 @@ void Game::HandleButtonPresses(int iPad) {
 bool Game::LoadInventoryMenu(int iPad,
                                       std::shared_ptr<LocalPlayer> player,
                                       bool bNavigateBack) {
+                                          ZoneScopedN("Game::LoadInventoryMenu");
     bool success = true;
 
     InventoryScreenInput* initData = new InventoryScreenInput();
@@ -353,6 +361,7 @@ bool Game::LoadInventoryMenu(int iPad,
 bool Game::LoadCreativeMenu(int iPad,
                                      std::shared_ptr<LocalPlayer> player,
                                      bool bNavigateBack) {
+                                         ZoneScopedN("Game::LoadCreativeMenu");
     bool success = true;
 
     InventoryScreenInput* initData = new InventoryScreenInput();
@@ -373,6 +382,7 @@ bool Game::LoadCreativeMenu(int iPad,
 
 bool Game::LoadCrafting2x2Menu(int iPad,
                                         std::shared_ptr<LocalPlayer> player) {
+                                            ZoneScopedN("Game::LoadCrafting2x2Menu");
     bool success = true;
 
     CraftingPanelScreenInput* initData = new CraftingPanelScreenInput();
@@ -397,6 +407,7 @@ bool Game::LoadCrafting2x2Menu(int iPad,
 bool Game::LoadCrafting3x3Menu(int iPad,
                                         std::shared_ptr<LocalPlayer> player,
                                         int x, int y, int z) {
+                                            ZoneScopedN("Game::LoadCrafting3x3Menu");
     bool success = true;
 
     CraftingPanelScreenInput* initData = new CraftingPanelScreenInput();
@@ -421,6 +432,7 @@ bool Game::LoadCrafting3x3Menu(int iPad,
 bool Game::LoadFireworksMenu(int iPad,
                                       std::shared_ptr<LocalPlayer> player,
                                       int x, int y, int z) {
+                                          ZoneScopedN("Game::LoadFireworksMenu");
     bool success = true;
 
     FireworksScreenInput* initData = new FireworksScreenInput();
@@ -445,6 +457,7 @@ bool Game::LoadEnchantingMenu(int iPad,
                                        std::shared_ptr<Inventory> inventory,
                                        int x, int y, int z, Level* level,
                                        const std::wstring& name) {
+                                           ZoneScopedN("Game::LoadEnchantingMenu");
     bool success = true;
 
     EnchantingScreenInput* initData = new EnchantingScreenInput();
@@ -470,6 +483,7 @@ bool Game::LoadEnchantingMenu(int iPad,
 bool Game::LoadFurnaceMenu(
     int iPad, std::shared_ptr<Inventory> inventory,
     std::shared_ptr<FurnaceTileEntity> furnace) {
+        ZoneScopedN("Game::LoadFurnaceMenu");
     bool success = true;
 
     FurnaceScreenInput* initData = new FurnaceScreenInput();
@@ -493,6 +507,7 @@ bool Game::LoadFurnaceMenu(
 bool Game::LoadBrewingStandMenu(
     int iPad, std::shared_ptr<Inventory> inventory,
     std::shared_ptr<BrewingStandTileEntity> brewingStand) {
+        ZoneScopedN("Game::LoadBrewingStandMenu");
     bool success = true;
 
     BrewingScreenInput* initData = new BrewingScreenInput();
@@ -516,6 +531,7 @@ bool Game::LoadBrewingStandMenu(
 bool Game::LoadContainerMenu(int iPad,
                                       std::shared_ptr<Container> inventory,
                                       std::shared_ptr<Container> container) {
+                                          ZoneScopedN("Game::LoadContainerMenu");
     bool success = true;
 
     ContainerScreenInput* initData = new ContainerScreenInput();
@@ -547,6 +563,7 @@ bool Game::LoadContainerMenu(int iPad,
 
 bool Game::LoadTrapMenu(int iPad, std::shared_ptr<Container> inventory,
                                  std::shared_ptr<DispenserTileEntity> trap) {
+                                     ZoneScopedN("Game::LoadTrapMenu");
     bool success = true;
 
     TrapScreenInput* initData = new TrapScreenInput();
@@ -569,6 +586,7 @@ bool Game::LoadTrapMenu(int iPad, std::shared_ptr<Container> inventory,
 
 bool Game::LoadSignEntryMenu(int iPad,
                                       std::shared_ptr<SignTileEntity> sign) {
+                                          ZoneScopedN("Game::LoadSignEntryMenu");
     bool success = true;
 
     SignEntryScreenInput* initData = new SignEntryScreenInput();
@@ -586,6 +604,7 @@ bool Game::LoadSignEntryMenu(int iPad,
 bool Game::LoadRepairingMenu(int iPad,
                                       std::shared_ptr<Inventory> inventory,
                                       Level* level, int x, int y, int z) {
+                                          ZoneScopedN("Game::LoadRepairingMenu");
     bool success = true;
 
     AnvilScreenInput* initData = new AnvilScreenInput();
@@ -609,6 +628,7 @@ bool Game::LoadTradingMenu(int iPad,
                                     std::shared_ptr<Inventory> inventory,
                                     std::shared_ptr<Merchant> trader,
                                     Level* level, const std::wstring& name) {
+                                        ZoneScopedN("Game::LoadTradingMenu");
     bool success = true;
 
     TradingScreenInput* initData = new TradingScreenInput();
@@ -629,6 +649,7 @@ bool Game::LoadTradingMenu(int iPad,
 bool Game::LoadHopperMenu(int iPad,
                                    std::shared_ptr<Inventory> inventory,
                                    std::shared_ptr<HopperTileEntity> hopper) {
+                                       ZoneScopedN("Game::LoadHopperMenu");
     bool success = true;
 
     HopperScreenInput* initData = new HopperScreenInput();
@@ -648,6 +669,7 @@ bool Game::LoadHopperMenu(int iPad,
 bool Game::LoadHopperMenu(int iPad,
                                    std::shared_ptr<Inventory> inventory,
                                    std::shared_ptr<MinecartHopper> hopper) {
+                                       ZoneScopedN("Game::LoadHopperMenu");
     bool success = true;
 
     HopperScreenInput* initData = new HopperScreenInput();
@@ -668,6 +690,7 @@ bool Game::LoadHorseMenu(int iPad,
                                   std::shared_ptr<Inventory> inventory,
                                   std::shared_ptr<Container> container,
                                   std::shared_ptr<EntityHorse> horse) {
+                                      ZoneScopedN("Game::LoadHorseMenu");
     bool success = true;
 
     HorseScreenInput* initData = new HorseScreenInput();
@@ -688,6 +711,7 @@ bool Game::LoadHorseMenu(int iPad,
 bool Game::LoadBeaconMenu(int iPad,
                                    std::shared_ptr<Inventory> inventory,
                                    std::shared_ptr<BeaconTileEntity> beacon) {
+                                       ZoneScopedN("Game::LoadBeaconMenu");
     bool success = true;
 
     BeaconScreenInput* initData = new BeaconScreenInput();
@@ -708,6 +732,7 @@ bool Game::LoadBeaconMenu(int iPad,
 // GAME SETTINGS
 //////////////////////////////////////////////
 void Game::InitGameSettings() {
+    ZoneScopedN("Game::InitGameSettings");
     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
         GameSettingsA[i] =
             (GAME_SETTINGS*)ProfileManager.GetGameDefinedProfileData(i);
@@ -738,6 +763,7 @@ void Game::InitGameSettings() {
 
 int Game::SetDefaultOptions(C_4JProfile::PROFILESETTINGS* pSettings,
                                      const int iPad) {
+                                         ZoneScopedN("Game::SetDefaultOptions");
     SetGameSettings(iPad, eGameSetting_MusicVolume, DEFAULT_VOLUME_LEVEL);
     SetGameSettings(iPad, eGameSetting_SoundFXVolume, DEFAULT_VOLUME_LEVEL);
     SetGameSettings(iPad, eGameSetting_Gamma, 50);
@@ -836,6 +862,7 @@ int Game::SetDefaultOptions(C_4JProfile::PROFILESETTINGS* pSettings,
 
 int Game::DefaultOptionsCallback(
     void* pParam, C_4JProfile::PROFILESETTINGS* pSettings, const int iPad) {
+        ZoneScopedN("Game::DefaultOptionsCallback");
     Game* pApp = (Game*)pParam;
 
     // flag the default options to be set
@@ -856,6 +883,7 @@ int Game::OldProfileVersionCallback(void* pParam,
                                              unsigned char* pucData,
                                              const unsigned short usVersion,
                                              const int iPad) {
+                                                 ZoneScopedN("Game::OldProfileVersionCallback");
     // check what needs to be done with this version to update to the current
     // one
 
@@ -991,6 +1019,7 @@ int Game::OldProfileVersionCallback(void* pParam,
 }
 
 void Game::ApplyGameSettingsChanged(int iPad) {
+    ZoneScopedN("Game::ApplyGameSettingsChanged");
     ActionGameSettings(iPad, eGameSetting_MusicVolume);
     ActionGameSettings(iPad, eGameSetting_SoundFXVolume);
     ActionGameSettings(iPad, eGameSetting_Gamma);
@@ -1024,6 +1053,7 @@ void Game::ApplyGameSettingsChanged(int iPad) {
 }
 
 void Game::ActionGameSettings(int iPad, eGameSetting eVal) {
+    ZoneScopedN("Game::ActionGameSettings");
     Minecraft* pMinecraft = Minecraft::GetInstance();
     switch (eVal) {
         case eGameSetting_MusicVolume:
@@ -1264,12 +1294,14 @@ void Game::ActionGameSettings(int iPad, eGameSetting eVal) {
 }
 
 void Game::SetPlayerSkin(int iPad, const std::wstring& name) {
+    ZoneScopedN("Game::SetPlayerSkin");
     std::uint32_t skinId = app.getSkinIdFromPath(name);
 
     SetPlayerSkin(iPad, skinId);
 }
 
 void Game::SetPlayerSkin(int iPad, std::uint32_t dwSkinId) {
+    ZoneScopedN("Game::SetPlayerSkin");
     DebugPrintf("Setting skin for %d to %08X\n", iPad, dwSkinId);
 
     GameSettingsA[iPad]->dwSelectedSkin = dwSkinId;
@@ -1281,10 +1313,12 @@ void Game::SetPlayerSkin(int iPad, std::uint32_t dwSkinId) {
 }
 
 std::wstring Game::GetPlayerSkinName(int iPad) {
+    ZoneScopedN("Game::GetPlayerSkinName");
     return app.getSkinPathFromId(GameSettingsA[iPad]->dwSelectedSkin);
 }
 
 std::uint32_t Game::GetPlayerSkinId(int iPad) {
+    ZoneScopedN("Game::GetPlayerSkinId");
     // 4J-PB -check the user has rights to use this skin - they may have had at
     // some point but the entitlement has been removed.
     DLCPack* Pack = nullptr;
@@ -1320,16 +1354,19 @@ std::uint32_t Game::GetPlayerSkinId(int iPad) {
 }
 
 std::uint32_t Game::GetAdditionalModelParts(int iPad) {
+    ZoneScopedN("Game::GetAdditionalModelParts");
     return m_dwAdditionalModelParts[iPad];
 }
 
 void Game::SetPlayerCape(int iPad, const std::wstring& name) {
+    ZoneScopedN("Game::SetPlayerCape");
     std::uint32_t capeId = Player::getCapeIdFromPath(name);
 
     SetPlayerCape(iPad, capeId);
 }
 
 void Game::SetPlayerCape(int iPad, std::uint32_t dwCapeId) {
+    ZoneScopedN("Game::SetPlayerCape");
     DebugPrintf("Setting cape for %d to %08X\n", iPad, dwCapeId);
 
     GameSettingsA[iPad]->dwSelectedCape = dwCapeId;
@@ -1344,15 +1381,18 @@ void Game::SetPlayerCape(int iPad, std::uint32_t dwCapeId) {
 }
 
 std::wstring Game::GetPlayerCapeName(int iPad) {
+    ZoneScopedN("Game::GetPlayerCapeName");
     return Player::getCapePathFromId(GameSettingsA[iPad]->dwSelectedCape);
 }
 
 std::uint32_t Game::GetPlayerCapeId(int iPad) {
+    ZoneScopedN("Game::GetPlayerCapeId");
     return GameSettingsA[iPad]->dwSelectedCape;
 }
 
 void Game::SetPlayerFavoriteSkin(int iPad, int iIndex,
                                           unsigned int uiSkinID) {
+                                              ZoneScopedN("Game::SetPlayerFavoriteSkin");
     DebugPrintf("Setting favorite skin for %d to %08X\n", iPad, uiSkinID);
 
     GameSettingsA[iPad]->uiFavoriteSkinA[iIndex] = uiSkinID;
@@ -1360,19 +1400,23 @@ void Game::SetPlayerFavoriteSkin(int iPad, int iIndex,
 }
 
 unsigned int Game::GetPlayerFavoriteSkin(int iPad, int iIndex) {
+    ZoneScopedN("Game::GetPlayerFavoriteSkin");
     return GameSettingsA[iPad]->uiFavoriteSkinA[iIndex];
 }
 
 unsigned char Game::GetPlayerFavoriteSkinsPos(int iPad) {
+    ZoneScopedN("Game::GetPlayerFavoriteSkinsPos");
     return GameSettingsA[iPad]->ucCurrentFavoriteSkinPos;
 }
 
 void Game::SetPlayerFavoriteSkinsPos(int iPad, int iPos) {
+    ZoneScopedN("Game::SetPlayerFavoriteSkinsPos");
     GameSettingsA[iPad]->ucCurrentFavoriteSkinPos = (unsigned char)iPos;
     GameSettingsA[iPad]->bSettingsChanged = true;
 }
 
 unsigned int Game::GetPlayerFavoriteSkinsCount(int iPad) {
+    ZoneScopedN("Game::GetPlayerFavoriteSkinsCount");
     unsigned int uiCount = 0;
     for (int i = 0; i < MAX_FAVORITE_SKINS; i++) {
         if (GameSettingsA[iPad]->uiFavoriteSkinA[i] != 0xFFFFFFFF) {
@@ -1385,6 +1429,7 @@ unsigned int Game::GetPlayerFavoriteSkinsCount(int iPad) {
 }
 
 void Game::ValidateFavoriteSkins(int iPad) {
+    ZoneScopedN("Game::ValidateFavoriteSkins");
     unsigned int uiCount = GetPlayerFavoriteSkinsCount(iPad);
 
     // remove invalid skins
@@ -1421,26 +1466,31 @@ void Game::ValidateFavoriteSkins(int iPad) {
 
 // Mash-up pack worlds
 void Game::HideMashupPackWorld(int iPad, unsigned int iMashupPackID) {
+    ZoneScopedN("Game::HideMashupPackWorld");
     unsigned int uiPackID = iMashupPackID - 1024;  // mash-up ids start at 1024
     GameSettingsA[iPad]->uiMashUpPackWorldsDisplay &= ~(1 << uiPackID);
     GameSettingsA[iPad]->bSettingsChanged = true;
 }
 
 void Game::EnableMashupPackWorlds(int iPad) {
+    ZoneScopedN("Game::EnableMashupPackWorlds");
     GameSettingsA[iPad]->uiMashUpPackWorldsDisplay = 0xFFFFFFFF;
     GameSettingsA[iPad]->bSettingsChanged = true;
 }
 
 unsigned int Game::GetMashupPackWorlds(int iPad) {
+    ZoneScopedN("Game::GetMashupPackWorlds");
     return GameSettingsA[iPad]->uiMashUpPackWorldsDisplay;
 }
 
 void Game::SetMinecraftLanguage(int iPad, unsigned char ucLanguage) {
+    ZoneScopedN("Game::SetMinecraftLanguage");
     GameSettingsA[iPad]->ucLanguage = ucLanguage;
     GameSettingsA[iPad]->bSettingsChanged = true;
 }
 
 unsigned char Game::GetMinecraftLanguage(int iPad) {
+    ZoneScopedN("Game::GetMinecraftLanguage");
     // if there are no game settings read yet, return the default language
     if (GameSettingsA[iPad] == nullptr) {
         return 0;
@@ -1450,11 +1500,13 @@ unsigned char Game::GetMinecraftLanguage(int iPad) {
 }
 
 void Game::SetMinecraftLocale(int iPad, unsigned char ucLocale) {
+    ZoneScopedN("Game::SetMinecraftLocale");
     GameSettingsA[iPad]->ucLocale = ucLocale;
     GameSettingsA[iPad]->bSettingsChanged = true;
 }
 
 unsigned char Game::GetMinecraftLocale(int iPad) {
+    ZoneScopedN("Game::GetMinecraftLocale");
     // if there are no game settings read yet, return the default language
     if (GameSettingsA[iPad] == nullptr) {
         return 0;
@@ -1465,6 +1517,7 @@ unsigned char Game::GetMinecraftLocale(int iPad) {
 
 void Game::SetGameSettings(int iPad, eGameSetting eVal,
                                     unsigned char ucVal) {
+                                        ZoneScopedN("Game::SetGameSettings");
     // Minecraft *pMinecraft=Minecraft::GetInstance();
 
     switch (eVal) {
@@ -1871,12 +1924,14 @@ void Game::SetGameSettings(int iPad, eGameSetting eVal,
 }
 
 unsigned char Game::GetGameSettings(eGameSetting eVal) {
+    ZoneScopedN("Game::GetGameSettings");
     int iPad = ProfileManager.GetPrimaryPad();
 
     return GetGameSettings(iPad, eVal);
 }
 
 unsigned char Game::GetGameSettings(int iPad, eGameSetting eVal) {
+    ZoneScopedN("Game::GetGameSettings");
     switch (eVal) {
         case eGameSetting_MusicVolume:
             return GameSettingsA[iPad]->ucMusicVolume;
@@ -2018,6 +2073,7 @@ unsigned char Game::GetGameSettings(int iPad, eGameSetting eVal) {
 
 void Game::CheckGameSettingsChanged(bool bOverride5MinuteTimer,
                                              int iPad) {
+                                                 ZoneScopedN("Game::CheckGameSettingsChanged");
     // If the settings have changed, write them to the profile
 
     if (iPad == XUSER_INDEX_ANY) {
@@ -2036,6 +2092,7 @@ void Game::CheckGameSettingsChanged(bool bOverride5MinuteTimer,
 }
 
 void Game::ClearGameSettingsChangedFlag(int iPad) {
+    ZoneScopedN("Game::ClearGameSettingsChangedFlag");
     GameSettingsA[iPad]->bSettingsChanged = false;
 }
 
@@ -2049,6 +2106,7 @@ unsigned int Game::GetGameSettingsDebugMask(
     int iPad, bool bOverridePlayer)  // bOverridePlayer is to force the send for
                                      // the server to get the read options
 {
+    ZoneScopedN("Game::GetGameSettingsDebugMask");
     return 0;
 }
 
@@ -2062,6 +2120,7 @@ unsigned int Game::GetGameSettingsDebugMask(
     int iPad, bool bOverridePlayer)  // bOverridePlayer is to force the send for
                                      // the server to get the read options
 {
+    ZoneScopedN("Game::GetGameSettingsDebugMask");
     if (iPad == -1) {
         iPad = ProfileManager.GetPrimaryPad();
     }
@@ -2078,6 +2137,7 @@ unsigned int Game::GetGameSettingsDebugMask(
 }
 
 void Game::SetGameSettingsDebugMask(int iPad, unsigned int uiVal) {
+    ZoneScopedN("Game::SetGameSettingsDebugMask");
 #if !defined(_CONTENT_PACKAGE)
     GameSettingsA[iPad]->bSettingsChanged = true;
     GameSettingsA[iPad]->uiDebugBitmask = uiVal;
@@ -2094,6 +2154,7 @@ void Game::SetGameSettingsDebugMask(int iPad, unsigned int uiVal) {
 }
 
 void Game::ActionDebugMask(int iPad, bool bSetAllClear) {
+    ZoneScopedN("Game::ActionDebugMask");
     unsigned int ulBitmask = app.GetGameSettingsDebugMask(iPad);
 
     if (bSetAllClear) ulBitmask = 0L;
@@ -2198,18 +2259,20 @@ void Game::ActionDebugMask(int iPad, bool bSetAllClear) {
 
 int Game::displaySavingMessage(C4JStorage::ESavingMessage eVal,
                                         int iPad) {
+                                            ZoneScopedN("Game::displaySavingMessage");
     ui.ShowSavingMessage(iPad, eVal);
 
     return 0;
 }
 
 void Game::SetActionConfirmed(void* param) {
+    ZoneScopedN("Game::SetActionConfirmed");
     XuiActionParam* actionInfo = (XuiActionParam*)param;
     app.SetAction(actionInfo->iPad, actionInfo->action);
 }
 
 void Game::HandleXuiActions(void) {
-    ZoneScoped;
+    ZoneScopedN("Game::HandleXuiActions");
     eXuiAction eAction;
     eTMSAction eTMS;
     void* param;
@@ -3632,6 +3695,7 @@ void Game::HandleXuiActions(void) {
 
 int Game::BannedLevelDialogReturned(
     void* pParam, int iPad, const C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::BannedLevelDialogReturned");
     Game* pApp = (Game*)pParam;
     // Minecraft *pMinecraft=Minecraft::GetInstance();
 
@@ -3647,6 +3711,7 @@ int Game::BannedLevelDialogReturned(
     return 0;
 }
 void Game::loadMediaArchive() {
+    ZoneScopedN("Game::loadMediaArchive");
     std::wstring mediapath = L"";
 
 #if _WINDOWS64
@@ -3672,6 +3737,7 @@ void Game::loadMediaArchive() {
 }
 
 void Game::loadStringTable() {
+    ZoneScopedN("Game::loadStringTable");
     if (m_stringTable != nullptr) {
         // we need to unload the current std::string table, this is a reload
         delete m_stringTable;
@@ -3690,6 +3756,7 @@ void Game::loadStringTable() {
 
 int Game::PrimaryPlayerSignedOutReturned(
     void* pParam, int iPad, const C4JStorage::EMessageResult) {
+        ZoneScopedN("Game::PrimaryPlayerSignedOutReturned");
     // Game* pApp = (Game*)pParam;
     // Minecraft *pMinecraft=Minecraft::GetInstance();
 
@@ -3709,6 +3776,7 @@ int Game::PrimaryPlayerSignedOutReturned(
 
 int Game::EthernetDisconnectReturned(
     void* pParam, int iPad, const C4JStorage::EMessageResult) {
+        ZoneScopedN("Game::EthernetDisconnectReturned");
     // Game* pApp = (Game*)pParam;
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
@@ -3725,6 +3793,7 @@ int Game::EthernetDisconnectReturned(
 }
 
 int Game::SignoutExitWorldThreadProc(void* lpParameter) {
+    ZoneScopedN("Game::SignoutExitWorldThreadProc");
     // Share AABB & Vec3 pools with default (main thread) - should be ok as long
     // as we don't tick the main thread whilst this thread is running
     Compression::UseDefaultThreadStorage();
@@ -3839,6 +3908,7 @@ int Game::SignoutExitWorldThreadProc(void* lpParameter) {
 
 int Game::UnlockFullInviteReturned(void* pParam, int iPad,
                                             C4JStorage::EMessageResult result) {
+                                                ZoneScopedN("Game::UnlockFullInviteReturned");
     // Game* pApp = (Game*)pParam;
     Minecraft* pMinecraft = Minecraft::GetInstance();
     bool bNoPlayer;
@@ -3856,11 +3926,13 @@ int Game::UnlockFullInviteReturned(void* pParam, int iPad,
 
 int Game::UnlockFullSaveReturned(void* pParam, int iPad,
                                           C4JStorage::EMessageResult result) {
+                                              ZoneScopedN("Game::UnlockFullSaveReturned");
     return 0;
 }
 
 int Game::UnlockFullExitReturned(void* pParam, int iPad,
                                           C4JStorage::EMessageResult result) {
+                                              ZoneScopedN("Game::UnlockFullExitReturned");
     Game* pApp = (Game*)pParam;
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
@@ -3874,6 +3946,7 @@ int Game::UnlockFullExitReturned(void* pParam, int iPad,
 
 int Game::TrialOverReturned(void* pParam, int iPad,
                                      C4JStorage::EMessageResult result) {
+                                         ZoneScopedN("Game::TrialOverReturned");
     Game* pApp = (Game*)pParam;
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
@@ -3885,12 +3958,14 @@ int Game::TrialOverReturned(void* pParam, int iPad,
 }
 
 void Game::ProfileReadErrorCallback(void* pParam) {
+    ZoneScopedN("Game::ProfileReadErrorCallback");
     Game* pApp = (Game*)pParam;
     int iPrimaryPlayer = ProfileManager.GetPrimaryPad();
     pApp->SetAction(iPrimaryPlayer, eAppAction_ProfileReadError);
 }
 
 void Game::ClearSignInChangeUsersMask() {
+    ZoneScopedN("Game::ClearSignInChangeUsersMask");
     // 4J-PB - When in the main menu, the user is on pad 0, and any change they
     // make to their profile will be to pad 0 data If they then go in as a
     // secondary player to a splitscreen game, their profile will not be read
@@ -3912,6 +3987,7 @@ void Game::ClearSignInChangeUsersMask() {
 void Game::SignInChangeCallback(void* pParam,
                                          bool bPrimaryPlayerChanged,
                                          unsigned int uiSignInData) {
+                                             ZoneScopedN("Game::SignInChangeCallback");
     Game* pApp = (Game*)pParam;
     // check if the primary player signed out
     int iPrimaryPlayer = ProfileManager.GetPrimaryPad();
@@ -4086,6 +4162,7 @@ void Game::SignInChangeCallback(void* pParam,
 void Game::NotificationsCallback(void* pParam,
                                           std::uint32_t dwNotification,
                                           unsigned int uiParam) {
+                                              ZoneScopedN("Game::NotificationsCallback");
     Game* pClass = (Game*)pParam;
 
     // push these on to the notifications to be handled in qnet's dowork
@@ -4132,6 +4209,7 @@ void Game::NotificationsCallback(void* pParam,
 
 #if defined(_DEBUG_MENUS_ENABLED)
 bool Game::DebugArtToolsOn() {
+    ZoneScopedN("Game::DebugArtToolsOn");
     return DebugSettingsOn() &&
            (GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
             (1L << eDebugSetting_ArtTools)) != 0;
@@ -4139,6 +4217,7 @@ bool Game::DebugArtToolsOn() {
 #endif
 
 void Game::SetDebugSequence(const char* pchSeq) {
+    ZoneScopedN("Game::SetDebugSequence");
     InputManager.SetDebugSequence(pchSeq, [this]() -> int {
         // printf("sequence matched\n");
         m_bDebugOptions = !m_bDebugOptions;
@@ -4157,6 +4236,7 @@ void Game::SetDebugSequence(const char* pchSeq) {
 }
 
 int Game::GetLocalPlayerCount(void) {
+    ZoneScopedN("Game::GetLocalPlayerCount");
     int iPlayerC = 0;
     Minecraft* pMinecraft = Minecraft::GetInstance();
     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
@@ -4170,6 +4250,7 @@ int Game::GetLocalPlayerCount(void) {
 
 int Game::MarketplaceCountsCallback(
     void* pParam, C4JStorage::DLC_TMS_DETAILS* pTMSDetails, int iPad) {
+        ZoneScopedN("Game::MarketplaceCountsCallback");
     app.DebugPrintf("Marketplace Counts= New - %d Total - %d\n",
                     pTMSDetails->dwNewOffers, pTMSDetails->dwTotalOffers);
 
@@ -4185,6 +4266,7 @@ int Game::MarketplaceCountsCallback(
 }
 
 bool Game::StartInstallDLCProcess(int iPad) {
+    ZoneScopedN("Game::StartInstallDLCProcess");
     app.DebugPrintf("--- Game::StartInstallDLCProcess: pad=%i.\n",
                     iPad);
 
@@ -4217,6 +4299,7 @@ bool Game::StartInstallDLCProcess(int iPad) {
 
 // Installed DLC callback
 int Game::dlcInstalledCallback(int iInstalledC, int iPad) {
+    ZoneScopedN("Game::dlcInstalledCallback");
     DebugPrintf(
         "--- Game::dlcInstalledCallback: totalDLC=%i, pad=%i.\n",
         iInstalledC, iPad);
@@ -4226,6 +4309,7 @@ int Game::dlcInstalledCallback(int iInstalledC, int iPad) {
 }
 
 void Game::MountNextDLC(int iPad) {
+    ZoneScopedN("Game::MountNextDLC");
     app.DebugPrintf("--- Game::MountNextDLC: pad=%i.\n", iPad);
     if (m_iTotalDLCInstalled < m_iTotalDLC) {
         // Mount it
@@ -4272,6 +4356,7 @@ void Game::MountNextDLC(int iPad) {
 
 int Game::dlcMountedCallback(int iPad, std::uint32_t dwErr,
                                       std::uint32_t dwLicenceMask) {
+                                          ZoneScopedN("Game::dlcMountedCallback");
 #if defined(_WINDOWS64)
     DebugPrintf("--- Game::dlcMountedCallback\n");
 
@@ -4363,6 +4448,7 @@ int Game::dlcMountedCallback(int iPad, std::uint32_t dwErr,
 //  }
 
 void Game::HandleDLC(DLCPack* pack) {
+    ZoneScopedN("Game::HandleDLC");
     unsigned int dwFilesProcessed = 0;
 #if defined(_WINDOWS64) || defined(__linux__)
     std::vector<std::string> dlcFilenames;
@@ -4388,6 +4474,7 @@ void Game::HandleDLC(DLCPack* pack) {
 // Desc: Initializes the timer variables
 //-------------------------------------------------------------------------------------
 void Game::InitTime() {
+    ZoneScopedN("Game::InitTime");
     // Save the start time
     m_Time.qwTime = time_util::clock::now();
 
@@ -4402,7 +4489,7 @@ void Game::InitTime() {
 // Desc: Updates the elapsed time since our last frame.
 //-------------------------------------------------------------------------------------
 void Game::UpdateTime() {
-    ZoneScoped;
+    ZoneScopedN("Game::UpdateTime");
     auto qwNewTime = time_util::clock::now();
     auto qwDeltaTime = qwNewTime - m_Time.qwTime;
 
@@ -4414,6 +4501,7 @@ void Game::UpdateTime() {
 }
 
 bool Game::isXuidNotch(PlayerUID xuid) {
+    ZoneScopedN("Game::isXuidNotch");
     if (m_xuidNotch != INVALID_XUID && xuid != INVALID_XUID) {
         return ProfileManager.AreXUIDSEqual(xuid, m_xuidNotch);
     }
@@ -4421,6 +4509,7 @@ bool Game::isXuidNotch(PlayerUID xuid) {
 }
 
 bool Game::isXuidDeadmau5(PlayerUID xuid) {
+    ZoneScopedN("Game::isXuidDeadmau5");
     auto it = MojangData.find(xuid);  // 4J Stu - The .at and [] accessors
                                       // insert elements if they don't exist
     if (it != MojangData.end()) {
@@ -4436,6 +4525,7 @@ bool Game::isXuidDeadmau5(PlayerUID xuid) {
 void Game::AddMemoryTextureFile(const std::wstring& wName,
                                          std::uint8_t* pbData,
                                          unsigned int byteCount) {
+                                             ZoneScopedN("Game::AddMemoryTextureFile");
     std::lock_guard<std::mutex> lock(csMemFilesLock);
     // check it's not already in
     PMEMDATA pData = nullptr;
@@ -4473,6 +4563,7 @@ void Game::AddMemoryTextureFile(const std::wstring& wName,
 }
 
 void Game::RemoveMemoryTextureFile(const std::wstring& wName) {
+    ZoneScopedN("Game::RemoveMemoryTextureFile");
     std::lock_guard<std::mutex> lock(csMemFilesLock);
 
     auto it = m_MEM_Files.find(wName);
@@ -4495,6 +4586,7 @@ void Game::RemoveMemoryTextureFile(const std::wstring& wName) {
 }
 
 bool Game::DefaultCapeExists() {
+    ZoneScopedN("Game::DefaultCapeExists");
     std::wstring wTex = L"Special_Cape.png";
     bool val = false;
 
@@ -4508,6 +4600,7 @@ bool Game::DefaultCapeExists() {
 }
 
 bool Game::IsFileInMemoryTextures(const std::wstring& wName) {
+    ZoneScopedN("Game::IsFileInMemoryTextures");
     bool val = false;
 
     {
@@ -4522,6 +4615,7 @@ bool Game::IsFileInMemoryTextures(const std::wstring& wName) {
 void Game::GetMemFileDetails(const std::wstring& wName,
                                       std::uint8_t** ppbData,
                                       unsigned int* pByteCount) {
+                                          ZoneScopedN("Game::GetMemFileDetails");
     std::lock_guard<std::mutex> lock(csMemFilesLock);
     auto it = m_MEM_Files.find(wName);
     if (it != m_MEM_Files.end()) {
@@ -4533,6 +4627,7 @@ void Game::GetMemFileDetails(const std::wstring& wName,
 
 void Game::AddMemoryTPDFile(int iConfig, std::uint8_t* pbData,
                                      unsigned int byteCount) {
+                                         ZoneScopedN("Game::AddMemoryTPDFile");
     std::lock_guard<std::mutex> lock(csMemTPDLock);
     // check it's not already in
     PMEMDATA pData = nullptr;
@@ -4548,6 +4643,7 @@ void Game::AddMemoryTPDFile(int iConfig, std::uint8_t* pbData,
 }
 
 void Game::RemoveMemoryTPDFile(int iConfig) {
+    ZoneScopedN("Game::RemoveMemoryTPDFile");
     std::lock_guard<std::mutex> lock(csMemTPDLock);
     // check it's not already in
     PMEMDATA pData = nullptr;
@@ -4563,6 +4659,7 @@ void Game::RemoveMemoryTPDFile(int iConfig) {
 int Game::GetTPConfigVal(wchar_t* pwchDataFile) { return -1; }
 #endif
 bool Game::IsFileInTPD(int iConfig) {
+    ZoneScopedN("Game::IsFileInTPD");
     bool val = false;
 
     {
@@ -4576,6 +4673,7 @@ bool Game::IsFileInTPD(int iConfig) {
 
 void Game::GetTPD(int iConfig, std::uint8_t** ppbData,
                            unsigned int* pByteCount) {
+                               ZoneScopedN("Game::GetTPD");
     std::lock_guard<std::mutex> lock(csMemTPDLock);
     auto it = m_MEM_TPD.find(iConfig);
     if (it != m_MEM_TPD.end()) {
@@ -4619,6 +4717,7 @@ void Game::ExitGame() {}
 void Game::ProcessInvite(std::uint32_t dwUserIndex,
                                   std::uint32_t dwLocalUsersMask,
                                   const INVITE_INFO* pInviteInfo) {
+                                      ZoneScopedN("Game::ProcessInvite");
     m_InviteData.dwUserIndex = dwUserIndex;
     m_InviteData.dwLocalUsersMask = dwLocalUsersMask;
     m_InviteData.pInviteInfo = pInviteInfo;
@@ -4628,6 +4727,7 @@ void Game::ProcessInvite(std::uint32_t dwUserIndex,
 
 int Game::ExitAndJoinFromInvite(void* pParam, int iPad,
                                          C4JStorage::EMessageResult result) {
+                                             ZoneScopedN("Game::ExitAndJoinFromInvite");
     Game* pApp = (Game*)pParam;
     // Minecraft *pMinecraft=Minecraft::GetInstance();
 
@@ -4641,6 +4741,7 @@ int Game::ExitAndJoinFromInvite(void* pParam, int iPad,
 
 int Game::ExitAndJoinFromInviteSaveDialogReturned(
     void* pParam, int iPad, C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::ExitAndJoinFromInviteSaveDialogReturned");
     Game* pClass = (Game*)pParam;
     // Exit with or without saving
     // Decline means save in this dialog
@@ -4716,6 +4817,7 @@ int Game::ExitAndJoinFromInviteSaveDialogReturned(
 
 int Game::WarningTrialTexturePackReturned(
     void* pParam, int iPad, C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::WarningTrialTexturePackReturned");
     // 4J Stu - I added this in when fixing an X1 bug. We should probably add
     // this as well but I don't have time to test all platforms atm
 
@@ -4724,6 +4826,7 @@ int Game::WarningTrialTexturePackReturned(
 
 int Game::ExitAndJoinFromInviteAndSaveReturned(
     void* pParam, int iPad, C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::ExitAndJoinFromInviteAndSaveReturned");
     // Game* pClass = (Game*)pParam;
 
     // results switched for this dialog
@@ -4769,6 +4872,7 @@ int Game::ExitAndJoinFromInviteAndSaveReturned(
 
 int Game::ExitAndJoinFromInviteDeclineSaveReturned(
     void* pParam, int iPad, C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::ExitAndJoinFromInviteDeclineSaveReturned");
     // results switched for this dialog
     if (result == C4JStorage::EMessage_ResultDecline) {
         MinecraftServer::getInstance()->setSaveOnExit(false);
@@ -4830,6 +4934,7 @@ TIPSTRUCT Game::m_TriviaTipA[MAX_TIPS_TRIVIATIP] = {
 Random* Game::TipRandom = new Random();
 
 int Game::TipsSortFunction(const void* a, const void* b) {
+    ZoneScopedN("Game::TipsSortFunction");
     // 4jcraft, scince the sortvalues can be negative, i changed it
     // to a three way comparison,
     // scince subtracting of signed integers can cause overflow.
@@ -4848,6 +4953,7 @@ int Game::TipsSortFunction(const void* a, const void* b) {
 }
 
 void Game::InitialiseTips() {
+    ZoneScopedN("Game::InitialiseTips");
     // We'll randomise the tips at start up based on their priority
 
     memset(m_TipIDA, 0, sizeof(m_TipIDA));
@@ -4906,6 +5012,7 @@ void Game::InitialiseTips() {
 }
 
 int Game::GetNextTip() {
+    ZoneScopedN("Game::GetNextTip");
     static bool bShowSkinDLCTip = true;
     if (app.GetNewDLCAvailable() && app.DisplayNewDLCTip()) {
         return IDS_TIPS_GAMETIP_NEWDLC;
@@ -4930,17 +5037,20 @@ int Game::GetNextTip() {
 }
 
 int Game::GetHTMLColour(eMinecraftColour colour) {
+    ZoneScopedN("Game::GetHTMLColour");
     Minecraft* pMinecraft = Minecraft::GetInstance();
     return pMinecraft->skins->getSelected()->getColourTable()->getColour(
         colour);
 }
 
 int Game::GetHTMLFontSize(EHTMLFontSize size) {
+    ZoneScopedN("Game::GetHTMLFontSize");
     return s_iHTMLFontSizesA[size];
 }
 
 std::wstring Game::FormatHTMLString(
     int iPad, const std::wstring& desc, int shadowColour /*= 0xFFFFFFFF*/) {
+        ZoneScopedN("Game::FormatHTMLString");
     std::wstring text(desc);
 
     wchar_t replacements[64];
@@ -5108,6 +5218,7 @@ std::wstring Game::FormatHTMLString(
 
 std::wstring Game::GetActionReplacement(int iPad,
                                                  unsigned char ucAction) {
+                                                     ZoneScopedN("Game::GetActionReplacement");
     unsigned int input = InputManager.GetGameJoypadMaps(
         InputManager.GetJoypadMapVal(iPad), ucAction);
 
@@ -5175,6 +5286,7 @@ std::wstring Game::GetActionReplacement(int iPad,
 }
 
 std::wstring Game::GetVKReplacement(unsigned int uiVKey) {
+    ZoneScopedN("Game::GetVKReplacement");
     std::wstring replacement = L"";
     switch (uiVKey) {
         case VK_PAD_A:
@@ -5241,6 +5353,7 @@ std::wstring Game::GetVKReplacement(unsigned int uiVKey) {
 }
 
 std::wstring Game::GetIconReplacement(unsigned int uiIcon) {
+    ZoneScopedN("Game::GetIconReplacement");
     wchar_t string[128];
 
 #if defined(_WIN64)
@@ -5276,6 +5389,7 @@ std::unordered_map<std::wstring, uint64_t> Game::DLCInfo_SkinName;
 
 int32_t Game::RegisterMojangData(wchar_t* pXuidName, PlayerUID xuid,
                                           wchar_t* pSkin, wchar_t* pCape) {
+                                              ZoneScopedN("Game::RegisterMojangData");
     int32_t hr = 0;
     eXUID eTempXuid = eXUID_Undefined;
     MOJANG_DATA* pMojangData = nullptr;
@@ -5306,10 +5420,12 @@ int32_t Game::RegisterMojangData(wchar_t* pXuidName, PlayerUID xuid,
 }
 
 MOJANG_DATA* Game::GetMojangDataForXuid(PlayerUID xuid) {
+    ZoneScopedN("Game::GetMojangDataForXuid");
     return MojangData[xuid];
 }
 
 int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
+    ZoneScopedN("Game::RegisterConfigValues");
     int32_t hr = 0;
 
     // #ifdef 0
@@ -5344,6 +5460,7 @@ int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
                                        wchar_t* pFirstSkin,
                                        unsigned int uiSortIndex, int iConfig,
                                        wchar_t* pDataFile) {
+                                           ZoneScopedN("Game::RegisterDLCData");
     int32_t hr = 0;
     DLC_INFO* pDLCData = new DLC_INFO;
     memset(pDLCData, 0, sizeof(DLC_INFO));
@@ -5394,6 +5511,7 @@ int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
                                        wchar_t* pFirstSkin,
                                        unsigned int uiSortIndex, int iConfig,
                                        wchar_t* pDataFile) {
+                                           ZoneScopedN("Game::RegisterDLCData");
     fprintf(stderr,
             "warning: Game::RegisterDLCData unimplemented for "
             "platform `__linux__`\n");
@@ -5404,6 +5522,7 @@ int32_t Game::RegisterDLCData(wchar_t* pType, wchar_t* pBannerName,
 int32_t Game::RegisterDLCData(char* pchDLCName,
                                        unsigned int uiSortIndex,
                                        char* pchImageURL) {
+                                           ZoneScopedN("Game::RegisterDLCData");
     // on PS3 we get all the required info from the name
     char chDLCType[3];
     int32_t hr = 0;
@@ -5450,6 +5569,7 @@ int32_t Game::RegisterDLCData(char* pchDLCName,
 
 bool Game::GetDLCFullOfferIDForSkinID(const std::wstring& FirstSkin,
                                                uint64_t* pullVal) {
+                                                   ZoneScopedN("Game::GetDLCFullOfferIDForSkinID");
     auto it = DLCInfo_SkinName.find(FirstSkin);
     if (it == DLCInfo_SkinName.end()) {
         return false;
@@ -5460,6 +5580,7 @@ bool Game::GetDLCFullOfferIDForSkinID(const std::wstring& FirstSkin,
 }
 bool Game::GetDLCFullOfferIDForPackID(const int iPackID,
                                                uint64_t* pullVal) {
+                                                   ZoneScopedN("Game::GetDLCFullOfferIDForPackID");
     auto it = DLCTextures_PackID.find(iPackID);
     if (it == DLCTextures_PackID.end()) {
         *pullVal = (uint64_t)0;
@@ -5470,6 +5591,7 @@ bool Game::GetDLCFullOfferIDForPackID(const int iPackID,
     }
 }
 DLC_INFO* Game::GetDLCInfoForTrialOfferID(uint64_t ullOfferID_Trial) {
+    ZoneScopedN("Game::GetDLCInfoForTrialOfferID");
     // DLC_INFO *pDLCInfo=NULL;
     if (DLCInfo_Trial.size() > 0) {
         auto it = DLCInfo_Trial.find(ullOfferID_Trial);
@@ -5485,6 +5607,7 @@ DLC_INFO* Game::GetDLCInfoForTrialOfferID(uint64_t ullOfferID_Trial) {
 }
 
 DLC_INFO* Game::GetDLCInfoTrialOffer(int iIndex) {
+    ZoneScopedN("Game::GetDLCInfoTrialOffer");
     std::unordered_map<uint64_t, DLC_INFO*>::iterator it =
         DLCInfo_Trial.begin();
 
@@ -5495,6 +5618,7 @@ DLC_INFO* Game::GetDLCInfoTrialOffer(int iIndex) {
     return it->second;
 }
 DLC_INFO* Game::GetDLCInfoFullOffer(int iIndex) {
+    ZoneScopedN("Game::GetDLCInfoFullOffer");
     std::unordered_map<uint64_t, DLC_INFO*>::iterator it = DLCInfo_Full.begin();
 
     for (int i = 0; i < iIndex; i++) {
@@ -5504,6 +5628,7 @@ DLC_INFO* Game::GetDLCInfoFullOffer(int iIndex) {
     return it->second;
 }
 uint64_t Game::GetDLCInfoTexturesFullOffer(int iIndex) {
+    ZoneScopedN("Game::GetDLCInfoTexturesFullOffer");
     std::unordered_map<int, uint64_t>::iterator it = DLCTextures_PackID.begin();
 
     for (int i = 0; i < iIndex; i++) {
@@ -5514,6 +5639,7 @@ uint64_t Game::GetDLCInfoTexturesFullOffer(int iIndex) {
 }
 
 DLC_INFO* Game::GetDLCInfoForFullOfferID(uint64_t ullOfferID_Full) {
+    ZoneScopedN("Game::GetDLCInfoForFullOfferID");
     if (DLCInfo_Full.size() > 0) {
         auto it = DLCInfo_Full.find(ullOfferID_Full);
 
@@ -5528,6 +5654,7 @@ DLC_INFO* Game::GetDLCInfoForFullOfferID(uint64_t ullOfferID_Full) {
 }
 
 void Game::lockSaveNotification() {
+    ZoneScopedN("Game::lockSaveNotification");
     std::lock_guard<std::mutex> lock(m_saveNotificationMutex);
     if (m_saveNotificationDepth++ == 0) {
         if (g_NetworkManager
@@ -5547,6 +5674,7 @@ void Game::lockSaveNotification() {
 }
 
 void Game::unlockSaveNotification() {
+    ZoneScopedN("Game::unlockSaveNotification");
     std::lock_guard<std::mutex> lock(m_saveNotificationMutex);
     if (--m_saveNotificationDepth == 0) {
         if (g_NetworkManager
@@ -5566,7 +5694,7 @@ void Game::unlockSaveNotification() {
 }
 
 int Game::RemoteSaveThreadProc(void* lpParameter) {
-    ZoneScoped;
+    ZoneScopedN("Game::RemoteSaveThreadProc");
     // The game should be stopped while we are doing this, but the connections
     // ticks may try to create some AABB's or Vec3's
     Compression::UseDefaultThreadStorage();
@@ -5614,6 +5742,7 @@ int Game::RemoteSaveThreadProc(void* lpParameter) {
 }
 
 void Game::ExitGameFromRemoteSave(void* lpParameter) {
+    ZoneScopedN("Game::ExitGameFromRemoteSave");
     int primaryPad = ProfileManager.GetPrimaryPad();
 
     unsigned int uiIDA[3];
@@ -5627,6 +5756,7 @@ void Game::ExitGameFromRemoteSave(void* lpParameter) {
 
 int Game::ExitGameFromRemoteSaveDialogReturned(
     void* pParam, int iPad, C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::ExitGameFromRemoteSaveDialogReturned");
     // CScene_Pause* pClass = (CScene_Pause*)pParam;
 
     // results switched for this dialog
@@ -5646,6 +5776,7 @@ int Game::ExitGameFromRemoteSaveDialogReturned(
 }
 
 void Game::SetSpecialTutorialCompletionFlag(int iPad, int index) {
+    ZoneScopedN("Game::SetSpecialTutorialCompletionFlag");
     if (index >= 0 && index < 32 && GameSettingsA[iPad] != nullptr) {
         GameSettingsA[iPad]->uiSpecialTutorialBitmask |= (1 << index);
     }
@@ -5654,12 +5785,14 @@ void Game::SetSpecialTutorialCompletionFlag(int iPad, int index) {
 // BANNED LIST FUNCTIONS
 
 void Game::SetUniqueMapName(char* pszUniqueMapName) {
+    ZoneScopedN("Game::SetUniqueMapName");
     memcpy(m_pszUniqueMapName, pszUniqueMapName, 14);
 }
 
 char* Game::GetUniqueMapName(void) { return m_pszUniqueMapName; }
 
 void Game::InvalidateBannedList(int iPad) {
+    ZoneScopedN("Game::InvalidateBannedList");
     if (m_bRead_BannedListA[iPad] == true) {
         m_bRead_BannedListA[iPad] = false;
         SetBanListCheck(iPad, false);
@@ -5675,6 +5808,7 @@ void Game::InvalidateBannedList(int iPad) {
 void Game::AddLevelToBannedLevelList(int iPad, PlayerUID xuid,
                                               char* pszLevelName,
                                               bool bWriteToTMS) {
+                                                  ZoneScopedN("Game::AddLevelToBannedLevelList");
     // we will have retrieved the banned level list from TMS, so add this one to
     // it and write it back to TMS
 
@@ -5710,6 +5844,7 @@ void Game::AddLevelToBannedLevelList(int iPad, PlayerUID xuid,
 
 bool Game::IsInBannedLevelList(int iPad, PlayerUID xuid,
                                         char* pszLevelName) {
+                                            ZoneScopedN("Game::IsInBannedLevelList");
     for (auto it = m_vBannedListA[iPad]->begin();
          it != m_vBannedListA[iPad]->end(); ++it) {
         PBANNEDLISTDATA pData = *it;
@@ -5724,6 +5859,7 @@ bool Game::IsInBannedLevelList(int iPad, PlayerUID xuid,
 
 void Game::RemoveLevelFromBannedLevelList(int iPad, PlayerUID xuid,
                                                    char* pszLevelName) {
+                                                       ZoneScopedN("Game::RemoveLevelFromBannedLevelList");
     // bool bFound=false;
     // bool bRes;
 
@@ -5768,6 +5904,7 @@ void Game::RemoveLevelFromBannedLevelList(int iPad, PlayerUID xuid,
 
 // function to add credits for the DLC packs
 void Game::AddCreditText(const wchar_t* lpStr) {
+    ZoneScopedN("Game::AddCreditText");
     DebugPrintf("ADDING CREDIT - %ls\n", lpStr);
     // add a std::string from the DLC to a credits std::vector
     SCreditTextItemDef* pCreditStruct = new SCreditTextItemDef;
@@ -5781,6 +5918,7 @@ void Game::AddCreditText(const wchar_t* lpStr) {
 }
 
 bool Game::AlreadySeenCreditText(const std::wstring& wstemp) {
+    ZoneScopedN("Game::AlreadySeenCreditText");
     for (unsigned int i = 0; i < m_vCreditText.size(); i++) {
         std::wstring temp = m_vCreditText.at(i);
 
@@ -5796,10 +5934,12 @@ bool Game::AlreadySeenCreditText(const std::wstring& wstemp) {
 }
 
 unsigned int Game::GetDLCCreditsCount() {
+    ZoneScopedN("Game::GetDLCCreditsCount");
     return (unsigned int)vDLCCredits.size();
 }
 
 SCreditTextItemDef* Game::GetDLCCredits(int iIndex) {
+    ZoneScopedN("Game::GetDLCCredits");
     return vDLCCredits.at(iIndex);
 }
 
@@ -5807,12 +5947,14 @@ SCreditTextItemDef* Game::GetDLCCredits(int iIndex) {
 
 void Game::SetGameHostOption(eGameHostOption eVal,
                                       unsigned int uiVal) {
+                                          ZoneScopedN("Game::SetGameHostOption");
     SetGameHostOption(m_uiGameHostSettings, eVal, uiVal);
 }
 
 void Game::SetGameHostOption(unsigned int& uiHostSettings,
                                       eGameHostOption eVal,
                                       unsigned int uiVal) {
+                                          ZoneScopedN("Game::SetGameHostOption");
     switch (eVal) {
         case eGameHostOption_FriendsOfFriends:
             if (uiVal != 0) {
@@ -6046,11 +6188,13 @@ void Game::SetGameHostOption(unsigned int& uiHostSettings,
 }
 
 unsigned int Game::GetGameHostOption(eGameHostOption eVal) {
+    ZoneScopedN("Game::GetGameHostOption");
     return GetGameHostOption(m_uiGameHostSettings, eVal);
 }
 
 unsigned int Game::GetGameHostOption(unsigned int uiHostSettings,
                                               eGameHostOption eVal) {
+                                                  ZoneScopedN("Game::GetGameHostOption");
     // unsigned int uiVal=0;
     switch (eVal) {
         case eGameHostOption_FriendsOfFriends:
@@ -6151,6 +6295,7 @@ unsigned int Game::GetGameHostOption(unsigned int uiHostSettings,
 }
 
 bool Game::CanRecordStatsAndAchievements() {
+    ZoneScopedN("Game::CanRecordStatsAndAchievements");
     bool isTutorial = Minecraft::GetInstance() != nullptr &&
                       Minecraft::GetInstance()->isTutorial();
     // 4J Stu - All of these options give the host player some advantage, so
@@ -6168,23 +6313,28 @@ bool Game::CanRecordStatsAndAchievements() {
 }
 
 void Game::processSchematics(LevelChunk* levelChunk) {
+    ZoneScopedN("Game::processSchematics");
     m_gameRules.processSchematics(levelChunk);
 }
 
 void Game::processSchematicsLighting(LevelChunk* levelChunk) {
+    ZoneScopedN("Game::processSchematicsLighting");
     m_gameRules.processSchematicsLighting(levelChunk);
 }
 
 void Game::loadDefaultGameRules() {
+    ZoneScopedN("Game::loadDefaultGameRules");
     m_gameRules.loadDefaultGameRules();
 }
 
 void Game::setLevelGenerationOptions(
     LevelGenerationOptions* levelGen) {
+        ZoneScopedN("Game::setLevelGenerationOptions");
     m_gameRules.setLevelGenerationOptions(levelGen);
 }
 
 const wchar_t* Game::GetGameRulesString(const std::wstring& key) {
+    ZoneScopedN("Game::GetGameRulesString");
     return m_gameRules.GetGameRulesString(key);
 }
 
@@ -6193,6 +6343,7 @@ unsigned char Game::m_szPNG[8] = {137, 80, 78, 71, 13, 10, 26, 10};
 #define PNG_TAG_tEXt 0x74455874
 
 unsigned int Game::FromBigEndian(unsigned int uiValue) {
+    ZoneScopedN("Game::FromBigEndian");
     unsigned int uiReturn =
         ((uiValue >> 24) & 0x000000ff) | ((uiValue >> 8) & 0x0000ff00) |
         ((uiValue << 8) & 0x00ff0000) | ((uiValue << 24) & 0xff000000);
@@ -6205,6 +6356,7 @@ void Game::GetImageTextData(std::uint8_t* imageData,
                                      unsigned int& uiHostOptions,
                                      bool& bHostOptionsRead,
                                      std::uint32_t& uiTexturePack) {
+                                         ZoneScopedN("Game::GetImageTextData");
     auto readPngUInt32 = [](const std::uint8_t* data) -> unsigned int {
         unsigned int value = 0;
         std::memcpy(&value, data, sizeof(value));
@@ -6301,6 +6453,7 @@ unsigned int Game::CreateImageTextData(std::uint8_t* textMetadata,
                                                 int64_t seed, bool hasSeed,
                                                 unsigned int uiHostOptions,
                                                 unsigned int uiTexturePackId) {
+                                                    ZoneScopedN("Game::CreateImageTextData");
     int iTextMetadataBytes = 0;
     if (hasSeed) {
         strcpy((char*)textMetadata, "4J_SEED");
@@ -6336,6 +6489,7 @@ unsigned int Game::CreateImageTextData(std::uint8_t* textMetadata,
 
 void Game::AddTerrainFeaturePosition(_eTerrainFeatureType eFeatureType,
                                               int x, int z) {
+                                                  ZoneScopedN("Game::AddTerrainFeaturePosition");
     // check we don't already have this in
     for (auto it = m_vTerrainFeatures.begin(); it < m_vTerrainFeatures.end();
          ++it) {
@@ -6355,6 +6509,7 @@ void Game::AddTerrainFeaturePosition(_eTerrainFeatureType eFeatureType,
 }
 
 _eTerrainFeatureType Game::IsTerrainFeature(int x, int z) {
+    ZoneScopedN("Game::IsTerrainFeature");
     for (auto it = m_vTerrainFeatures.begin(); it < m_vTerrainFeatures.end();
          ++it) {
         FEATURE_DATA* pFeatureData = *it;
@@ -6368,6 +6523,7 @@ _eTerrainFeatureType Game::IsTerrainFeature(int x, int z) {
 
 bool Game::GetTerrainFeaturePosition(_eTerrainFeatureType eType,
                                               int* pX, int* pZ) {
+                                                  ZoneScopedN("Game::GetTerrainFeaturePosition");
     for (auto it = m_vTerrainFeatures.begin(); it < m_vTerrainFeatures.end();
          ++it) {
         FEATURE_DATA* pFeatureData = *it;
@@ -6383,6 +6539,7 @@ bool Game::GetTerrainFeaturePosition(_eTerrainFeatureType eType,
 }
 
 void Game::ClearTerrainFeaturePosition() {
+    ZoneScopedN("Game::ClearTerrainFeaturePosition");
     FEATURE_DATA* pFeatureData;
     while (m_vTerrainFeatures.size() > 0) {
         pFeatureData = m_vTerrainFeatures.back();
@@ -6394,6 +6551,7 @@ void Game::ClearTerrainFeaturePosition() {
 void Game::UpdatePlayerInfo(std::uint8_t networkSmallId,
                                      int16_t playerColourIndex,
                                      unsigned int playerGamePrivileges) {
+                                         ZoneScopedN("Game::UpdatePlayerInfo");
     for (unsigned int i = 0; i < MINECRAFT_NET_MAX_PLAYERS; ++i) {
         if (m_playerColours[i] == networkSmallId) {
             m_playerColours[i] = 0;
@@ -6408,6 +6566,7 @@ void Game::UpdatePlayerInfo(std::uint8_t networkSmallId,
 }
 
 short Game::GetPlayerColour(std::uint8_t networkSmallId) {
+    ZoneScopedN("Game::GetPlayerColour");
     short index = -1;
     for (unsigned int i = 0; i < MINECRAFT_NET_MAX_PLAYERS; ++i) {
         if (m_playerColours[i] == networkSmallId) {
@@ -6419,6 +6578,7 @@ short Game::GetPlayerColour(std::uint8_t networkSmallId) {
 }
 
 unsigned int Game::GetPlayerPrivileges(std::uint8_t networkSmallId) {
+    ZoneScopedN("Game::GetPlayerPrivileges");
     unsigned int privileges = 0;
     for (unsigned int i = 0; i < MINECRAFT_NET_MAX_PLAYERS; ++i) {
         if (m_playerColours[i] == networkSmallId) {
@@ -6430,6 +6590,7 @@ unsigned int Game::GetPlayerPrivileges(std::uint8_t networkSmallId) {
 }
 
 std::wstring Game::getEntityName(eINSTANCEOF type) {
+    ZoneScopedN("Game::getEntityName");
     switch (type) {
         case eTYPE_WOLF:
             return app.GetString(IDS_WOLF);
@@ -6491,6 +6652,7 @@ std::uint32_t Game::m_dwContentTypeA[e_Marketplace_MAX] = {
 
 unsigned int Game::AddDLCRequest(eDLCMarketplaceType eType,
                                           bool bPromote) {
+                                              ZoneScopedN("Game::AddDLCRequest");
     // lock access
     {
         std::lock_guard<std::mutex> lock(csDLCDownloadQueue);
@@ -6536,6 +6698,7 @@ unsigned int Game::AddDLCRequest(eDLCMarketplaceType eType,
 
 unsigned int Game::AddTMSPPFileTypeRequest(eDLCContentType eType,
                                                     bool bPromote) {
+                                                        ZoneScopedN("Game::AddTMSPPFileTypeRequest");
     // lock access
     std::lock_guard<std::mutex> lock(csTMSPPDownloadQueue);
 
@@ -6721,6 +6884,7 @@ unsigned int Game::AddTMSPPFileTypeRequest(eDLCContentType eType,
 }
 
 bool Game::CheckTMSDLCCanStop() {
+    ZoneScopedN("Game::CheckTMSDLCCanStop");
     std::lock_guard<std::mutex> lock(csTMSPPDownloadQueue);
     for (auto it = m_TMSPPDownloadQueue.begin();
          it != m_TMSPPDownloadQueue.end(); ++it) {
@@ -6735,6 +6899,7 @@ bool Game::CheckTMSDLCCanStop() {
 }
 
 bool Game::RetrieveNextDLCContent() {
+    ZoneScopedN("Game::RetrieveNextDLCContent");
     // If there's already a retrieve in progress, quit
     // we may have re-ordered the list, so need to check every item
 
@@ -6792,6 +6957,7 @@ bool Game::RetrieveNextDLCContent() {
 int Game::TMSPPFileReturned(void* pParam, int iPad, int iUserData,
                                      C4JStorage::PTMSPP_FILEDATA pFileData,
                                      const char* szFilename) {
+                                         ZoneScopedN("Game::TMSPPFileReturned");
     Game* pClass = (Game*)pParam;
 
     // find the right one in the vector
@@ -6844,6 +7010,7 @@ int Game::TMSPPFileReturned(void* pParam, int iPad, int iUserData,
 bool Game::RetrieveNextTMSPPContent() { return false; }
 
 void Game::TickDLCOffersRetrieved() {
+    ZoneScopedN("Game::TickDLCOffersRetrieved");
     if (!m_bAllDLCContentRetrieved) {
         if (!app.RetrieveNextDLCContent()) {
             app.DebugPrintf("[Consoles_App] All content retrieved.\n");
@@ -6852,6 +7019,7 @@ void Game::TickDLCOffersRetrieved() {
     }
 }
 void Game::ClearAndResetDLCDownloadQueue() {
+    ZoneScopedN("Game::ClearAndResetDLCDownloadQueue");
     app.DebugPrintf("[Consoles_App] Clear and reset download queue.\n");
 
     int iPosition = 0;
@@ -6870,6 +7038,7 @@ void Game::ClearAndResetDLCDownloadQueue() {
 }
 
 void Game::TickTMSPPFilesRetrieved() {
+    ZoneScopedN("Game::TickTMSPPFilesRetrieved");
     if (m_bTickTMSDLCFiles && !m_bAllTMSContentRetrieved) {
         if (app.RetrieveNextTMSPPContent() == false) {
             m_bAllTMSContentRetrieved = true;
@@ -6877,6 +7046,7 @@ void Game::TickTMSPPFilesRetrieved() {
     }
 }
 void Game::ClearTMSPPFilesRetrieved() {
+    ZoneScopedN("Game::ClearTMSPPFilesRetrieved");
     int iPosition = 0;
     {
         std::lock_guard<std::mutex> lock(csTMSPPDownloadQueue);
@@ -6894,6 +7064,7 @@ void Game::ClearTMSPPFilesRetrieved() {
 
 int Game::dlcOffersReturned(int iOfferC, std::uint32_t dwType,
                                      int iPad) {
+                                         ZoneScopedN("Game::dlcOffersReturned");
     // find the right one in the vector
     {
         std::lock_guard<std::mutex> lock(csTMSPPDownloadQueue);
@@ -6918,6 +7089,7 @@ int Game::dlcOffersReturned(int iOfferC, std::uint32_t dwType,
 }
 
 eDLCContentType Game::Find_eDLCContentType(std::uint32_t dwType) {
+    ZoneScopedN("Game::Find_eDLCContentType");
     for (int i = 0; i < e_DLC_MAX; i++) {
         if (m_dwContentTypeA[i] == dwType) {
             return (eDLCContentType)i;
@@ -6926,6 +7098,7 @@ eDLCContentType Game::Find_eDLCContentType(std::uint32_t dwType) {
     return (eDLCContentType)0;
 }
 bool Game::DLCContentRetrieved(eDLCMarketplaceType eType) {
+    ZoneScopedN("Game::DLCContentRetrieved");
     // If there's already a retrieve in progress, quit
     // we may have re-ordered the list, so need to check every item
     std::lock_guard<std::mutex> lock(csDLCDownloadQueue);
@@ -6944,6 +7117,7 @@ bool Game::DLCContentRetrieved(eDLCMarketplaceType eType) {
 void Game::SetAdditionalSkinBoxes(std::uint32_t dwSkinID,
                                            SKIN_BOX* SkinBoxA,
                                            unsigned int dwSkinBoxC) {
+                                               ZoneScopedN("Game::SetAdditionalSkinBoxes");
     EntityRenderer* renderer =
         EntityRenderDispatcher::instance->getRenderer(eTYPE_PLAYER);
     Model* pModel = renderer->getModel();
@@ -6981,6 +7155,7 @@ void Game::SetAdditionalSkinBoxes(std::uint32_t dwSkinID,
 
 std::vector<ModelPart*>* Game::SetAdditionalSkinBoxes(
     std::uint32_t dwSkinID, std::vector<SKIN_BOX*>* pvSkinBoxA) {
+        ZoneScopedN("Game::SetAdditionalSkinBoxes");
     EntityRenderer* renderer =
         EntityRenderDispatcher::instance->getRenderer(eTYPE_PLAYER);
     Model* pModel = renderer->getModel();
@@ -7016,6 +7191,7 @@ std::vector<ModelPart*>* Game::SetAdditionalSkinBoxes(
 
 std::vector<ModelPart*>* Game::GetAdditionalModelParts(
     std::uint32_t dwSkinID) {
+        ZoneScopedN("Game::GetAdditionalModelParts");
     std::lock_guard<std::mutex> lock(csAdditionalModelParts);
     std::vector<ModelPart*>* pvModelParts = nullptr;
     if (m_AdditionalModelParts.size() > 0) {
@@ -7030,6 +7206,7 @@ std::vector<ModelPart*>* Game::GetAdditionalModelParts(
 
 std::vector<SKIN_BOX*>* Game::GetAdditionalSkinBoxes(
     std::uint32_t dwSkinID) {
+        ZoneScopedN("Game::GetAdditionalSkinBoxes");
     std::lock_guard<std::mutex> lock(csAdditionalSkinBoxes);
     std::vector<SKIN_BOX*>* pvSkinBoxes = nullptr;
     if (m_AdditionalSkinBoxes.size() > 0) {
@@ -7043,6 +7220,7 @@ std::vector<SKIN_BOX*>* Game::GetAdditionalSkinBoxes(
 }
 
 unsigned int Game::GetAnimOverrideBitmask(std::uint32_t dwSkinID) {
+    ZoneScopedN("Game::GetAnimOverrideBitmask");
     std::lock_guard<std::mutex> lock(csAnimOverrideBitmask);
     unsigned int uiAnimOverrideBitmask = 0L;
 
@@ -7058,6 +7236,7 @@ unsigned int Game::GetAnimOverrideBitmask(std::uint32_t dwSkinID) {
 
 void Game::SetAnimOverrideBitmask(std::uint32_t dwSkinID,
                                            unsigned int uiAnimOverrideBitmask) {
+                                               ZoneScopedN("Game::SetAnimOverrideBitmask");
     // Make thread safe
     std::lock_guard<std::mutex> lock(csAnimOverrideBitmask);
 
@@ -7072,6 +7251,7 @@ void Game::SetAnimOverrideBitmask(std::uint32_t dwSkinID,
 }
 
 std::uint32_t Game::getSkinIdFromPath(const std::wstring& skin) {
+    ZoneScopedN("Game::getSkinIdFromPath");
     bool dlcSkin = false;
     unsigned int skinId = 0;
 
@@ -7097,6 +7277,7 @@ std::uint32_t Game::getSkinIdFromPath(const std::wstring& skin) {
 }
 
 std::wstring Game::getSkinPathFromId(std::uint32_t skinId) {
+    ZoneScopedN("Game::getSkinPathFromId");
     // 4J Stu - This function maps the encoded uint32_t we store in the player
     // profile to a filename that is stored as a memory texture and shared
     // between systems in game
@@ -7122,10 +7303,12 @@ std::wstring Game::getSkinPathFromId(std::uint32_t skinId) {
 
 int Game::TexturePackDialogReturned(
     void* pParam, int iPad, C4JStorage::EMessageResult result) {
+        ZoneScopedN("Game::TexturePackDialogReturned");
     return 0;
 }
 
 int Game::getArchiveFileSize(const std::wstring& filename) {
+    ZoneScopedN("Game::getArchiveFileSize");
     TexturePack* tPack = nullptr;
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft && pMinecraft->skins)
@@ -7138,6 +7321,7 @@ int Game::getArchiveFileSize(const std::wstring& filename) {
 }
 
 bool Game::hasArchiveFile(const std::wstring& filename) {
+    ZoneScopedN("Game::hasArchiveFile");
     TexturePack* tPack = nullptr;
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft && pMinecraft->skins)
@@ -7151,6 +7335,7 @@ bool Game::hasArchiveFile(const std::wstring& filename) {
 
 std::vector<uint8_t> Game::getArchiveFile(
     const std::wstring& filename) {
+        ZoneScopedN("Game::getArchiveFile");
     TexturePack* tPack = nullptr;
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft && pMinecraft->skins)
@@ -7165,19 +7350,23 @@ std::vector<uint8_t> Game::getArchiveFile(
 // DLC
 
 int Game::GetDLCInfoTrialOffersCount() {
+    ZoneScopedN("Game::GetDLCInfoTrialOffersCount");
     return (int)DLCInfo_Trial.size();
 }
 
 int Game::GetDLCInfoFullOffersCount() {
+    ZoneScopedN("Game::GetDLCInfoFullOffersCount");
     return (int)DLCInfo_Full.size();
 }
 
 int Game::GetDLCInfoTexturesOffersCount() {
+    ZoneScopedN("Game::GetDLCInfoTexturesOffersCount");
     return (int)DLCTextures_PackID.size();
 }
 
 // AUTOSAVE
 void Game::SetAutosaveTimerTime(void) {
+    ZoneScopedN("Game::SetAutosaveTimerTime");
     int settingValue = GetGameSettings(ProfileManager.GetPrimaryPad(), eGameSetting_Autosave);
     m_uiAutosaveTimer =
         time_util::clock::now() +
@@ -7185,23 +7374,28 @@ void Game::SetAutosaveTimerTime(void) {
 }  // value x 15 to get mins
 
 bool Game::AutosaveDue(void) {
+    ZoneScopedN("Game::AutosaveDue");
     return (time_util::clock::now() > m_uiAutosaveTimer);
 }
 
 int64_t Game::SecondsToAutosave() {
+    ZoneScopedN("Game::SecondsToAutosave");
     return std::chrono::duration_cast<std::chrono::seconds>(m_uiAutosaveTimer - time_util::clock::now()).count();
 }
 
 void Game::SetTrialTimerStart(void) {
+    ZoneScopedN("Game::SetTrialTimerStart");
     m_fTrialTimerStart = m_Time.fAppTime;
     mfTrialPausedTime = 0.0f;
 }
 
 float Game::getTrialTimer(void) {
+    ZoneScopedN("Game::getTrialTimer");
     return m_Time.fAppTime - m_fTrialTimerStart - mfTrialPausedTime;
 }
 
 bool Game::IsLocalMultiplayerAvailable() {
+    ZoneScopedN("Game::IsLocalMultiplayerAvailable");
     unsigned int connectedControllers = 0;
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
         if (InputManager.IsPadConnected(i) || ProfileManager.IsSignedIn(i))
@@ -7236,6 +7430,7 @@ bool Game::IsLocalMultiplayerAvailable() {
 // 4J-PB - language and locale function
 
 void Game::getLocale(std::vector<std::wstring>& vecWstrLocales) {
+    ZoneScopedN("Game::getLocale");
     std::vector<eMCLang> locales;
 
     const unsigned int systemLanguage = XGetLanguage();
@@ -7394,14 +7589,17 @@ void Game::getLocale(std::vector<std::wstring>& vecWstrLocales) {
 }
 
 int Game::get_eMCLang(wchar_t* pwchLocale) {
+    ZoneScopedN("Game::get_eMCLang");
     return m_eMCLangA[pwchLocale];
 }
 
 int Game::get_xcLang(wchar_t* pwchLocale) {
+    ZoneScopedN("Game::get_xcLang");
     return m_xcLangA[pwchLocale];
 }
 
 void Game::LocaleAndLanguageInit() {
+    ZoneScopedN("Game::LocaleAndLanguageInit");
     m_localeA[eMCLang_zhCHT] = L"zh-CHT";
     m_localeA[eMCLang_csCS] = L"cs-CS";
     m_localeA[eMCLang_laLAS] = L"la-LAS";
@@ -7603,6 +7801,7 @@ void Game::LocaleAndLanguageInit() {
 }
 
 void Game::SetTickTMSDLCFiles(bool bVal) {
+    ZoneScopedN("Game::SetTickTMSDLCFiles");
     // 4J-PB - we need to stop the retrieval of minecraft store images from TMS
     // when we aren't in the DLC, since going in to Play Game will change the
     // title id group
@@ -7613,6 +7812,7 @@ std::wstring Game::getFilePath(std::uint32_t packId,
                                         std::wstring filename,
                                         bool bAddDataFolder,
                                         std::wstring mountPoint) {
+                                            ZoneScopedN("Game::getFilePath");
     std::wstring path =
         getRootPath(packId, true, bAddDataFolder, mountPoint) + filename;
     File f(path);
@@ -7647,6 +7847,7 @@ std::wstring titleUpdateTexturePackRoot = L"CU\\DLC\\";
 std::wstring Game::getRootPath(std::uint32_t packId,
                                         bool allowOverride, bool bAddDataFolder,
                                         std::wstring mountPoint) {
+                                            ZoneScopedN("Game::getRootPath");
     std::wstring path = mountPoint;
     if (allowOverride) {
         switch (packId) {

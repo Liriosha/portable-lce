@@ -1,3 +1,6 @@
+#ifdef TRACY_ENABLE
+#include <tracy/Tracy.hpp>
+#endif
 #include "RegionFile.h"
 
 #include <string.h>
@@ -19,7 +22,8 @@
 std::vector<uint8_t> RegionFile::emptySector(SECTOR_BYTES);
 
 RegionFile::RegionFile(ConsoleSaveFile* saveFile, File* path) {
-    _lastModified = 0;
+     _lastModified = 0;
+    ZoneScopedN("RegionFile::RegionFile");
 
     m_saveFile = saveFile;
 
@@ -143,7 +147,7 @@ RegionFile::RegionFile(ConsoleSaveFile* saveFile, File* path) {
 void RegionFile::writeAllOffsets()  // used for the file ConsoleSaveFile
                                     // conversion between platforms
 {
-    if (m_bIsEmpty == false) {
+    ZoneScopedN("RegionFile::writeAllOffsets");    if (m_bIsEmpty == false) {
         // save all the offsets and timestamps
         m_saveFile->LockSaveAccess();
 
@@ -162,7 +166,7 @@ void RegionFile::writeAllOffsets()  // used for the file ConsoleSaveFile
     }
 }
 RegionFile::~RegionFile() {
-    delete[] offsets;
+    ZoneScopedN("RegionFile");    delete[] offsets;
     delete[] chunkTimestamps;
     delete sectorFree;
     m_saveFile->closeHandle(fileEntry);
@@ -180,7 +184,7 @@ int RegionFile::getSizeDelta()  // TODO - was synchronized
 DataInputStream* RegionFile::getChunkDataInputStream(
     int x, int z)  // TODO - was synchronized
 {
-    if (outOfBounds(x, z)) {
+    ZoneScopedN("RegionFile::getChunkDataInputStream");    if (outOfBounds(x, z)) {
         //        debugln("READ", x, z, "out of bounds");
         return nullptr;
     }
@@ -281,7 +285,7 @@ DataInputStream* RegionFile::getChunkDataInputStream(
 }
 
 DataOutputStream* RegionFile::getChunkDataOutputStream(int x, int z) {
-    // 4J - was DeflatorOutputStream in here too, but we've already compressed
+    ZoneScopedN("RegionFile::getChunkDataOutputStream");    // 4J - was DeflatorOutputStream in here too, but we've already compressed
     return new DataOutputStream(new ChunkBuffer(this, x, z));
 }
 
@@ -289,7 +293,7 @@ DataOutputStream* RegionFile::getChunkDataOutputStream(int x, int z) {
 void RegionFile::write(int x, int z, std::uint8_t* data,
                        int length)  // TODO - was synchronized
 {
-    // 4J Stu - Do the compression here so that we know how much space we need
+    ZoneScopedN("RegionFile::write");    // 4J Stu - Do the compression here so that we know how much space we need
     // to store the compressed data
     std::uint8_t* compData =
         new std::uint8_t[length +
@@ -404,7 +408,7 @@ void RegionFile::write(int x, int z, std::uint8_t* data,
 /* write a chunk data to the region file at specified sector number */
 void RegionFile::write(int sectorNumber, std::uint8_t* data, int length,
                        unsigned int compLength) {
-    unsigned int numberOfBytesWritten = 0;
+                           ZoneScopedN("RegionFile::write");    unsigned int numberOfBytesWritten = 0;
     // SetFilePointer(file,sectorNumber * SECTOR_BYTES,0,FILE_BEGIN);
     m_saveFile->setFilePointer(fileEntry, sectorNumber * SECTOR_BYTES,
                                SaveFileSeekOrigin::Begin);
@@ -429,7 +433,7 @@ void RegionFile::write(int sectorNumber, std::uint8_t* data, int length,
 }
 
 void RegionFile::zero(int sectorNumber, int length) {
-    unsigned int numberOfBytesWritten = 0;
+    ZoneScopedN("RegionFile::zero");    unsigned int numberOfBytesWritten = 0;
     // SetFilePointer(file,sectorNumber * SECTOR_BYTES,0,FILE_BEGIN);
     m_saveFile->setFilePointer(fileEntry, sectorNumber * SECTOR_BYTES,
                                SaveFileSeekOrigin::Begin);
@@ -448,7 +452,7 @@ bool RegionFile::hasChunk(int x, int z) { return getOffset(x, z) != 0; }
 // 4J added - write the initial two sectors that used to be written in the ctor
 // when the file was empty
 void RegionFile::insertInitialSectors() {
-    m_saveFile->setFilePointer(fileEntry, 0, SaveFileSeekOrigin::Begin);
+    ZoneScopedN("RegionFile::insertInitialSectors");    m_saveFile->setFilePointer(fileEntry, 0, SaveFileSeekOrigin::Begin);
     unsigned int numberOfBytesWritten = 0;
     std::uint8_t zeroBytes[SECTOR_BYTES];
     memset(zeroBytes, 0, SECTOR_BYTES);

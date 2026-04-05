@@ -17,35 +17,51 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/world/level/LevelSettings.h"
 
+#ifdef TRACY_ENABLE
+  #include <tracy/Tracy.hpp>
+#else
+  #define ZoneScoped
+  #define ZoneScopedN(name)
+#endif
+
 LinuxGame app;
 
 #define CONTEXT_GAME_STATE 0
 
 LinuxGame::LinuxGame() : Game() {}
 
-void LinuxGame::SetRichPresenceContext(int iPad, int contextId) {}
+void LinuxGame::SetRichPresenceContext(int iPad, int contextId) {
+    ZoneScoped;
+}
 
-void LinuxGame::StoreLaunchData() {}
+void LinuxGame::StoreLaunchData() { ZoneScoped; }
 void LinuxGame::ExitGame() {
+    ZoneScoped;
     app.DebugPrintf("Linux_App LinuxGame::ExitGame AFTER START\n");
     RenderManager.Close();
 }
 void LinuxGame::FatalLoadError() {
+    ZoneScoped;
     app.DebugPrintf(
         "LinuxGame::FatalLoadError - asserting 0 and dying...\n");
     assert(0);
 }
 
-void LinuxGame::CaptureSaveThumbnail() {}
+void LinuxGame::CaptureSaveThumbnail() { ZoneScoped; }
 void LinuxGame::GetSaveThumbnail(std::uint8_t** thumbnailData,
-                                            unsigned int* thumbnailSize) {}
-void LinuxGame::ReleaseSaveThumbnail() {}
+                                            unsigned int* thumbnailSize) {
+    ZoneScoped;
+}
+void LinuxGame::ReleaseSaveThumbnail() { ZoneScoped; }
 
 void LinuxGame::GetScreenshot(int iPad,
                                          std::uint8_t** screenshotData,
-                                         unsigned int* screenshotSize) {}
+                                         unsigned int* screenshotSize) {
+    ZoneScoped;
+}
 
 void LinuxGame::TemporaryCreateGameStart() {
+    ZoneScoped;
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// From CScene_Main::OnInit
 
@@ -124,14 +140,22 @@ void LinuxGame::TemporaryCreateGameStart() {
 int LinuxGame::GetLocalTMSFileIndex(wchar_t* wchTMSFile,
                                                bool bFilenameIncludesExtension,
                                                eFileExtensionType eEXT) {
+    ZoneScoped;
     return -1;
 }
 
-int LinuxGame::LoadLocalTMSFile(wchar_t* wchTMSFile) { return -1; }
+int LinuxGame::LoadLocalTMSFile(wchar_t* wchTMSFile) {
+    ZoneScoped;
+    return -1;
+}
 
 int LinuxGame::LoadLocalTMSFile(wchar_t* wchTMSFile,
                                            eFileExtensionType eExt) {
+    ZoneScoped;
     return -1;
 }
 
-void LinuxGame::FreeLocalTMSFiles(eTMSFileType eType) {}
+void LinuxGame::FreeLocalTMSFiles(eTMSFileType eType) {
+    ZoneScoped;
+}
+

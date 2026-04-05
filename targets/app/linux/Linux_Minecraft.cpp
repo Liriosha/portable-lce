@@ -70,6 +70,14 @@ static void sigsegv_handler(int sig) {
 #include "minecraft/world/level/tile/Tile.h"
 #include "strings.h"
 
+#ifdef TRACY_ENABLE
+  #include <tracy/Tracy.hpp>
+#else
+  #define ZoneScoped
+  #define ZoneScopedN(name)
+#endif
+
+
 // #include "../Orbis/Leaderboards/OrbisLeaderboardManager.h"
 
 // #include "../Orbis/Network/Orbis_NPToolkit.h"
@@ -105,6 +113,7 @@ void FreeRichPresenceStrings();
 bool g_bWidescreen = true;
 
 void DefineActions(void) {
+    ZoneScoped;
     // The app needs to define the actions required, and the possible mappings
     // for these
 
@@ -410,6 +419,7 @@ void DefineActions(void) {
 }
 
 int main(int argc, const char* argv[]) {
+    ZoneScoped;
 #if defined(__linux__) && defined(__GLIBC__)
     struct sigaction sa;
     sa.sa_handler = sigsegv_handler;
@@ -646,6 +656,7 @@ int main(int argc, const char* argv[]) {
 std::vector<uint8_t*> vRichPresenceStrings;
 
 uint8_t* mallocAndCreateUTF8ArrayFromString(int iID) {
+    ZoneScoped;
     const wchar_t* wchString = app.GetString(iID);
 
     std::wstring srcString = wchString;
@@ -659,6 +670,7 @@ uint8_t* mallocAndCreateUTF8ArrayFromString(int iID) {
 }
 
 uint8_t* AddRichPresenceString(int iID) {
+    ZoneScoped;
     uint8_t* strUtf8 = mallocAndCreateUTF8ArrayFromString(iID);
     if (strUtf8 != nullptr) {
         vRichPresenceStrings.push_back(strUtf8);
@@ -667,6 +679,7 @@ uint8_t* AddRichPresenceString(int iID) {
 }
 
 void FreeRichPresenceStrings() {
+    ZoneScoped;
     uint8_t* strUtf8;
     for (int i = 0; i < vRichPresenceStrings.size(); i++) {
         strUtf8 = vRichPresenceStrings.at(i);

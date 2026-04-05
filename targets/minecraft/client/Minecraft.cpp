@@ -165,6 +165,7 @@ ResourceLocation Minecraft::ALT_FONT_LOCATION = ResourceLocation(TN_ALT_FONT);
 Minecraft::Minecraft(Component* mouseComponent, Canvas* parent,
                      MinecraftApplet* minecraftApplet, int width, int height,
                      bool fullscreen) {
+                         ZoneScopedN("Minecraft::Minecraft");
     // 4J - added this block of initialisers
     gameMode = nullptr;
     hasCrashed = false;
@@ -283,6 +284,7 @@ Minecraft::Minecraft(Component* mouseComponent, Canvas* parent,
 }
 
 void Minecraft::clearConnectionFailed() {
+    ZoneScopedN("Minecraft::clearConnectionFailed");
     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
         m_connectionFailed[i] = false;
         m_connectionFailedReason[i] = DisconnectPacket::eDisconnect_None;
@@ -291,11 +293,13 @@ void Minecraft::clearConnectionFailed() {
 }
 
 void Minecraft::connectTo(const std::wstring& server, int port) {
+    ZoneScopedN("Minecraft::connectTo");
     connectToIp = server;
     connectToPort = port;
 }
 
 void Minecraft::init() {
+    ZoneScopedN("Minecraft::init");
     // glClearColor(0.2f, 0.2f, 0.2f, 1);
 
     workingDirectory = getWorkingDirectory();
@@ -401,6 +405,7 @@ void Minecraft::init() {
 }
 
 void Minecraft::renderLoadingScreen() {
+    ZoneScopedN("Minecraft::renderLoadingScreen");
     // 4J Unused
     // testing stuff on vita just now
 #if defined(ENABLE_JAVA_GUIS)
@@ -453,6 +458,7 @@ void Minecraft::renderLoadingScreen() {
 }
 
 void Minecraft::blit(int x, int y, int sx, int sy, int w, int h) {
+    ZoneScopedN("Minecraft::blit");
     float us = 1 / 256.0f;
     float vs = 1 / 256.0f;
     Tesselator* t = Tesselator::getInstance();
@@ -469,11 +475,13 @@ void Minecraft::blit(int x, int y, int sx, int sy, int w, int h) {
 }
 
 File Minecraft::getWorkingDirectory() {
+    ZoneScopedN("Minecraft::getWorkingDirectory");
     if (workDir.getPath().empty()) workDir = getWorkingDirectory(L"4jcraft");
     return workDir;
 }
 
 File Minecraft::getWorkingDirectory(const std::wstring& applicationName) {
+    ZoneScopedN("Minecraft::getWorkingDirectory");
     // 4J - original version
     // 4jcraft: ported to C++
     std::wstring userHome = convStringToWstring(getenv("HOME"));
@@ -508,6 +516,7 @@ File Minecraft::getWorkingDirectory(const std::wstring& applicationName) {
 LevelStorageSource* Minecraft::getLevelSource() { return levelSource; }
 
 void Minecraft::setScreen(Screen* screen) {
+    ZoneScopedN("Minecraft::setScreen");
     if (dynamic_cast<ErrorScreen*>(this->screen) != nullptr) return;
 
     if (this->screen != nullptr) {
@@ -576,10 +585,12 @@ void Minecraft::setScreen(Screen* screen) {
 }
 
 void Minecraft::checkGlError(const std::wstring& string) {
+    ZoneScopedN("Minecraft::checkGlError");
     // 4J - TODO
 }
 
 void Minecraft::destroy() {
+    ZoneScopedN("Minecraft::destroy");
     // 4J Gordon: Do not force a stats save here
     /*stats->forceSend();
     stats->forceSave();*/
@@ -666,6 +677,7 @@ void Minecraft::destroy() {
 // from our xbox game loop
 
 void Minecraft::run() {
+    ZoneScopedN("Minecraft::run");
     running = true;
     //    try {	// 4J - removed try/catch
     init();
@@ -1026,7 +1038,6 @@ void Minecraft::createPrimaryLocalPlayer(int iPad) {
 }
 
 void Minecraft::run_middle() {
-    ZoneScoped;
     static int64_t lastTime = 0;
     static bool bFirstTimeIntoGame = true;
     static bool bAutosaveTimerSet = false;
@@ -1174,7 +1185,6 @@ void Minecraft::run_middle() {
                 // 4J-PB - Once we're in the level, check if the players have
                 // the level in their banned list and ask if they want to play
                 // it
-                ZoneScopedN("Render Viewports");
                 for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                     if (localplayers[i] && (app.GetBanListCheck(i) == false) &&
                         !Minecraft::GetInstance()->isTutorial() &&
@@ -1828,12 +1838,14 @@ void Minecraft::run_middle() {
 void Minecraft::run_end() { destroy(); }
 
 void Minecraft::emergencySave() {
+    ZoneScopedN("Minecraft::emergencySave");
     // 4J - lots of try/catches removed here, and garbage collector things
     levelRenderer->clear();
     setLevel(nullptr);
 }
 
 void Minecraft::renderFpsMeter(int64_t tickTime) {
+    ZoneScopedN("Minecraft::renderFpsMeter");
     int nsPer60Fps = 1000000000l / 60;
     if (lastTimer == -1) {
         lastTimer = System::nanoTime();
@@ -1926,11 +1938,13 @@ void Minecraft::renderFpsMeter(int64_t tickTime) {
 }
 
 void Minecraft::stop() {
+    ZoneScopedN("Minecraft::stop");
     running = false;
     // keepPolling = false;
 }
 
 void Minecraft::pauseGame() {
+    ZoneScopedN("Minecraft::pauseGame");
     if (screen != nullptr) {
         // 4jcraft: Pass the keypress to the screen
         // normally this would've been done in updateEvents(), but it works
@@ -1944,6 +1958,7 @@ void Minecraft::pauseGame() {
 }
 
 bool Minecraft::pollResize() {
+    ZoneScopedN("Minecraft::pollResize");
     int fbw, fbh;
     RenderManager.GetFramebufferSize(fbw, fbh);
     if (fbw != width_phys || fbh != height_phys) {
@@ -1954,6 +1969,7 @@ bool Minecraft::pollResize() {
 }
 
 void Minecraft::resize(int width, int height) {
+    ZoneScopedN("Minecraft::resize");
     if (width <= 0) width = 1;
     if (height <= 0) height = 1;
     // 4jcraft: store physical framebuffer size and adjust logical width
@@ -1981,6 +1997,7 @@ void Minecraft::resize(int width, int height) {
 }
 
 void Minecraft::verify() {
+    ZoneScopedN("Minecraft::verify");
     /* 4J - TODO
     new Thread() {
     public void run() {
@@ -2000,12 +2017,13 @@ void Minecraft::verify() {
 }
 
 void Minecraft::levelTickUpdateFunc(void* pParam) {
-    ZoneScoped;
+    ZoneScopedN("Minecraft::levelTickUpdateFunc");
     Level* pLevel = (Level*)pParam;
     pLevel->tick();
 }
 
 void Minecraft::levelTickThreadInitFunc() {
+    ZoneScopedN("Minecraft::levelTickThreadInitFunc");
     Compression::UseDefaultThreadStorage();
 }
 
@@ -2014,7 +2032,7 @@ void Minecraft::levelTickThreadInitFunc() {
 // textures are to be updated - this will be true for the last time this tick
 // runs with bFirst true
 void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
-    ZoneScoped;
+    ZoneScopedN("Minecraft::tick");
     int iPad = player->GetXboxPad();
     // OutputDebugString("Minecraft::tick\n");
 
@@ -3667,6 +3685,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
 }
 
 void Minecraft::reloadSound() {
+    ZoneScopedN("Minecraft::reloadSound");
     //    System.out.println("FORCING RELOAD!");		// 4J - removed
     soundEngine = new SoundEngine();
     soundEngine->init(options);
@@ -3674,6 +3693,7 @@ void Minecraft::reloadSound() {
 }
 
 bool Minecraft::isClientSide() {
+    ZoneScopedN("Minecraft::isClientSide");
     return level != nullptr && level->isClientSide;
 }
 
@@ -3685,10 +3705,12 @@ void Minecraft::selectLevel(ConsoleSaveFile* saveFile,
 bool Minecraft::saveSlot(int slot, const std::wstring& name) { return false; }
 
 bool Minecraft::loadSlot(const std::wstring& userName, int slot) {
+    ZoneScopedN("Minecraft::loadSlot");
     return false;
 }
 
 void Minecraft::releaseLevel(int message) {
+    ZoneScopedN("Minecraft::releaseLevel");
     // this->level = nullptr;
     setLevel(nullptr, message);
 }
@@ -3696,6 +3718,7 @@ void Minecraft::releaseLevel(int message) {
 // 4J Stu - This code was within setLevel, but I moved it out so that I can call
 // it at a better time when exiting from an online game
 void Minecraft::forceStatsSave(int idx) {
+    ZoneScopedN("Minecraft::forceStatsSave");
     // 4J Gordon: Force a stats save
     stats[idx]->save(idx, true);
 
@@ -3710,6 +3733,7 @@ void Minecraft::forceStatsSave(int idx) {
 
 // 4J Added
 MultiPlayerLevel* Minecraft::getLevel(int dimension) {
+    ZoneScopedN("Minecraft::getLevel");
     if (dimension == -1)
         return levels[1];
     else if (dimension == 1)
@@ -3734,6 +3758,7 @@ MultiPlayerLevel* Minecraft::getLevel(int dimension) {
 //}
 
 void Minecraft::forceaddLevel(MultiPlayerLevel* level) {
+    ZoneScopedN("Minecraft::forceaddLevel");
     int dimId = level->dimension->id;
     if (dimId == -1)
         levels[1] = level;
@@ -3922,6 +3947,7 @@ void Minecraft::setLevel(MultiPlayerLevel* level, int message /*=-1*/,
 }
 
 void Minecraft::prepareLevel(int title) {
+    ZoneScopedN("Minecraft::prepareLevel");
     if (progressRenderer != nullptr) {
         this->progressRenderer->progressStart(title);
         this->progressRenderer->progressStage(IDS_PROGRESS_BUILDING_TERRAIN);
@@ -3960,6 +3986,7 @@ void Minecraft::prepareLevel(int title) {
 }
 
 void Minecraft::fileDownloaded(const std::wstring& name, File* file) {
+    ZoneScopedN("Minecraft::fileDownloaded");
     int p = (int)name.find(L"/");
     std::wstring category = name.substr(0, p);
     std::wstring name2 = name.substr(p + 1);
@@ -3978,27 +4005,32 @@ void Minecraft::fileDownloaded(const std::wstring& name, File* file) {
 }
 
 std::wstring Minecraft::gatherStats1() {
+    ZoneScopedN("Minecraft::gatherStats1");
     // return levelRenderer->gatherStats1();
     return L"Time to autosave: " +
            toWString<int64_t>(app.SecondsToAutosave()) + L"s";
 }
 
 std::wstring Minecraft::gatherStats2() {
+    ZoneScopedN("Minecraft::gatherStats2");
     return g_NetworkManager.GatherStats();
     // return levelRenderer->gatherStats2();
 }
 
 std::wstring Minecraft::gatherStats3() {
+    ZoneScopedN("Minecraft::gatherStats3");
     return g_NetworkManager.GatherRTTStats();
     // return L"P: " + particleEngine->countParticles() + L". T: " +
     // level->gatherStats();
 }
 
 std::wstring Minecraft::gatherStats4() {
+    ZoneScopedN("Minecraft::gatherStats4");
     return level->gatherChunkSourceStats();
 }
 
 void Minecraft::respawnPlayer(int iPad, int dimension, int newEntityId) {
+    ZoneScopedN("Minecraft::respawnPlayer");
     gameRenderer
         ->DisableUpdateThread();  // 4J - don't do updating whilst we are
                                   // adjusting the player & localplayer array
@@ -4102,12 +4134,14 @@ void Minecraft::respawnPlayer(int iPad, int dimension, int newEntityId) {
 }
 
 void Minecraft::start(const std::wstring& name, const std::wstring& sid) {
+    ZoneScopedN("Minecraft::start");
     startAndConnectTo(name, sid, L"");
 }
 
 void Minecraft::startAndConnectTo(const std::wstring& name,
                                   const std::wstring& sid,
                                   const std::wstring& url) {
+                                      ZoneScopedN("Minecraft::startAndConnectTo");
     bool fullScreen = false;
     std::wstring userName = name;
 
@@ -4192,6 +4226,7 @@ void Minecraft::startAndConnectTo(const std::wstring& name,
 }
 
 ClientConnection* Minecraft::getConnection(int iPad) {
+    ZoneScopedN("Minecraft::getConnection");
     return localplayers[iPad]->connection;
 }
 
@@ -4203,6 +4238,7 @@ bool useLomp = false;
 int g_iMainThreadId;
 
 void Minecraft::main() {
+    ZoneScopedN("Minecraft::main");
     std::wstring name;
     std::wstring sessionId;
 
@@ -4246,6 +4282,7 @@ void Minecraft::main() {
 }
 
 bool Minecraft::renderNames() {
+    ZoneScopedN("Minecraft::renderNames");
     if (m_instance == nullptr || !m_instance->options->hideGui) {
         return true;
     }
@@ -4253,23 +4290,28 @@ bool Minecraft::renderNames() {
 }
 
 bool Minecraft::useFancyGraphics() {
+    ZoneScopedN("Minecraft::useFancyGraphics");
     return (m_instance != nullptr && m_instance->options->fancyGraphics);
 }
 
 bool Minecraft::useAmbientOcclusion() {
+    ZoneScopedN("Minecraft::useAmbientOcclusion");
     return (m_instance != nullptr &&
             m_instance->options->ambientOcclusion != Options::AO_OFF);
 }
 
 bool Minecraft::renderDebug() {
+    ZoneScopedN("Minecraft::renderDebug");
     return (m_instance != nullptr && m_instance->options->renderDebug);
 }
 
 bool Minecraft::handleClientSideCommand(const std::wstring& chatMessage) {
+    ZoneScopedN("Minecraft::handleClientSideCommand");
     return false;
 }
 
 int Minecraft::maxSupportedTextureSize() {
+    ZoneScopedN("Minecraft::maxSupportedTextureSize");
     // 4J Force value
     return 1024;
 
@@ -4287,6 +4329,7 @@ int Minecraft::maxSupportedTextureSize() {
 void Minecraft::delayTextureReload() { reloadTextures = true; }
 
 int64_t Minecraft::currentTimeMillis() {
+    ZoneScopedN("Minecraft::currentTimeMillis");
     return System::currentTimeMillis();  //(Sys.getTime() * 1000) /
                                          // Sys.getTimerResolution();
 }
@@ -4314,6 +4357,7 @@ gameMode->stopDestroyBlock();
 
 void Minecraft::handleMouseClick(int button)
 {
+    ZoneScopedN("Minecraft::handleMouseClick");
 if (button == 0 && missTime > 0) return;
 if (button == 0)
 {
@@ -4429,6 +4473,7 @@ gameRenderer->itemInHandRenderer->itemUsed();
 Screen* Minecraft::getScreen() { return screen; }
 
 bool Minecraft::isTutorial() {
+    ZoneScopedN("Minecraft::isTutorial");
     return m_inFullTutorialBits > 0;
 
     /*if( gameMode != nullptr && gameMode->isTutorial() )
@@ -4442,6 +4487,7 @@ bool Minecraft::isTutorial() {
 }
 
 void Minecraft::playerStartedTutorial(int iPad) {
+    ZoneScopedN("Minecraft::playerStartedTutorial");
     // If the app doesn't think we are in a tutorial mode then just ignore this
     // add
     if (app.GetTutorialMode())
@@ -4449,6 +4495,7 @@ void Minecraft::playerStartedTutorial(int iPad) {
 }
 
 void Minecraft::playerLeftTutorial(int iPad) {
+    ZoneScopedN("Minecraft::playerLeftTutorial");
     // 4J Stu - Fix for bug that was flooding Sentient with LevelStart events
     // If the tutorial bits are already 0 then don't need to update anything
     if (m_inFullTutorialBits == 0) {
@@ -4463,6 +4510,7 @@ void Minecraft::playerLeftTutorial(int iPad) {
 }
 
 int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
+    ZoneScopedN("Minecraft::InGame_SignInReturned");
     Minecraft* pMinecraftClass = (Minecraft*)pParam;
 
     if (g_NetworkManager.IsInSession()) {
@@ -4529,7 +4577,7 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
 }
 
 void Minecraft::tickAllConnections() {
-    ZoneScoped;
+    ZoneScopedN("Minecraft::tickAllConnections");
     int oldIdx = getLocalPlayerIdx();
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; i++) {
         std::shared_ptr<MultiplayerLocalPlayer> mplp = localplayers[i];
@@ -4543,6 +4591,7 @@ void Minecraft::tickAllConnections() {
 
 bool Minecraft::addPendingClientTextureRequest(
     const std::wstring& textureName) {
+        ZoneScopedN("Minecraft::addPendingClientTextureRequest");
     auto it = find(m_pendingTextureRequests.begin(),
                    m_pendingTextureRequests.end(), textureName);
     if (it == m_pendingTextureRequests.end()) {
@@ -4553,6 +4602,7 @@ bool Minecraft::addPendingClientTextureRequest(
 }
 
 void Minecraft::handleClientTextureReceived(const std::wstring& textureName) {
+    ZoneScopedN("Minecraft::handleClientTextureReceived");
     auto it = find(m_pendingTextureRequests.begin(),
                    m_pendingTextureRequests.end(), textureName);
     if (it != m_pendingTextureRequests.end()) {
@@ -4561,10 +4611,12 @@ void Minecraft::handleClientTextureReceived(const std::wstring& textureName) {
 }
 
 unsigned int Minecraft::getCurrentTexturePackId() {
+    ZoneScopedN("Minecraft::getCurrentTexturePackId");
     return skins->getSelected()->getId();
 }
 
 ColourTable* Minecraft::getColourTable() {
+    ZoneScopedN("Minecraft::getColourTable");
     TexturePack* selected = skins->getSelected();
 
     ColourTable* colours = selected->getColourTable();

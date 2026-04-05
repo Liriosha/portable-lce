@@ -1,3 +1,6 @@
+#ifdef TRACY_ENABLE
+#include <tracy/Tracy.hpp>
+#endif
 #include "McRegionChunkStorage.h"
 
 #include <stdio.h>
@@ -45,7 +48,8 @@ C4JThread* McRegionChunkStorage::s_saveThreads[3];
 McRegionChunkStorage::McRegionChunkStorage(ConsoleSaveFile* saveFile,
                                            const std::wstring& prefix)
     : m_prefix(prefix) {
-    m_saveFile = saveFile;
+        ZoneScopedN("m_prefix");
+        m_saveFile = saveFile;
 
     // Make sure that if there are any files for regions to be created, that
     // they are created in the order that suits us for making the initial level
@@ -89,17 +93,20 @@ McRegionChunkStorage::McRegionChunkStorage(ConsoleSaveFile* saveFile,
             memcpy(savedData.data(), bos.buf.data(), bos.size());
 
             m_entityData[index] = savedData;
+#ifdef TRACY_ENABLE
+        TracyPlot("McRegion EntityData Map Size", (int64_t)m_entityData.size());
+#endif
         }
     }
 #endif
 }
 
 McRegionChunkStorage::~McRegionChunkStorage() {
-    // vectors manage their own memory; clearing the map is sufficient
+    ZoneScopedN("McRegionChunkStorage");    // vectors manage their own memory; clearing the map is sufficient
 }
 
 LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
-    DataInputStream* regionChunkInputStream =
+    ZoneScopedN("McRegionChunkStorage::load");    DataInputStream* regionChunkInputStream =
         RegionFileCache::getChunkDataInputStream(m_saveFile, m_prefix, x, z);
 
 #if defined(SPLIT_SAVES)
@@ -114,6 +121,9 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
         auto it = m_entityData.find(index);
         if (it != m_entityData.end()) {
             m_entityData.erase(it);
+#ifdef TRACY_ENABLE
+            TracyPlot("McRegion EntityData Map Size", (int64_t)m_entityData.size());
+#endif
         }
     }
 #endif
@@ -193,7 +203,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
 }
 
 void McRegionChunkStorage::save(Level* level, LevelChunk* levelChunk) {
-    level->checkSession();
+    ZoneScopedN("McRegionChunkStorage::save");    level->checkSession();
 
     // 4J - removed try/catch
     //    try {
@@ -212,6 +222,9 @@ void McRegionChunkStorage::save(Level* level, LevelChunk* levelChunk) {
             {
                 std::lock_guard<std::mutex> lock(cs_memory);
                 s_chunkDataQueue.push_back(output);
+#ifdef TRACY_ENABLE
+                TracyPlot("McRegion ChunkDataQueue Size", (int64_t)s_chunkDataQueue.size());
+#endif
             }
             // 4jcraft: WAKE UP, WAKE THE FUCK.. UP
             s_queueCondition.notify_one();
@@ -254,6 +267,7 @@ void McRegionChunkStorage::save(Level* level, LevelChunk* levelChunk) {
 }
 
 void McRegionChunkStorage::saveEntities(Level* level, LevelChunk* levelChunk) {
+    ZoneScopedN("McRegionChunkStorage::saveEntities");
 #if defined(SPLIT_SAVES)
     // 4j added cast to unsigned and changed index to u
     uint64_t index = ((uint64_t)(uint32_t)(levelChunk->x) << 32) |
@@ -272,10 +286,16 @@ void McRegionChunkStorage::saveEntities(Level* level, LevelChunk* levelChunk) {
         memcpy(savedData.data(), bos.buf.data(), bos.size());
 
         m_entityData[index] = savedData;
+#ifdef TRACY_ENABLE
+        TracyPlot("McRegion EntityData Map Size", (int64_t)m_entityData.size());
+#endif
     } else {
         auto it = m_entityData.find(index);
         if (it != m_entityData.end()) {
             m_entityData.erase(it);
+#ifdef TRACY_ENABLE
+            TracyPlot("McRegion EntityData Map Size", (int64_t)m_entityData.size());
+#endif
         }
     }
     delete newTag;
@@ -284,6 +304,7 @@ void McRegionChunkStorage::saveEntities(Level* level, LevelChunk* levelChunk) {
 }
 
 void McRegionChunkStorage::loadEntities(Level* level, LevelChunk* levelChunk) {
+    ZoneScopedN("McRegionChunkStorage::loadEntities");
 #if defined(SPLIT_SAVES)
     int64_t index = ((int64_t)(levelChunk->x) << 32) |
                     (((int64_t)(levelChunk->z)) & 0x00000000FFFFFFFF);
@@ -303,6 +324,7 @@ void McRegionChunkStorage::loadEntities(Level* level, LevelChunk* levelChunk) {
 void McRegionChunkStorage::tick() { m_saveFile->tick(); }
 
 void McRegionChunkStorage::flush() {
+    ZoneScopedN("McRegionChunkStorage::flush");
 #if defined(SPLIT_SAVES)
     ConsoleSavePath currentFile =
         ConsoleSavePath(m_prefix + std::wstring(L"entities.dat"));
@@ -323,7 +345,7 @@ void McRegionChunkStorage::flush() {
 }
 
 void McRegionChunkStorage::staticCtor() {
-    for (unsigned int i = 0; i < 3; ++i) {
+    ZoneScopedN("McRegionChunkStorage::staticCtor");    for (unsigned int i = 0; i < 3; ++i) {
         char threadName[256];
         sprintf(threadName, "McRegion Save thread %d\n", i);
         C4JThread::setThreadName(0, threadName);
@@ -342,6 +364,10 @@ void McRegionChunkStorage::staticCtor() {
 
 // 4jcraft: removed the wasting 100ms chunk loading part.
 int McRegionChunkStorage::runSaveThreadProc(void* lpParam) {
+    ZoneScopedN("McRegionChunkStorage::runSaveThreadProc");
+    #ifdef TRACY_ENABLE
+    tracy::SetThreadName("McRegionChunkStorage Save Thread");
+    #endif
     Compression::CreateNewThreadStorage();
 
     bool running = true;
@@ -352,6 +378,9 @@ int McRegionChunkStorage::runSaveThreadProc(void* lpParam) {
             s_queueCondition.wait(lock, [] { return !s_chunkDataQueue.empty(); });
             dos = s_chunkDataQueue.front();
             s_chunkDataQueue.pop_front();
+#ifdef TRACY_ENABLE
+            TracyPlot("McRegion ChunkDataQueue Size", (int64_t)s_chunkDataQueue.size());
+#endif
             s_runningThreadCount++;
         } // Unlock so the main thread can keep working
 
@@ -382,7 +411,7 @@ void McRegionChunkStorage::WaitIfTooManyQueuedChunks() { WaitForSaves(); }
 // Static
 // 4jcraft: Better waiting system
 void McRegionChunkStorage::WaitForAllSaves() {
-    std::unique_lock<std::mutex> lock(cs_memory);
+    ZoneScopedN("McRegionChunkStorage::WaitForAllSaves");    std::unique_lock<std::mutex> lock(cs_memory);
     // Pause the main thread instantly until queue is 0 AND workers are done
     s_waitCondition.wait(lock, [] {
         return s_chunkDataQueue.empty() && s_runningThreadCount == 0;
@@ -391,7 +420,7 @@ void McRegionChunkStorage::WaitForAllSaves() {
 
 // Static
 void McRegionChunkStorage::WaitForSaves() {
-    static const int MAX_QUEUE_SIZE = 12;
+    ZoneScopedN("McRegionChunkStorage::WaitForSaves");    static const int MAX_QUEUE_SIZE = 12;
     static const int DESIRED_QUEUE_SIZE = 6;
 
 

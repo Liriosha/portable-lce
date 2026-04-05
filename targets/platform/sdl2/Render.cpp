@@ -8,6 +8,19 @@
 #include "SDL_video.h"
 #include "gl3_loader.h"
 
+#ifdef TRACY_ENABLE
+  #include <tracy/Tracy.hpp>
+  #include <tracy/TracyOpenGL.hpp>
+#else
+  #define ZoneScoped
+  #define ZoneScopedN(name)
+  #define TracyGpuContext
+  #define TracyGpuContextName(name, size)
+  #define TracyGpuCollect
+  #define TracyGpuZone(name)
+  #define TracyGpuZoneC(name, color)
+#endif
+
 // undefine macros from header to avoid argument mismatch
 #undef glGenTextures
 #undef glDeleteTextures
@@ -92,7 +105,10 @@ static bool s_fullscreen = false;
 
 static pthread_key_t s_glCtxKey;
 static pthread_once_t s_glCtxKeyOnce = PTHREAD_ONCE_INIT;
-static void makeGLCtxKey() { pthread_key_create(&s_glCtxKey, nullptr); }
+static void makeGLCtxKey() {
+    ZoneScoped;
+    pthread_key_create(&s_glCtxKey, nullptr);
+}
 static const int MAX_SHARED_CTXS = 6;
 static SDL_Window* s_sharedWins[MAX_SHARED_CTXS] = {};
 static SDL_GLContext s_sharedCtxs[MAX_SHARED_CTXS] = {};
@@ -622,6 +638,7 @@ static GLenum mapPrim(int pt) {
 
 // Initialises the renderer
 void C4JRender::Initialise() {
+    ZoneScoped;
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "[4J_Render] SDL_Init: %s\n", SDL_GetError());
         return;
@@ -664,6 +681,8 @@ void C4JRender::Initialise() {
 #ifndef GLES
     gl3_load();
 #endif
+    TracyGpuContext;
+    TracyGpuContextName("OpenGL", 6);
     int fw, fh;
     SDL_GetWindowSize(s_window, &fw, &fh);
     onFramebufferResize(fw, fh);
@@ -713,6 +732,7 @@ void C4JRender::Initialise() {
 }
 
 void C4JRender::InitialiseContext() {
+    ZoneScoped;
     if (!s_window) return;
     pthread_once(&s_glCtxKeyOnce, makeGLCtxKey);
     if (s_mainThreadSet && pthread_equal(pthread_self(), s_mainThread)) {
@@ -743,6 +763,7 @@ void C4JRender::InitialiseContext() {
 }
 
 void C4JRender::StartFrame() {
+    ZoneScoped;
     Set_matrixDirty();
     int w, h;
     SDL_GetWindowSize(s_window, &w, &h);
@@ -752,6 +773,7 @@ void C4JRender::StartFrame() {
 }
 
 void C4JRender::Present() {
+    ZoneScoped;
     if (!s_window) return;
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
@@ -766,6 +788,7 @@ void C4JRender::Present() {
     }
     glFlush();
     SDL_GL_SwapWindow(s_window);
+    TracyGpuCollect;
 }
 
 void C4JRender::SetWindowSize(int w, int h) {
@@ -785,6 +808,7 @@ void C4JRender::GetFramebufferSize(int& w, int& h) {
 void C4JRender::Close() { s_window = nullptr; }
 
 void C4JRender::Shutdown() {
+    ZoneScoped;
     pthread_mutex_lock(&s_glCallMtx);
     for (auto& kv : s_chunkPool) kv.second.destroy();
     s_chunkPool.clear();
@@ -809,6 +833,7 @@ void C4JRender::Shutdown() {
 
 void C4JRender::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
                              eVertexType vType, ePixelShaderType) {
+    ZoneScoped;
     if (count <= 0 || !dataIn) return;
 
     bool wasQuad = isQuadPrim((int)ptype);
@@ -908,6 +933,7 @@ void C4JRender::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
     glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)bytes, dataIn);
     s_streamVBOSize = (GLsizeiptr)bytes;
 
+    TracyGpuZone("DrawVertices");
     glDrawArrays(glMode, 0, count);
 
     glBindVertexArray(0);
@@ -916,6 +942,7 @@ void C4JRender::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
 }
 
 void C4JRender::ReadPixels(int x, int y, int w, int h, void* buf) {
+    ZoneScoped;
     if (!buf) return;
     pthread_mutex_lock(&s_glCallMtx);
     glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
@@ -923,6 +950,7 @@ void C4JRender::ReadPixels(int x, int y, int w, int h, void* buf) {
 }
 
 int C4JRender::CBuffCreate(int count) {
+    ZoneScoped;
     pthread_mutex_lock(&s_glCallMtx);
     int b = s_nextListBase;
     s_nextListBase += count;
@@ -931,6 +959,7 @@ int C4JRender::CBuffCreate(int count) {
 }
 
 void C4JRender::CBuffDelete(int first, int count) {
+    ZoneScoped;
     pthread_mutex_lock(&s_glCallMtx);
     for (int i = first; i < first + count; i++) {
         auto it = s_chunkPool.find(i);
@@ -943,6 +972,7 @@ void C4JRender::CBuffDelete(int first, int count) {
 }
 
 void C4JRender::CBuffDeleteAll() {
+    ZoneScoped;
     pthread_mutex_lock(&s_glCallMtx);
     for (auto& kv : s_chunkPool) {
         kv.second.destroy();
@@ -953,12 +983,14 @@ void C4JRender::CBuffDeleteAll() {
 }
 
 void C4JRender::CBuffStart(int index, bool) {
+    ZoneScoped;
     s_recListId = index;
     s_recVerts.clear();
     s_recDraws.clear();
 }
 
 void C4JRender::CBuffEnd() {
+    ZoneScoped;
     if (s_recListId < 0) return;
     pthread_mutex_lock(&s_glCallMtx);
     ChunkBuffer& cb = s_chunkPool[s_recListId];
@@ -978,6 +1010,7 @@ void C4JRender::CBuffEnd() {
 }
 
 void C4JRender::CBuffClear(int index) {
+    ZoneScoped;
     pthread_mutex_lock(&s_glCallMtx);
     auto it = s_chunkPool.find(index);
     if (it != s_chunkPool.end()) {
@@ -988,6 +1021,7 @@ void C4JRender::CBuffClear(int index) {
 }
 
 bool C4JRender::CBuffCall(int index, bool) {
+    ZoneScoped;
     pthread_mutex_lock(&s_glCallMtx);
     auto it = s_chunkPool.find(index);
     if (it == s_chunkPool.end() || !it->second.valid) {
@@ -1018,6 +1052,7 @@ bool C4JRender::CBuffCall(int index, bool) {
 
     pushRenderState();
 
+    TracyGpuZone("ChunkBufferDraw");
     glBindVertexArray(cb.vao);
     for (const auto& dc : cb.draws) glDrawArrays(dc.prim, dc.first, dc.count);
     glBindVertexArray(0);
@@ -1271,19 +1306,23 @@ void C4JRender::StateSetActiveTexture(int tex) {
 }
 
 int C4JRender::TextureCreate() {
+    ZoneScoped;
     GLuint id;
     glGenTextures(1, &id);
     return (int)id;
 }
 void C4JRender::TextureFree(int i) {
+    ZoneScoped;
     GLuint id = (GLuint)i;
     glDeleteTextures(1, &id);
 }
 void C4JRender::TextureBind(int idx) {
+    ZoneScoped;
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, idx < 0 ? 0 : (GLuint)idx);
 }
 void C4JRender::TextureBindVertex(int idx, bool scaleLight) {
+    ZoneScoped;
     if (idx < 0) {
         if (s_rs.useLightmap) {
             s_rs.useLightmap = false;
@@ -1312,6 +1351,7 @@ void C4JRender::TextureBindVertex(int idx, bool scaleLight) {
     }
 }
 void C4JRender::TextureSetTextureLevels(int l) {
+    ZoneScoped;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, l > 0 ? l - 1 : 0);
     if (l > 1)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -1321,6 +1361,7 @@ void C4JRender::TextureSetTextureLevels(int l) {
 }
 int C4JRender::TextureGetTextureLevels() { return 1; }
 void C4JRender::TextureData(int w, int h, void* d, int lvl, eTextureFormat) {
+    ZoneScoped;
     glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, w, h, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, d);
     if (lvl == 0) {
@@ -1333,15 +1374,18 @@ void C4JRender::TextureData(int w, int h, void* d, int lvl, eTextureFormat) {
 }
 void C4JRender::TextureDataUpdate(int xo, int yo, int w, int h, void* d,
                                   int lvl) {
+    ZoneScoped;
     glTexSubImage2D(GL_TEXTURE_2D, lvl, xo, yo, w, h, GL_RGBA, GL_UNSIGNED_BYTE,
                     d);
 }
 void C4JRender::TextureSetParam(int p, int v) {
+    ZoneScoped;
     glTexParameteri(GL_TEXTURE_2D, p, v);
 }
 
 static int stbLoad(unsigned char* data, int w, int h, D3DXIMAGE_INFO* info,
                    int** out) {
+    ZoneScoped;
     int* px = new int[w * h];
     for (int i = 0; i < w * h; i++) {
         unsigned char r = data[i * 4], g = data[i * 4 + 1], b = data[i * 4 + 2],
@@ -1356,6 +1400,7 @@ static int stbLoad(unsigned char* data, int w, int h, D3DXIMAGE_INFO* info,
     return 0;  // Success
 }
 int C4JRender::LoadTextureData(const char* fn, D3DXIMAGE_INFO* i, int** o) {
+    ZoneScoped;
     int w, h, c;
     unsigned char* d = stbi_load(fn, &w, &h, &c, 4);
     if (!d) return -1;  // Failure
@@ -1365,6 +1410,7 @@ int C4JRender::LoadTextureData(const char* fn, D3DXIMAGE_INFO* i, int** o) {
 }
 int C4JRender::LoadTextureData(uint8_t* pb, uint32_t nb, D3DXIMAGE_INFO* i,
                                int** o) {
+    ZoneScoped;
     int w, h, c;
     unsigned char* d = stbi_load_from_memory(pb, (int)nb, &w, &h, &c, 4);
     if (!d) return -1;  // Failure
