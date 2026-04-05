@@ -1,10 +1,6 @@
 #include "app/common/src/UI/Controls/UIControl_MinecraftHorse.h"
 
-#ifdef GLES
-#include <GLES3/gl3.h>
-#else
 #include <GL/gl.h>
-#endif
 
 #include <cmath>
 #include <memory>

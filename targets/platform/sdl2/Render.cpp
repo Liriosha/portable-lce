@@ -1,11 +1,11 @@
 #include "Render.h"
 
 #include "../PlatformTypes.h"
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_error.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_video.h>
+#include "SDL.h"
+#include "SDL_error.h"
+#include "SDL_events.h"
+#include "SDL_stdinc.h"
+#include "SDL_video.h"
 #include "gl3_loader.h"
 
 // undefine macros from header to avoid argument mismatch
@@ -41,11 +41,6 @@
 #include <dlfcn.h>
 #include <pthread.h>
 
-#ifdef __android__
-#include <android/log.h>
-#include <EGL/egl.h>
-#endif
-
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -55,12 +50,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
- 
-#ifdef __android__
-#define fprintf(file, ...) ((void)__android_log_print(ANDROID_LOG_INFO, "4JRENDER", __VA_ARGS__))
-#define printf(...) ((void)__android_log_print(ANDROID_LOG_INFO, "4JRENDER", __VA_ARGS__))
-#endif
 
 C4JRender RenderManager;
 
@@ -92,11 +81,6 @@ static const char* FRAG_SRC =
 // MARK: OpenGL state
 
 // Hello SDL and opengl 3.3
-#ifdef __android__
-static EGLDisplay s_eglDisplay = EGL_NO_DISPLAY;
-static EGLContext s_mainEglContext = EGL_NO_CONTEXT;
-static EGLSurface s_mainEglSurface = EGL_NO_SURFACE;
-#endif
 static SDL_Window* s_window = nullptr;
 static SDL_GLContext s_glContext = nullptr;
 static bool s_shouldClose = false;
@@ -110,14 +94,8 @@ static pthread_key_t s_glCtxKey;
 static pthread_once_t s_glCtxKeyOnce = PTHREAD_ONCE_INIT;
 static void makeGLCtxKey() { pthread_key_create(&s_glCtxKey, nullptr); }
 static const int MAX_SHARED_CTXS = 6;
-
-#ifdef __android__
-static EGLSurface s_sharedWins[MAX_SHARED_CTXS] = {};
-static EGLContext s_sharedCtxs[MAX_SHARED_CTXS] = {};
-#else
 static SDL_Window* s_sharedWins[MAX_SHARED_CTXS] = {};
 static SDL_GLContext s_sharedCtxs[MAX_SHARED_CTXS] = {};
-#endif
 static int s_sharedCtxCount = 0;
 static int s_nextSharedCtx = 0;
 static pthread_mutex_t s_sharedMtx = PTHREAD_MUTEX_INITIALIZER;
@@ -669,9 +647,6 @@ void C4JRender::Initialise() {
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-#ifdef __android__
-    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
-#endif 
     Uint32 wf = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
     if (s_fullscreen) wf |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     s_window = SDL_CreateWindow("Minecraft Console Edition",
@@ -711,50 +686,16 @@ void C4JRender::Initialise() {
     s_mainThread = pthread_self();
     s_mainThreadSet = true;
     pthread_setspecific(s_glCtxKey, (void*)s_window);
-
-#ifdef __android__
-    s_eglDisplay = eglGetCurrentDisplay(); 
-
-    EGLint pb_atr[] = {
-        EGL_WIDTH, 1,
-        EGL_HEIGHT, 1,
-        EGL_NONE
-    };
-
-    EGLint cfg_id;
-    if (!eglQueryContext(s_eglDisplay, (EGLContext)s_glContext, EGL_CONFIG_ID, &cfg_id)) 
-    {
-        printf("BRUH\n");
-    }
-    
-    EGLConfig cfg;
-    EGLint cfgs;
-    EGLint atrs[] = { EGL_CONFIG_ID, cfg_id, EGL_NONE };
-
-    eglChooseConfig(s_eglDisplay, atrs, &cfg, 1, &cfgs);
-#endif
-
     SDL_GL_MakeCurrent(s_window, s_glContext);
     for (int i = 0; i < MAX_SHARED_CTXS; i++) {
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-#ifndef __android__
         SDL_Window* w = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED,
                                          SDL_WINDOWPOS_UNDEFINED, 1, 1,
                                          SDL_WINDOW_HIDDEN | SDL_WINDOW_OPENGL);
         if (!w) break;
         SDL_GLContext ctx = SDL_GL_CreateContext(w);
-#else
-        EGLint ctx_atr[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
-        EGLContext ctx = eglCreateContext(s_eglDisplay, cfg, (EGLContext)s_glContext, ctx_atr);
-        EGLSurface w = eglCreatePbufferSurface(s_eglDisplay, cfg, pb_atr);
-        if ( w == EGL_NO_SURFACE ) {
-            printf("EGL_NO_SURFACE: %d\n", eglGetError() );
-        }
-#endif
         if (!ctx) {
-#ifndef __android__
             SDL_DestroyWindow(w);
-#endif
             break;
         }
         s_sharedWins[s_sharedCtxCount] = w;
@@ -781,18 +722,10 @@ void C4JRender::InitialiseContext() {
     }
     void* cp = pthread_getspecific(s_glCtxKey);
     if (cp) {
-#ifdef __android__
-        EGLContext ctx = (EGLContext)cp;
-#else
         SDL_GLContext ctx = (SDL_GLContext)cp;
-#endif
         for (int i = 0; i < s_sharedCtxCount; i++)
             if (s_sharedCtxs[i] == ctx) {
-#ifdef __android__
-                eglMakeCurrent(s_eglDisplay, s_sharedWins[i], s_sharedWins[i], ctx );
-#else
                 SDL_GL_MakeCurrent(s_sharedWins[i], ctx);
-#endif
                 return;
             }
         return;
@@ -805,11 +738,7 @@ void C4JRender::InitialiseContext() {
     if (!shared) return;
     for (int i = 0; i < s_sharedCtxCount; i++)
         if (s_sharedCtxs[i] == shared)
-#ifdef __android__
-            eglMakeCurrent(s_eglDisplay, s_sharedWins[i],  s_sharedWins[i], shared );
-#else
             SDL_GL_MakeCurrent(s_sharedWins[i], shared);
-#endif
     pthread_setspecific(s_glCtxKey, (void*)shared);
 }
 
@@ -872,14 +801,8 @@ void C4JRender::Shutdown() {
         s_window = nullptr;
     }
     for (int i = 0; i < s_sharedCtxCount; i++) {
-#ifdef __android__
-        eglMakeCurrent(s_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (s_sharedCtxs[i]) eglDestroySurface(s_eglDisplay, s_sharedWins[i]);
-        if (s_sharedWins[i]) eglDestroyContext(s_eglDisplay, s_sharedCtxs[i]);
-#else
         if (s_sharedCtxs[i]) SDL_GL_DeleteContext(s_sharedCtxs[i]);
         if (s_sharedWins[i]) SDL_DestroyWindow(s_sharedWins[i]);
-#endif
     }
     SDL_Quit();
 }

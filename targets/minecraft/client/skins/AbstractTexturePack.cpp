@@ -1,10 +1,6 @@
 #include "AbstractTexturePack.h"
 
-#ifdef GLES
-#include <GLES3/gl3.h>
-#else
 #include <GL/gl.h>
-#endif
 #include <wchar.h>
 
 #include <vector>
