@@ -131,6 +131,13 @@
 #include "minecraft/world/level/chunk/SparseDataStorage.h"
 #include "minecraft/world/level/chunk/SparseLightStorage.h"
 
+#ifdef TRACY_ENABLE
+  #include <tracy/Tracy.hpp>
+#else
+  #define ZoneScoped
+  #define ZoneScopedN(name)
+#endif
+
 class ChunkSource;
 
 // #define DISABLE_SPU_CODE
@@ -1019,6 +1026,7 @@ void Minecraft::createPrimaryLocalPlayer(int iPad) {
 }
 
 void Minecraft::run_middle() {
+    ZoneScoped;
     static int64_t lastTime = 0;
     static bool bFirstTimeIntoGame = true;
     static bool bAutosaveTimerSet = false;
@@ -1166,6 +1174,7 @@ void Minecraft::run_middle() {
                 // 4J-PB - Once we're in the level, check if the players have
                 // the level in their banned list and ask if they want to play
                 // it
+                ZoneScopedN("Render Viewports");
                 for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                     if (localplayers[i] && (app.GetBanListCheck(i) == false) &&
                         !Minecraft::GetInstance()->isTutorial() &&
@@ -1813,6 +1822,7 @@ void Minecraft::run_middle() {
             */
         }
     }  // lock_guard scope
+    FrameMark;
 }
 
 void Minecraft::run_end() { destroy(); }
@@ -1990,6 +2000,7 @@ void Minecraft::verify() {
 }
 
 void Minecraft::levelTickUpdateFunc(void* pParam) {
+    ZoneScoped;
     Level* pLevel = (Level*)pParam;
     pLevel->tick();
 }
@@ -2003,6 +2014,7 @@ void Minecraft::levelTickThreadInitFunc() {
 // textures are to be updated - this will be true for the last time this tick
 // runs with bFirst true
 void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
+    ZoneScoped;
     int iPad = player->GetXboxPad();
     // OutputDebugString("Minecraft::tick\n");
 
@@ -4517,6 +4529,7 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
 }
 
 void Minecraft::tickAllConnections() {
+    ZoneScoped;
     int oldIdx = getLocalPlayerIdx();
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; i++) {
         std::shared_ptr<MultiplayerLocalPlayer> mplp = localplayers[i];

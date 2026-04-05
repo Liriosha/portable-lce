@@ -89,6 +89,12 @@ pip install meson ninja
 
 Or follow the [Meson quickstart guide](https://mesonbuild.com/Quick-guide.html).
 
+### Tracy profiler
+
+This project can be built with Tracy profiling support. Tracy is available as a meson subproject (bundled in `subprojects/tracy`) and many distributions provide the Tracy tooling; on Arch/Manjaro you can get the latest build from the AUR as `tracy-git`.
+
+Tracy can be directly enabled if you enable the tracy meson option before compiling.
+
 #### Docker (alternative)
 
 If you don't want to install dependencies, use the included devcontainer. Open the project in VS Code with the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension, or build manually:

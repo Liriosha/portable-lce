@@ -92,6 +92,13 @@
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/level/ServerPlayer.h"
 
+#ifdef TRACY_ENABLE
+  #include <tracy/Tracy.hpp>
+#else
+  #define ZoneScoped
+  #define ZoneScopedN(name)
+#endif
+
 class BeaconTileEntity;
 class BrewingStandTileEntity;
 class DispenserTileEntity;
@@ -2202,6 +2209,7 @@ void Game::SetActionConfirmed(void* param) {
 }
 
 void Game::HandleXuiActions(void) {
+    ZoneScoped;
     eXuiAction eAction;
     eTMSAction eTMS;
     void* param;
@@ -4394,6 +4402,7 @@ void Game::InitTime() {
 // Desc: Updates the elapsed time since our last frame.
 //-------------------------------------------------------------------------------------
 void Game::UpdateTime() {
+    ZoneScoped;
     auto qwNewTime = time_util::clock::now();
     auto qwDeltaTime = qwNewTime - m_Time.qwTime;
 
@@ -5557,6 +5566,7 @@ void Game::unlockSaveNotification() {
 }
 
 int Game::RemoteSaveThreadProc(void* lpParameter) {
+    ZoneScoped;
     // The game should be stopped while we are doing this, but the connections
     // ticks may try to create some AABB's or Vec3's
     Compression::UseDefaultThreadStorage();
