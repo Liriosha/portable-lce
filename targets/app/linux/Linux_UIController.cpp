@@ -1,5 +1,8 @@
+#ifdef GLES
+#include <GLES3/gl3.h>
+#else
 #include <GL/gl.h>
-
+#endif
 // GDraw GL backend for Linux
 #include "platform/sdl2/Render.h"
 #include "Linux_UIController.h"

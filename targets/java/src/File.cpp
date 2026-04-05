@@ -205,7 +205,10 @@ bool File::mkdirs() const {
         return false;
     }
 
-    return fs::create_directories(path, error);
+    // Previous behavior could return false even if the directory did not exist
+    // and was successfully created, at least this happens on Android
+    fs::create_directories(path, error);
+    return !error;
 }
 
 /*

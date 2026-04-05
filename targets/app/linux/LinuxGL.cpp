@@ -11,17 +11,14 @@ extern C4JRender RenderManager;
 
 #ifdef GLES
 extern "C" {
-extern void glClearDepthf(float depth);
-void glClearDepth(double depth) { glClearDepthf((float)depth); }
-void glTexGeni(unsigned int, unsigned int, int) {}
-void glTexGenfv(unsigned int, unsigned int, const float*) {}
-void glTexCoordPointer(int, unsigned int, int, const void*) {}
-void glNormalPointer(unsigned int, int, const void*) {}
-void glColorPointer(int, unsigned int, int, const void*) {}
-void glVertexPointer(int, unsigned int, int, const void*) {}
-void glEndList(void) {}
-void glCallLists(int, unsigned int, const void*) {}
+    void glTexGeni(GLenum, GLenum, GLint) {}
 }
+void glTexGenfv(unsigned int, unsigned int, const float*) {}
+void glTexCoordPointer(int, unsigned int, int) {}
+void glNormalPointer(unsigned int, int) {}
+void glColorPointer(int, unsigned int, int, const void*) {}
+void glVertexPointer(int, unsigned int, int) {}
+void glCallLists(int) {}
 #endif
 
 inline int* getIntPtr(IntBuffer* buf) {
@@ -110,14 +107,32 @@ void glTexGen_4J(int, int, FloatBuffer*) {}
 #include <stdio.h>
 #include <string.h>
 
+#ifdef GLES
+static PFNGLGENQUERIESPROC _glGenQueriesARB = nullptr;
+static PFNGLBEGINQUERYPROC _glBeginQueryARB = nullptr;
+static PFNGLENDQUERYPROC _glEndQueryARB = nullptr;
+static PFNGLGETQUERYOBJECTUIVPROC _glGetQueryObjectuivARB = nullptr;
+static bool _queriesInitialized = false;
+#else
 static PFNGLGENQUERIESARBPROC _glGenQueriesARB = nullptr;
 static PFNGLBEGINQUERYARBPROC _glBeginQueryARB = nullptr;
 static PFNGLENDQUERYARBPROC _glEndQueryARB = nullptr;
 static PFNGLGETQUERYOBJECTUIVARBPROC _glGetQueryObjectuivARB = nullptr;
 static bool _queriesInitialized = false;
+#endif
 
 static void initQueryFuncs() {
     if (_queriesInitialized) return;
+#ifdef GLES
+    _queriesInitialized = true;
+    _glGenQueriesARB =
+        (PFNGLGENQUERIESPROC)dlsym(RTLD_DEFAULT, "glGenQueries");
+    _glBeginQueryARB =
+        (PFNGLBEGINQUERYPROC)dlsym(RTLD_DEFAULT, "glBeginQuery");
+    _glEndQueryARB = (PFNGLENDQUERYPROC)dlsym(RTLD_DEFAULT, "glEndQuery");
+    _glGetQueryObjectuivARB = (PFNGLGETQUERYOBJECTUIVPROC)dlsym(
+        RTLD_DEFAULT, "glGetQueryObjectuiv");
+#else
     _queriesInitialized = true;
     _glGenQueriesARB =
         (PFNGLGENQUERIESARBPROC)dlsym(RTLD_DEFAULT, "glGenQueriesARB");
@@ -126,6 +141,7 @@ static void initQueryFuncs() {
     _glEndQueryARB = (PFNGLENDQUERYARBPROC)dlsym(RTLD_DEFAULT, "glEndQueryARB");
     _glGetQueryObjectuivARB = (PFNGLGETQUERYOBJECTUIVARBPROC)dlsym(
         RTLD_DEFAULT, "glGetQueryObjectuivARB");
+#endif
 }
 
 void glGenQueriesARB_4J(IntBuffer* buf) {

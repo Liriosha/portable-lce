@@ -2,6 +2,16 @@
 
 #include "gdraw.h"
 
+// Do we really really need gdraw for the java ui?
+#ifndef _ENABLEIGGY
+void gdraw_GL_BeginCustomDraw_4J(IggyCustomDrawCallbackRegion* region, F32* matrix) {}
+void gdraw_GL_CalculateCustomDraw_4J(IggyCustomDrawCallbackRegion* region, F32* matrix) {}
+void gdraw_GL_EndCustomDraw(IggyCustomDrawCallbackRegion* region) {}
+void gdraw_GL_SetTileOrigin(S32 vx, S32 vy, unsigned int framebuffer) {} 
+void gdraw_GL_WrappedTextureDestroy(GDrawTexture* handle) {}
+
+#else
+
 #include <GL/gl.h>
 #include <dlfcn.h>
 #include <stdbool.h>
@@ -838,3 +848,4 @@ void gdraw_GL_CalculateCustomDraw_4J(IggyCustomDrawCallbackRegion* region,
                                      F32* matrix) {
     gdraw_GetObjectSpaceMatrix(matrix, region->o2w, gdraw->projection, 0.0f, 0);
 }
+#endif

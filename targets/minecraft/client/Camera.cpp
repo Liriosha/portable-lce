@@ -1,6 +1,10 @@
 #include "Camera.h"
 
+#ifdef GLES
+#include <GLES3/gl3.h>
+#else
 #include <GL/gl.h>
+#endif
 #include <glm/glm.hpp>
 #include <math.h>
 #include <string.h>
@@ -9,6 +13,7 @@
 
 #include "MemoryTracker.h"
 #include "app/include/stubs.h"
+#include "platform/sdl2/Render.h"
 #include "java/FloatBuffer.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/player/Player.h"
