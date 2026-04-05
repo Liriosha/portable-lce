@@ -1,15 +1,15 @@
 #pragma once
+#include "OffsettedRenderList.h"
 #include "app/include/NetTypes.h"
 #include "app/include/SkinBox.h"
 #include "app/include/XboxStubs.h"
-#include "OffsettedRenderList.h"
-#include "platform/C4JThread.h"
-#include "util/Definitions.h"
 #include "java/JavaIntHash.h"
 #include "minecraft/core/particles/ParticleTypes.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/LevelListener.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/C4JThread.h"
+#include "util/Definitions.h"
 
 class ClipChunk;
 class HitResult;
@@ -119,7 +119,7 @@ public:
     void renderClouds(float alpha);
     bool isInCloud(double x, double y, double z, float alpha);
     void renderAdvancedClouds(float alpha);
-    bool updateDirtyChunks();
+    bool updateDirtyChunks(int64_t cachedNowMs = -1);
 
 public:
     void renderHit(std::shared_ptr<Player> player, HitResult* h, int mode,
@@ -225,6 +225,8 @@ private:
     uint64_t getGlobalChunkConnectivity(int index);
     std::vector<ClipChunk*> m_bfsGrid;
     std::vector<uint8_t> m_bfsVisitedFaces[4];
+    std::vector<ClipChunk*> m_globalClipChunks;
+    bool m_dirtyChunksRequireFullScan;
     std::unordered_map<int, BlockDestructionProgress*> destroyingBlocks;
     Icon** breakingTextures;
 
@@ -355,7 +357,7 @@ public:
 
     bool dirtyChunkPresent;
     int64_t lastDirtyChunkFound;
-    static const int FORCE_DIRTY_CHUNK_CHECK_PERIOD_MS = 250;
+    static const int FORCE_DIRTY_CHUNK_CHECK_PERIOD_PASSES = 64;
 
 #if defined(_LARGE_WORLDS)
     static const int MAX_CONCURRENT_CHUNK_REBUILDS = 4;

@@ -13,11 +13,10 @@
 #include <utility>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
 #include "LevelRenderer.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/FrameProfiler.h"
 #include "TileRenderer.h"
+#include "app/include/FrameProfiler.h"
+#include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/culling/Culler.h"
 #include "minecraft/client/renderer/tileentity/TileEntityRenderDispatcher.h"
@@ -29,6 +28,7 @@
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/sdl2/Render.h"
 
 int Chunk::updates = 0;
 
@@ -174,6 +174,11 @@ void Chunk::setPos(int x, int y, int z) {
             levelRenderer->m_csDirtyChunks);
         unsigned char refCount =
             levelRenderer->incGlobalChunkRefCount(x, y, z, level);
+        if ((clipChunk->globalIdx >= 0) &&
+            ((size_t)clipChunk->globalIdx <
+             levelRenderer->m_globalClipChunks.size())) {
+            levelRenderer->m_globalClipChunks[clipChunk->globalIdx] = clipChunk;
+        }
         //	printf("\t\t [inc] refcount %d at %d, %d, %d\n",refCount,x,y,z);
 
         //	int idx = levelRenderer->getGlobalIndexForChunk(x, y, z, level);
@@ -223,7 +228,14 @@ void Chunk::makeCopyForRebuild(Chunk* source) {
     this->globalRenderableTileEntities = source->globalRenderableTileEntities;
     this->globalRenderableTileEntities_cs =
         source->globalRenderableTileEntities_cs;
+    this->buildContext = source->buildContext;
 }
+
+void Chunk::setBuildContext(const ChunkBuildContext& ctx) {
+    buildContext = ctx;
+}
+
+const ChunkBuildContext& Chunk::getBuildContext() const { return buildContext; }
 
 void Chunk::rebuild() {
     //	if (!dirty) return;
@@ -285,8 +297,8 @@ void Chunk::rebuild() {
 
     LevelSource* region =
         new Region(level, x0 - r, y0 - r, z0 - r, x1 + r, y1 + r, z1 + r, r);
-    TileRenderer* tileRenderer =
-        new TileRenderer(region, this->x, this->y, this->z, tileIds);
+    TileRenderer* tileRenderer = new TileRenderer(
+        region, this->x, this->y, this->z, tileIds, &buildContext);
 
     // AP - added a caching system for Chunk::rebuild to take advantage of
     // Basically we're storing of copy of the tileIDs array inside the region so
@@ -542,10 +554,14 @@ void Chunk::rebuild() {
     bb = {bounds.boundingBox[0], bounds.boundingBox[1], bounds.boundingBox[2],
           bounds.boundingBox[3], bounds.boundingBox[4], bounds.boundingBox[5]};
 
-    uint64_t conn = computeConnectivity(tileIds);  // pass tileIds
     int globalIdx =
         levelRenderer->getGlobalIndexForChunk(this->x, this->y, this->z, level);
+#if defined(OCCLUSION_MODE_BFS)
+    uint64_t conn = computeConnectivity(tileIds);  // pass tileIds
     levelRenderer->setGlobalChunkConnectivity(globalIdx, conn);
+#else
+    levelRenderer->setGlobalChunkConnectivity(globalIdx, ~0ULL);
+#endif
 
     delete tileRenderer;
     delete region;
@@ -590,6 +606,7 @@ float Chunk::squishedDistanceToSqr(std::shared_ptr<Entity> player) {
     return xd * xd + yd * yd + zd * zd;
 }
 
+#if defined(OCCLUSION_MODE_BFS)
 uint64_t Chunk::computeConnectivity(const uint8_t* tileIds) {
     const int W = 16;
     const int H = 16;
@@ -726,6 +743,7 @@ uint64_t Chunk::computeConnectivity(const uint8_t* tileIds) {
 
     return result;
 }
+#endif
 void Chunk::reset() {
     if (assigned) {
         int oldKey = -1;
@@ -742,6 +760,9 @@ void Chunk::reset() {
             //%d\n",refCount,x,y,z);
             if (refCount == 0 && oldKey != -1) {
                 retireRenderableTileEntities = true;
+                if ((size_t)oldKey < levelRenderer->m_globalClipChunks.size()) {
+                    levelRenderer->m_globalClipChunks[oldKey] = nullptr;
+                }
                 int lists = oldKey * 2;
                 if (lists >= 0) {
                     lists += levelRenderer->chunkLists;

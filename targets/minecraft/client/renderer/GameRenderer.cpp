@@ -6,24 +6,18 @@
 #include <cmath>
 #include <numbers>
 
-#include "platform/PlatformTypes.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Render.h"
 #include "BossMobGuiInfo.h"
 #include "Chunk.h"
 #include "ItemInHandRenderer.h"
 #include "LevelRenderer.h"
+#include "Tesselator.h"
 #include "app/common/App_enums.h"
-#include "platform/ShutdownManager.h"
 #include "app/common/src/Colours/ColourTable.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "app/include/BufferedImage.h"
 #include "app/include/FrameProfiler.h"
 #include "app/include/stubs.h"
-#include "Tesselator.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
-
+#include "app/linux/LinuxGame.h"
+#include "app/linux/Stubs/winapi_stubs.h"
 #include "java/Class.h"
 #include "java/FloatBuffer.h"
 #include "java/JavaMath.h"
@@ -78,10 +72,15 @@
 #include "minecraft/world/level/chunk/SparseLightStorage.h"
 #include "minecraft/world/level/dimension/Dimension.h"
 #include "minecraft/world/level/material/Material.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
 #include "minecraft/world/phys/HitResult.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/PlatformTypes.h"
+#include "platform/ShutdownManager.h"
+#include "platform/sdl2/Input.h"
+#include "platform/sdl2/Render.h"
 
 bool GameRenderer::anaglyph3d = false;
 int GameRenderer::anaglyphPass = 0;
@@ -1115,6 +1114,7 @@ void GameRenderer::FinishedReassigning() { m_csDeleteStack.unlock(); }
 
 int GameRenderer::runUpdate(void* lpParam) {
     Minecraft* minecraft = Minecraft::GetInstance();
+    int64_t updatePassToken = 0;
     Tesselator::CreateNewThreadStorage(1024 * 1024);
     Compression::UseDefaultThreadStorage();
     RenderManager.InitialiseContext();
@@ -1150,8 +1150,10 @@ int GameRenderer::runUpdate(void* lpParam) {
         int count = 0;
         static const int MAX_DEFERRED_UPDATES = 10;
         bool shouldContinue = false;
+        const int64_t tickNowMs = ++updatePassToken;
         do {
-            shouldContinue = minecraft->levelRenderer->updateDirtyChunks();
+            shouldContinue =
+                minecraft->levelRenderer->updateDirtyChunks(tickNowMs);
             count++;
         } while (shouldContinue && count < MAX_DEFERRED_UPDATES);
 
@@ -1421,7 +1423,8 @@ void GameRenderer::renderLevel(float a, int64_t until) {
             int visibleWaterChunks =
                 levelRenderer->render(cameraEntity, 1, a, updateChunks);
 
-            RenderManager.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderManager.StateSetBlendFunc(GL_SRC_ALPHA,
+                                            GL_ONE_MINUS_SRC_ALPHA);
 
             if (visibleWaterChunks > 0) {
                 levelRenderer->render(

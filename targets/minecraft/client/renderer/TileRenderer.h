@@ -30,6 +30,7 @@ class BeaconTile;
 class HopperTile;
 class Icon;
 class Minecraft;
+struct ChunkBuildContext;
 
 class TileRenderer {
     friend class FallingTileRenderer;
@@ -62,6 +63,7 @@ public:
     bool isTranslucentAt(LevelSource* level, int x, int y, int z);
     unsigned int* cache;
     unsigned char* tileIds;
+    const ChunkBuildContext* buildContext;
     static const unsigned int cache_getLightColor_valid = 0x80000000;
     static const unsigned int cache_isTranslucentAt_valid = 0x40000000;
     static const unsigned int cache_isSolidBlockingTile_valid = 0x20000000;
@@ -74,10 +76,12 @@ public:
 
 public:
     TileRenderer(LevelSource* level, int xMin, int yMin, int zMin,
-                 unsigned char* tileIds);
+                 unsigned char* tileIds,
+                 const ChunkBuildContext* buildContext = nullptr);
     TileRenderer(LevelSource* level);
     TileRenderer();
     ~TileRenderer();
+    void setBuildContext(const ChunkBuildContext* buildContext);
     void setFixedTexture(Icon* fixedTexture);
     void clearFixedTexture();
     bool hasFixedTexture();

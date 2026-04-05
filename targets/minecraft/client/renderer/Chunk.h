@@ -17,6 +17,14 @@ class Entity;
 class Chunk;
 class Culler;
 
+struct ChunkBuildContext {
+    int64_t nowMs = 0;
+    uint32_t batchId = 0;
+    uint16_t veryNearCount = 0;
+    bool onlyRebuild = false;
+    bool deferredAtomic = false;
+};
+
 class ClipChunk {
 public:
     Chunk* chunk;
@@ -57,7 +65,9 @@ public:
     int xm, ym, zm;
     AABB bb;
     ClipChunk* clipChunk;
+#if defined(OCCLUSION_MODE_BFS)
     uint64_t computeConnectivity(const uint8_t* tileIds);
+#endif
     int id;
     // public:
     //	std::vector<std::shared_ptr<TileEntity> > renderableTileEntities;
@@ -67,6 +77,7 @@ private:
     LevelRenderer::rteMap* globalRenderableTileEntities;
     std::mutex* globalRenderableTileEntities_cs;
     bool assigned;
+    ChunkBuildContext buildContext;
 
 public:
     Chunk(Level* level, LevelRenderer::rteMap& globalRenderableTileEntities,
@@ -84,6 +95,8 @@ private:
 
 public:
     void makeCopyForRebuild(Chunk* source);
+    void setBuildContext(const ChunkBuildContext& ctx);
+    const ChunkBuildContext& getBuildContext() const;
     void rebuild();
     float distanceToSqr(std::shared_ptr<Entity> player) const;
     float squishedDistanceToSqr(std::shared_ptr<Entity> player);

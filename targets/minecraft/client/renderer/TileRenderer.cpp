@@ -13,13 +13,13 @@
 #include <cmath>
 #include <numbers>
 
-#include "platform/sdl2/Render.h"
+#include "Chunk.h"
 #include "EntityTileRenderer.h"
 #include "GameRenderer.h"
+#include "Tesselator.h"
 #include "app/common/App_enums.h"
 #include "app/common/src/Colours/ColourTable.h"
 #include "app/include/FrameProfiler.h"
-#include "Tesselator.h"
 #include "minecraft/Direction.h"
 #include "minecraft/Facing.h"
 #include "minecraft/SharedConstants.h"
@@ -69,6 +69,7 @@
 #include "minecraft/world/level/tile/piston/PistonBaseTile.h"
 #include "minecraft/world/level/tile/piston/PistonExtensionTile.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/sdl2/Render.h"
 
 bool TileRenderer::fancy = true;
 
@@ -101,6 +102,7 @@ void TileRenderer::_init() {
     yMin = 0;
     zMin = 0;
     cache = nullptr;
+    buildContext = nullptr;
 }
 
 bool TileRenderer::isTranslucentAt(LevelSource* level, int x, int y, int z) {
@@ -204,7 +206,8 @@ int TileRenderer::getLightColor(Tile* tt, LevelSource* level, int x, int y,
 }
 
 TileRenderer::TileRenderer(LevelSource* level, int xMin, int yMin, int zMin,
-                           unsigned char* tileIds) {
+                           unsigned char* tileIds,
+                           const ChunkBuildContext* buildContext) {
     this->level = level;
     _init();
     this->xMin = xMin;
@@ -214,6 +217,7 @@ TileRenderer::TileRenderer(LevelSource* level, int xMin, int yMin, int zMin,
     this->yMin2 = yMin - 2;
     this->zMin2 = zMin - 2;
     this->tileIds = tileIds;
+    this->buildContext = buildContext;
     cache = new unsigned int[32 * 32 * 32];
     memset(cache, 0, 32 * 32 * 32 * sizeof(unsigned int));
 }
@@ -230,6 +234,10 @@ TileRenderer::TileRenderer(LevelSource* level) {
 TileRenderer::TileRenderer() {
     this->level = nullptr;
     _init();
+}
+
+void TileRenderer::setBuildContext(const ChunkBuildContext* buildContext) {
+    this->buildContext = buildContext;
 }
 
 void TileRenderer::setFixedTexture(Icon* fixedTexture) {
@@ -5254,10 +5262,10 @@ bool TileRenderer::tesselateBlockInWorldWithAmbienceOcclusionTexLighting(
         ll0yZ = getShadeBrightness(tt, level, pX, pY, pZ + 1);
         llXy0 = getShadeBrightness(tt, level, pX + 1, pY, pZ);
 
-        bool llTransXy0 = Tile::transculent[level->getTile(pX + 1, pY - 1, pZ)];
-        bool llTransxy0 = Tile::transculent[level->getTile(pX - 1, pY - 1, pZ)];
-        bool llTrans0yZ = Tile::transculent[level->getTile(pX, pY - 1, pZ + 1)];
-        bool llTrans0yz = Tile::transculent[level->getTile(pX, pY - 1, pZ - 1)];
+        bool llTransXy0 = isTranslucentAt(level, pX + 1, pY - 1, pZ);
+        bool llTransxy0 = isTranslucentAt(level, pX - 1, pY - 1, pZ);
+        bool llTrans0yZ = isTranslucentAt(level, pX, pY - 1, pZ + 1);
+        bool llTrans0yz = isTranslucentAt(level, pX, pY - 1, pZ - 1);
 
         if (llTrans0yz || llTransxy0) {
             llxyz = getShadeBrightness(tt, level, pX - 1, pY, pZ - 1);
@@ -5346,10 +5354,10 @@ bool TileRenderer::tesselateBlockInWorldWithAmbienceOcclusionTexLighting(
         ll0Yz = getShadeBrightness(tt, level, pX, pY, pZ - 1);
         ll0YZ = getShadeBrightness(tt, level, pX, pY, pZ + 1);
 
-        bool llTransXY0 = Tile::transculent[level->getTile(pX + 1, pY + 1, pZ)];
-        bool llTransxY0 = Tile::transculent[level->getTile(pX - 1, pY + 1, pZ)];
-        bool llTrans0YZ = Tile::transculent[level->getTile(pX, pY + 1, pZ + 1)];
-        bool llTrans0Yz = Tile::transculent[level->getTile(pX, pY + 1, pZ - 1)];
+        bool llTransXY0 = isTranslucentAt(level, pX + 1, pY + 1, pZ);
+        bool llTransxY0 = isTranslucentAt(level, pX - 1, pY + 1, pZ);
+        bool llTrans0YZ = isTranslucentAt(level, pX, pY + 1, pZ + 1);
+        bool llTrans0Yz = isTranslucentAt(level, pX, pY + 1, pZ - 1);
 
         if (llTrans0Yz || llTransxY0) {
             llxYz = getShadeBrightness(tt, level, pX - 1, pY, pZ - 1);
@@ -5429,10 +5437,10 @@ bool TileRenderer::tesselateBlockInWorldWithAmbienceOcclusionTexLighting(
         cc0Yz = getLightColor(tt, level, pX, pY + 1, pZ);
         ccX0z = getLightColor(tt, level, pX + 1, pY, pZ);
 
-        bool llTransX0z = Tile::transculent[level->getTile(pX + 1, pY, pZ - 1)];
-        bool llTransx0z = Tile::transculent[level->getTile(pX - 1, pY, pZ - 1)];
-        bool llTrans0Yz = Tile::transculent[level->getTile(pX, pY + 1, pZ - 1)];
-        bool llTrans0yz = Tile::transculent[level->getTile(pX, pY - 1, pZ - 1)];
+        bool llTransX0z = isTranslucentAt(level, pX + 1, pY, pZ - 1);
+        bool llTransx0z = isTranslucentAt(level, pX - 1, pY, pZ - 1);
+        bool llTrans0Yz = isTranslucentAt(level, pX, pY + 1, pZ - 1);
+        bool llTrans0yz = isTranslucentAt(level, pX, pY - 1, pZ - 1);
 
         if (llTransx0z || llTrans0yz) {
             llxyz = getShadeBrightness(tt, level, pX - 1, pY - 1, pZ);
@@ -5597,10 +5605,10 @@ bool TileRenderer::tesselateBlockInWorldWithAmbienceOcclusionTexLighting(
         cc0yZ = getLightColor(tt, level, pX, pY - 1, pZ);
         cc0YZ = getLightColor(tt, level, pX, pY + 1, pZ);
 
-        bool llTransX0Z = Tile::transculent[level->getTile(pX + 1, pY, pZ + 1)];
-        bool llTransx0Z = Tile::transculent[level->getTile(pX - 1, pY, pZ + 1)];
-        bool llTrans0YZ = Tile::transculent[level->getTile(pX, pY + 1, pZ + 1)];
-        bool llTrans0yZ = Tile::transculent[level->getTile(pX, pY - 1, pZ + 1)];
+        bool llTransX0Z = isTranslucentAt(level, pX + 1, pY, pZ + 1);
+        bool llTransx0Z = isTranslucentAt(level, pX - 1, pY, pZ + 1);
+        bool llTrans0YZ = isTranslucentAt(level, pX, pY + 1, pZ + 1);
+        bool llTrans0yZ = isTranslucentAt(level, pX, pY - 1, pZ + 1);
 
         if (llTransx0Z || llTrans0yZ) {
             llxyZ = getShadeBrightness(tt, level, pX - 1, pY - 1, pZ);
@@ -5765,10 +5773,10 @@ bool TileRenderer::tesselateBlockInWorldWithAmbienceOcclusionTexLighting(
         ccx0Z = getLightColor(tt, level, pX, pY, pZ + 1);
         ccxY0 = getLightColor(tt, level, pX, pY + 1, pZ);
 
-        bool llTransxY0 = Tile::transculent[level->getTile(pX - 1, pY + 1, pZ)];
-        bool llTransxy0 = Tile::transculent[level->getTile(pX - 1, pY - 1, pZ)];
-        bool llTransx0z = Tile::transculent[level->getTile(pX - 1, pY, pZ - 1)];
-        bool llTransx0Z = Tile::transculent[level->getTile(pX - 1, pY, pZ + 1)];
+        bool llTransxY0 = isTranslucentAt(level, pX - 1, pY + 1, pZ);
+        bool llTransxy0 = isTranslucentAt(level, pX - 1, pY - 1, pZ);
+        bool llTransx0z = isTranslucentAt(level, pX - 1, pY, pZ - 1);
+        bool llTransx0Z = isTranslucentAt(level, pX - 1, pY, pZ + 1);
 
         if (llTransx0z || llTransxy0) {
             llxyz = getShadeBrightness(tt, level, pX, pY - 1, pZ - 1);
@@ -5929,10 +5937,10 @@ bool TileRenderer::tesselateBlockInWorldWithAmbienceOcclusionTexLighting(
         ccX0Z = getLightColor(tt, level, pX, pY, pZ + 1);
         ccXY0 = getLightColor(tt, level, pX, pY + 1, pZ);
 
-        bool llTransXY0 = Tile::transculent[level->getTile(pX + 1, pY + 1, pZ)];
-        bool llTransXy0 = Tile::transculent[level->getTile(pX + 1, pY - 1, pZ)];
-        bool llTransX0Z = Tile::transculent[level->getTile(pX + 1, pY, pZ + 1)];
-        bool llTransX0z = Tile::transculent[level->getTile(pX + 1, pY, pZ - 1)];
+        bool llTransXY0 = isTranslucentAt(level, pX + 1, pY + 1, pZ);
+        bool llTransXy0 = isTranslucentAt(level, pX + 1, pY - 1, pZ);
+        bool llTransX0Z = isTranslucentAt(level, pX + 1, pY, pZ + 1);
+        bool llTransX0z = isTranslucentAt(level, pX + 1, pY, pZ - 1);
 
         if (llTransXy0 || llTransX0z) {
             llXyz = getShadeBrightness(tt, level, pX, pY - 1, pZ - 1);
