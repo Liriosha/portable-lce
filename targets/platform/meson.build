@@ -1,5 +1,4 @@
 platform_inc = include_directories('.')
-_inc_dir = '../../' / inc_dir
 _threads = dependency('threads')
 
 lib_platform_core = static_library('platform_core',
@@ -15,37 +14,14 @@ platform_dep = declare_dependency(
 )
 
 # SDL2-based platform implementations (formerly 4J.* modules)
-if host_machine.system() == 'android'
-  _sdl2 = declare_dependency(
-  dependencies: cc.find_library('SDL2', dirs: lib_dir, required: true ), 
-  include_directories: _inc_dir)
-else
-  _sdl2 = dependency('sdl2')
-endif
+_sdl2 = dependency('sdl2')
 _defs = []
 
 if get_option('renderer') == 'gles'
-  if host_machine.system() == 'android'
-    _gl = cc.find_library('GLESv3', required: true )
-    _egl  = cc.find_library('EGL', required: true )
-  else
-    _gl = dependency('glesv2', required: true)
-  endif
+  _gl = dependency('glesv2', required: true)
   _defs += ['-DGLES']
 else
   _gl = dependency('gl', required: true)
-endif
-
-deps = [
-  _sdl2, 
-  _gl, 
-  _threads, 
-  glm_dep,
-  stb_dep,
-]
-
-if host_machine.system() == 'android'
-  deps += _egl
 endif
 
 sdl2_sources = files(
@@ -59,7 +35,7 @@ sdl2_sources = files(
 lib_platform_sdl2 = static_library('platform_sdl2',
   sdl2_sources,
   include_directories: [platform_inc, include_directories('sdl2')],
-  dependencies: deps,
+  dependencies: [_sdl2, _gl, _threads, glm_dep, stb_dep],
   cpp_args: _defs + global_cpp_args + global_cpp_defs,
 )
 
@@ -68,7 +44,7 @@ lib_platform_sdl2 = static_library('platform_sdl2',
 render_dep = declare_dependency(
   link_with: lib_platform_sdl2,
   include_directories: [platform_inc, include_directories('sdl2')],
-  dependencies: deps,
+  dependencies: [_sdl2, _gl, _threads, glm_dep],
 )
 input_dep = render_dep
 profile_dep = render_dep

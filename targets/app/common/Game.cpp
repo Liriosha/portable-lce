@@ -73,13 +73,6 @@
 #include <utility>
 #include <vector>
 
-#ifdef __android__
-#include <android/log.h>
-
-#define TAG "4JCRAFT"
-#define AndroidPrintf(...) do { __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__); printf( __VA_ARGS__); } while( 0 );
-#endif
-
 #include "platform/sdl2/Input.h"
 #include "app/common/src/Audio/SoundEngine.h"
 #include "app/common/src/Colours/ColourTable.h"
@@ -256,11 +249,7 @@ void Game::DebugPrintf(const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-#if defined(__android__)
-    AndroidPrintf("%s", buf);
-#else
     OutputDebugStringA(buf);
-#endif
 #endif
 }
 
@@ -272,11 +261,7 @@ void Game::DebugPrintf(int user, const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-#if defined(__android__)
-    AndroidPrintf("%s", buf);
-#else
     OutputDebugStringA(buf);
-#endif
     if (user == USER_UI) {
         ui.logDebugString(buf);
     }

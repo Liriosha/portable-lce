@@ -17,8 +17,6 @@ pymod = import('python')
 python = pymod.find_installation('python3', required: true)
 
 cc = meson.get_compiler('cpp')
-lib_dir = meson.current_source_dir() / 'thirdparty/lib' / host_machine.system() / host_machine.cpu()
-inc_dir = 'thirdparty/include' / host_machine.system()
 
 global_cpp_defs = [
   '-DSPLIT_SAVES',
@@ -30,21 +28,13 @@ global_cpp_defs = [
   '-DDEBUG',
 ]
 
-if host_machine.system() == 'linux' or host_machine.system() == 'android'
+if host_machine.system() == 'linux'
   global_cpp_defs += ['-Dlinux', '-D__linux', '-D__linux__']
-endif
-
-if host_machine.system() == 'android'
-  global_cpp_defs += ['-D__android__']
 endif
 
 if get_option('renderer') == 'gles'
   global_cpp_defs += ['-DGLES']
-  if host_machine.system() == 'android'
-    gl_dep = cc.find_library('GLESv3', required: true )
-  else
-    gl_dep = dependency('glesv2', required: true)
-  endif
+  gl_dep = dependency('glesv2', required: true)
   glu_dep = dependency('', required: false)
 else
   gl_dep = dependency('gl', required: true)
@@ -79,21 +69,10 @@ global_cpp_args = [
 ]
 add_project_arguments(global_cpp_args, language: 'cpp')
 
-if host_machine.system() == 'android'
-  sdl2_dep = declare_dependency(
-    dependencies: cc.find_library('SDL2', dirs: lib_dir, required: true ), 
-    include_directories: inc_dir)
-else
-  sdl2_dep = dependency('sdl2')
-endif
+sdl2_dep = dependency('sdl2')
 thread_dep = dependency('threads')
 dl_dep = cc.find_library('dl', required: true)
-
-if host_machine.system() == 'android'
-  glm_dep  = declare_dependency(include_directories: inc_dir)
-else
-  glm_dep = dependency('glm')
-endif
+glm_dep = dependency('glm')
 
 stb = subproject('stb').get_variable('stb_inc')
 stb_dep = declare_dependency(include_directories: stb)

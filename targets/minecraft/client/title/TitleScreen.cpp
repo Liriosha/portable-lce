@@ -4,7 +4,6 @@
 
 #include <cmath>
 #include <vector>
-#include <numbers> // for std::numbers
 
 #include "platform/sdl2/Render.h"
 #include "app/linux/LinuxGame.h"

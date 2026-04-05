@@ -75,18 +75,13 @@ public:
     }
 
     std::filesystem::path getBasePath() override {
-#if defined(__linux__) && !defined (__android__)
+#if defined(__linux__)
         char buf[4096];
         ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
         if (len > 0) {
             buf[len] = '\0';
             return std::filesystem::path(buf).parent_path();
         }
-#elif defined(__android__)
-        // Because of the static init fiasco
-        // I need to set the path before loading the library
-        // I can only do this through ENV
-        return std::filesystem::path( getenv("MC_PATH") ); 
 #endif
         return std::filesystem::current_path();
     }
