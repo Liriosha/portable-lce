@@ -8,9 +8,14 @@
 #include <system_error>
 #include <vector>
 
+#if defined(__linux__)
+#include <unistd.h>
+#endif
+
 #include "util/StringHelpers.h"  // 4jcraft TODO
 #include "platform/PlatformServices.h"
 #include "java/FileFilter.h"
+#include "platform/StdFileIO.h"
 
 const wchar_t File::pathSeparator = L'/';
 
@@ -64,11 +69,11 @@ File::File(const std::wstring& pathname) {
     m_abstractPathName = fixedPath;
 
 #if defined(__linux__)
-    std::string request = std::filesystem::path(m_abstractPathName).string();
+    std::string request = wstringtofilename(m_abstractPathName);
     while (!request.empty() && request[0] == '/') request.erase(0, 1);
     if (request.find("res/") == 0) request.erase(0, 4);
 
-    std::string exeDir = PlatformFileIO.getBasePath().string();
+    std::string exeDir = StdFileIO().getBasePath().string();
     std::string fileName = request;
     size_t lastSlash = fileName.find_last_of('/');
     if (lastSlash != std::string::npos)
@@ -78,21 +83,24 @@ File::File(const std::wstring& pathname) {
                            "/Common/res/TitleUpdate/res/",
                            "/Common/Media/",
                            "/Common/res/",
-                           "/Common/",
-                           "resources/"};
+                           "/Common/"};
 
     for (const char* base : bases) {
         std::string tryFull = exeDir + base + request;
         std::string tryFile = exeDir + base + fileName;
-        if (PlatformFileIO.exists(tryFull)) {
+        if (access(tryFull.c_str(), F_OK) != -1) {
             m_abstractPathName = convStringToWstring(tryFull);
             return;
         }
-        if (PlatformFileIO.exists(tryFile)) {
+        if (access(tryFile.c_str(), F_OK) != -1) {
             m_abstractPathName = convStringToWstring(tryFile);
             return;
         }
     }
+
+    // 4jcraft: If it's not a core asset, anchor it to the executable directory
+    // so save files don't break
+    m_abstractPathName = convStringToWstring(exeDir + "/" + request);
 #endif
 
 #ifdef _WINDOWS64
@@ -155,7 +163,8 @@ this->parent = nullptr;
 // deleted; false otherwise
 bool File::_delete() {
     std::error_code error;
-    const bool result = fs::remove(ToFilesystemPath(getPath()), error);
+    // 4jcraft: remove all better
+    const bool result = fs::remove_all(ToFilesystemPath(getPath()), error);
     if (!result || error) {
 #ifndef _CONTENT_PACKAGE
         printf("File::_delete - Error code %d (%#0.8X)\n", error.value(),

@@ -99,7 +99,7 @@ void PendingConnection::sendPreLoginResponse() {
     std::uint8_t ugcXuidCount = 0;
     std::uint8_t hostIndex = 0;
     std::uint8_t ugcFriendsOnlyBits = 0;
-    char szUniqueMapName[14];
+    char szUniqueMapName[256]{};
 
     StorageManager.GetSaveUniqueFilename(szUniqueMapName);
 

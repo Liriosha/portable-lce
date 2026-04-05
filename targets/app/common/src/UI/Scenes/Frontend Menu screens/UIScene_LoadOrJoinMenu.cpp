@@ -547,13 +547,43 @@ void UIScene_LoadOrJoinMenu::tick() {
             m_iState = e_SavesIdle;
             break;
     }
-#else
-    if (!m_bSavesDisplayed) {
-        AddDefaultButtons();
-        m_bSavesDisplayed = true;
-        m_controlSavesTimer.setVisible(false);
-    }
-#endif
+    // 4jcraft: the game literally defaulted to nothing but default buttons
+    // if the game was on a non console / recognized platform.
+    #else
+        if (!m_bSavesDisplayed) {
+            m_pSaveDetails = StorageManager.ReturnSavesInfo();
+            if (m_pSaveDetails != nullptr) {
+                AddDefaultButtons();
+
+                if (m_saveDetails != nullptr) {
+                    for (unsigned int i = 0; i < m_iSaveDetailsCount; ++i) {
+                        if (m_saveDetails[i].pbThumbnailData != nullptr)
+                            delete m_saveDetails[i].pbThumbnailData;
+                    }
+                    delete[] m_saveDetails;
+                }
+
+                m_saveDetails = new SaveListDetails[m_pSaveDetails->iSaveC];
+                m_iSaveDetailsCount = m_pSaveDetails->iSaveC;
+
+                for (unsigned int i = 0; i < m_pSaveDetails->iSaveC; ++i) {
+                    m_buttonListSaves.addItem(
+                        m_pSaveDetails->SaveInfoA[i].UTF8SaveTitle, L"");
+
+                    m_saveDetails[i].saveId = i;
+                    memcpy(m_saveDetails[i].UTF8SaveName,
+                           m_pSaveDetails->SaveInfoA[i].UTF8SaveTitle, 128);
+                    memcpy(m_saveDetails[i].UTF8SaveFilename,
+                           m_pSaveDetails->SaveInfoA[i].UTF8SaveFilename,
+                           MAX_SAVEFILENAME_LENGTH);
+                }
+
+                m_bSavesDisplayed = true;
+                m_controlSavesTimer.setVisible(false);
+                UpdateGamesList();
+            }
+        }
+    #endif
 
     // SAVE TRANSFERS
 }
