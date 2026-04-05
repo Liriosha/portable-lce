@@ -69,6 +69,27 @@ endif
 
 platform_services_src = files('../platform/PlatformServices.cpp')
 
+if host_machine.system() == 'android'
+  client_dependencies += declare_dependency(dependencies: cc.find_library('log', required: true))
+endif
+
+if host_machine.system() == 'android'
+client = shared_library(
+  'MinecraftClient',
+  client_sources + platform_sources + platform_services_src + localisation[1],
+  include_directories: include_directories('include', '..'),
+  dependencies: client_dependencies,
+  cpp_args: global_cpp_args
+  + global_cpp_defs
+  + [
+    '-DUNICODE',
+    '-D_UNICODE',
+  ],
+  c_args: global_cpp_defs + ['-DUNICODE', '-D_UNICODE'],
+  install: true,
+  install_dir: '',
+)
+else
 client = executable(
   'Minecraft.Client',
   client_sources + platform_sources + platform_services_src + localisation[1],
@@ -84,6 +105,7 @@ client = executable(
   install: true,
   install_dir: '',
 )
+endif
 
 custom_target(
   'copy_assets_to_client',

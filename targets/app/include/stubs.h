@@ -2,8 +2,12 @@
 
 #include <string>
 #ifdef __linux__
+#ifdef GLES
+#include <GLES3/gl3.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 
 #undef GL_SMOOTH
 #undef GL_FLAT
@@ -166,7 +170,13 @@ public:
     static const int GL_FLAT = 0x1D00;
 #undef glShadeModel
 #define GL_SHADEMODEL_IS_FUNCTION
-    static void glShadeModel(int mode) { ::glShadeModel(mode); }
+    static void glShadeModel(int mode) { 
+#ifdef GLES
+        glShadeModel(mode);
+#else
+        ::glShadeModel(mode);
+#endif
+    }
 };
 #undef GL_ARRAY_BUFFER_ARB
 #undef GL_STREAM_DRAW_ARB

@@ -1,6 +1,10 @@
 #include "LevelRenderer.h"
 
+#ifdef GLES
+#include <GLES3/gl3.h>
+#else
 #include <GL/gl.h>
+#endif
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>

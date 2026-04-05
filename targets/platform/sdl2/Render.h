@@ -2,8 +2,12 @@
 
 #include "gl3_loader.h"
 // NOTE: gl3_loader.h must be included before these two
+#ifdef GLES
+#include <GLES3/gl3.h>
+#else
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 
 #include <cstdint>
 #include <cstdlib>
@@ -386,6 +390,34 @@ extern C4JRender RenderManager;
 #define GL_TRIANGLE_STRIP 0x0005
 #endif
 
+// These constants do not exist on the GLES, 
+// so for now it is just stub
+#ifdef GLES
+
+#ifndef GL_COLOR_MATERIAL
+#define GL_COLOR_MATERIAL 0x0B57
+#endif
+#ifndef GL_RESCALE_NORMAL
+#define GL_RESCALE_NORMAL 0x803A
+#endif
+#ifndef GL_NORMALIZE
+#define GL_NORMALIZE 0x0BA1
+#endif
+#ifndef GL_POLYGON_OFFSET_LINE
+#define GL_POLYGON_OFFSET_LINE 0x2A02
+#endif
+#ifndef GL_AMBIENT_AND_DIFFUSE
+#define GL_AMBIENT_AND_DIFFUSE 0x1602
+#endif
+
+extern "C" {
+void glShadeModel(GLenum);
+void glColorMaterial(GLenum, GLenum);
+void glNormal3f(GLfloat, GLfloat, GLfloat);
+void glTexGeni(GLenum, GLenum, GLint);
+} 
+#endif
+
 // glCallList / display list macros
 #undef glNewList
 #define glNewList(_list, _mode) RenderManager.CBuffStart(_list)
@@ -726,3 +758,7 @@ void glGetQueryObjectu_4J_Helper(unsigned int id, unsigned int pname,
 #define glLight(a, b, c) glLight_4J(a, b, c)
 #define glLightModel(a, b) glLightModel_4J(a, b)
 #define glTexGen(a, b, c) glTexGen_4J(a, b, c)
+
+#ifdef GLES
+#define glClearDepth(a) glClearDepthf((float)a)
+#endif

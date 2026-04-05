@@ -1,6 +1,11 @@
 #pragma once
 
+#ifdef GLES
+#include <GLES3/gl3.h>
+#include <GLES2/gl2ext.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #include <format>
 #include <string>
@@ -13,12 +18,19 @@ class BufferedImage;
 class Texture {
 public:
     static const int WM_WRAP = GL_REPEAT;
+#ifdef GLES
+    static const int WM_CLAMP = GL_CLAMP_TO_EDGE;
+#else
     static const int WM_CLAMP = GL_CLAMP;
+#endif
     static const int WM_MIRROR = 0;  // GL_MIRRORED_REPEAT;
 
     static const int TFMT_RGBA = GL_RGBA;
+#ifdef GLES
+    static const int TFMT_BGRA = GL_BGRA_EXT;
+#else
     static const int TFMT_BGRA = GL_BGRA;
-
+#endif
     static const int TFLT_NEAREST = GL_NEAREST;
     static const int TFLT_LINEAR = GL_LINEAR;
     static const int TFLT_LINEAR_MIP_NEAREST = 0;  // GL_LINEAR_MIPMAP_NEAREST;
