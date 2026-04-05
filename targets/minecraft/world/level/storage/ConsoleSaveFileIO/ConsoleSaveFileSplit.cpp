@@ -216,11 +216,13 @@ void ConsoleSaveFileSplit::RegionFileReference::Decompress() {
         unsigned char* dataIn = dataCompressed + 4;
         unsigned char* dataInLast = dataCompressed + dataCompressedSize;
 
-        while (dataIn != dataInLast) {
+        while (dataIn < dataInLast) {
             unsigned char thisByte = *dataIn++;
             if (thisByte == 0) {
+                if (dataIn >= dataInLast) break;
                 thisByte = *dataIn++;
                 if (thisByte == 0) {
+                    if (dataIn + 1 >= dataInLast) break;
                     unsigned int runLength = (*dataIn++) << 8;
                     runLength |= (*dataIn++);
                     runLength += 256;
@@ -237,7 +239,6 @@ void ConsoleSaveFileSplit::RegionFileReference::Decompress() {
         if (fileEntry->data.length != uncompressedSize) {
             // Treat as if it was an empty region file
             fileEntry->data.length = 0;
-            assert(0);
             return;
         }
     }
@@ -246,21 +247,24 @@ void ConsoleSaveFileSplit::RegionFileReference::Decompress() {
     unsigned char* dataIn = dataCompressed + 4;
     unsigned char* dataInLast = dataCompressed + dataCompressedSize;
     unsigned char* dataOut = data;
+    unsigned char* dataOutLast = data + fileEntry->data.length;
 
-    while (dataIn != dataInLast) {
+    while (dataIn < dataInLast && dataOut < dataOutLast) {
         unsigned char thisByte = *dataIn++;
         if (thisByte == 0) {
+            if (dataIn >= dataInLast) break;
             thisByte = *dataIn++;
             if (thisByte == 0) {
+                if (dataIn + 1 >= dataInLast) break;
                 unsigned int runLength = (*dataIn++) << 8;
                 runLength |= (*dataIn++);
                 runLength += 256;
-                for (unsigned int i = 0; i < runLength; i++) {
+                for (unsigned int i = 0; i < runLength && dataOut < dataOutLast; i++) {
                     *dataOut++ = 0;
                 }
             } else {
                 unsigned int runLength = thisByte;
-                for (unsigned int i = 0; i < runLength; i++) {
+                for (unsigned int i = 0; i < runLength && dataOut < dataOutLast; i++) {
                     *dataOut++ = 0;
                 }
             }
@@ -274,7 +278,6 @@ void ConsoleSaveFileSplit::RegionFileReference::Decompress() {
         free(data);
         fileEntry->data.length = 0;
         data = nullptr;
-        assert(0);
     }
     //	std::int64_t endTime = System::currentTimeMillis();
     //	app.DebugPrintf("Decompressing region file from 0x%.8x %d to %d bytes -
@@ -437,6 +440,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
     // Get details of region files. From this point on we are responsible for
     // the memory that the storage manager initially allocated for them
     unsigned int regionCount = PlatformStorage.GetSubfileCount();
+
     for (unsigned int i = 0; i < regionCount; i++) {
         unsigned int regionIndex;
         unsigned char* regionDataCompressed;
@@ -446,8 +450,14 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
                                           (void**)&regionDataCompressed,
                                           &regionSizeCompressed);
 
+        unsigned char* copiedData = nullptr;
+        if (regionSizeCompressed > 0 && regionDataCompressed) {
+            copiedData = (unsigned char*)malloc(regionSizeCompressed);
+            memcpy(copiedData, regionDataCompressed, regionSizeCompressed);
+        }
+
         RegionFileReference* regionFileRef = new RegionFileReference(
-            i, regionIndex, regionSizeCompressed, regionDataCompressed);
+            regionIndex, regionIndex, regionSizeCompressed, copiedData);
         if (regionSizeCompressed > 0) {
             regionFileRef->Decompress();
         } else {
@@ -493,10 +503,12 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
             PlatformStorage.GetSaveData(pvSaveMem, &storageLength);
             app.DebugPrintf("Filesize - %d, Adjusted size - %d\n", fileSize,
                             storageLength);
+
             fileSize = storageLength;
         }
 
         int compressed = *(int*)pvSaveMem;
+
         if (compressed == 0) {
             unsigned int decompSize = *((int*)pvSaveMem + 1);
 
@@ -1287,6 +1299,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
     time_util::Timer timer;
 
     unsigned int fileSize = header.GetFileSize();
+
 
     // Assume that the compression will make it smaller so initially attempt to
     // allocate the current file size We add 4 bytes to the start so that we can

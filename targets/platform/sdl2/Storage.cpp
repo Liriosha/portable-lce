@@ -33,8 +33,11 @@ static unsigned int s_SaveBufferSize = 0;
 struct SubfileData {
     std::vector<std::uint8_t> data;
 };
+
+#include <mutex>
 static std::map<int, SubfileData> s_Subfiles;
 static int s_SubfileCounter = 0;
+static std::mutex s_SubfileMutex;
 
 // helper functions
 static StdFileIO s_FileIO;
@@ -87,8 +90,11 @@ void C4JStorage::Init(unsigned int uiSaveVersion,
 void C4JStorage::ResetSaveData() {
     s_CurrentSaveTitle = L"New World";
     s_CurrentSaveFilename = "";
-    s_Subfiles.clear();
-    s_SubfileCounter = 0;
+    {
+        std::lock_guard<std::mutex> lock(s_SubfileMutex);
+        s_Subfiles.clear();
+        s_SubfileCounter = 0;
+    }
     if (s_SaveBuffer) {
         free(s_SaveBuffer);
         s_SaveBuffer = nullptr;
@@ -314,19 +320,33 @@ C4JStorage::ESaveGameState C4JStorage::LoadSaveData(
             s_SaveBufferSize = (unsigned int)blobData.size();
             s_SaveBuffer = (std::uint8_t*)malloc(s_SaveBufferSize);
             memcpy(s_SaveBuffer, blobData.data(), s_SaveBufferSize);
+
         }
 
         // put in mem
-        s_Subfiles.clear();
-        for (int i = 0; i < 50; i++) {
-            auto subData = s_FileIO.readFileToVec(
-                GetSaveFile(s_CurrentSaveFilename,
-                            "subfile_" + std::to_string(i) + ".dat"));
-            if (!subData.empty()) {
-                SubfileData sd;
-                sd.data = std::move(subData);
-                s_Subfiles[i] = std::move(sd);
+        {
+            std::lock_guard<std::mutex> lock(s_SubfileMutex);
+            s_Subfiles.clear();
+            int maxIndex = -1;
+            auto dir = GetSaveDir(s_CurrentSaveFilename);
+            std::error_code ec;
+            for (const auto& entry : std::filesystem::directory_iterator(dir, ec)) {
+                if (!entry.is_regular_file()) continue;
+                std::string filename = entry.path().filename().string();
+                if (filename.find("subfile_") == 0 && filename.find(".dat") == filename.size() - 4) {
+                    try {
+                        int i = std::stoi(filename.substr(8, filename.size() - 12));
+                        auto subData = s_FileIO.readFileToVec(entry.path());
+                        if (!subData.empty()) {
+                            SubfileData sd;
+                            sd.data = std::move(subData);
+                            s_Subfiles[i] = std::move(sd);
+                            if (i > maxIndex) maxIndex = i;
+                        }
+                    } catch (...) {}
+                }
             }
+            s_SubfileCounter = maxIndex + 1;
         }
     }
 
@@ -426,17 +446,30 @@ unsigned int C4JStorage::CRC(unsigned char* buf, int len) {
 
 // that fucking bird that i hate
 int C4JStorage::AddSubfile(int regionIndex) {
-    s_Subfiles[s_SubfileCounter] = SubfileData();
-    return s_SubfileCounter++;
+    std::lock_guard<std::mutex> lock(s_SubfileMutex);
+    s_Subfiles[regionIndex] = SubfileData();
+    if (regionIndex >= s_SubfileCounter) {
+        s_SubfileCounter = regionIndex + 1;
+    }
+    return regionIndex;
 }
 
-unsigned int C4JStorage::GetSubfileCount() { return s_Subfiles.size(); }
+unsigned int C4JStorage::GetSubfileCount() {
+    std::lock_guard<std::mutex> lock(s_SubfileMutex);
+    return s_Subfiles.size(); 
+}
 
 void C4JStorage::GetSubfileDetails(unsigned int i, int* regionIndex,
                                    void** data, unsigned int* size) {
-    auto it = s_Subfiles.find(i);
+    std::lock_guard<std::mutex> lock(s_SubfileMutex);
+    auto it = s_Subfiles.begin();
+    unsigned int index = 0;
+    while (it != s_Subfiles.end() && index < i) {
+        ++it;
+        ++index;
+    }
     if (it != s_Subfiles.end()) {
-        if (regionIndex) *regionIndex = 0;
+        if (regionIndex) *regionIndex = it->first;
         if (data) *data = it->second.data.data();
         if (size) *size = (unsigned int)it->second.data.size();
     } else {
@@ -447,15 +480,18 @@ void C4JStorage::GetSubfileDetails(unsigned int i, int* regionIndex,
 }
 
 void C4JStorage::ResetSubfiles() {
+    std::lock_guard<std::mutex> lock(s_SubfileMutex);
     s_Subfiles.clear();
     s_SubfileCounter = 0;
 }
 void C4JStorage::UpdateSubfile(int index, void* data, unsigned int size) {
+    std::lock_guard<std::mutex> lock(s_SubfileMutex);
     SubfileData& sd = s_Subfiles[index];  // inserts if missing
     sd.data.resize(size);
     memcpy(sd.data.data(), data, size);
 }
 void C4JStorage::SaveSubfiles(std::function<int(const bool)> callback) {
+    std::lock_guard<std::mutex> lock(s_SubfileMutex);
     if (!s_CurrentSaveFilename.empty() && !s_Subfiles.empty()) {
         auto dir = GetSaveDir(s_CurrentSaveFilename);
         std::error_code ec;
