@@ -7,8 +7,8 @@ option(
 )
 
 option('classic_panorama',
-  type : 'boolean', 
-  value : false, 
+  type : 'boolean',
+  value : false,
   description : 'Enable classic java edition panorama (ui_backend=java ONLY).')
 
 option(
@@ -39,4 +39,11 @@ option(
   choices: ['off', 'frustum', 'bfs', 'hardware'],
   value: 'frustum',
   description: 'Occlusion culling mode. Off disables ALL CULLING (debug only!), Frustum disables offscreen rendering (default), BFS is experimental connectivity culling, hardware uses GPU queries.',
+)
+
+option(
+  'enable_greedy_meshing',
+  type: 'boolean',
+  value: true,
+  description: 'Enable greedy meshing for chunks and liquid tops.',
 )

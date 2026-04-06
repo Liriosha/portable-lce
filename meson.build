@@ -1,16 +1,16 @@
 project(
-  '4jcraft',
-  ['cpp', 'c'],
-  version: '0.1.0',
-  meson_version: '>= 1.3',
-  default_options: [
-    'cpp_std=c++23',
-    'warning_level=0',
-    'buildtype=debugoptimized', # for now
-    'unity=on', # merge source files per target
-    'unity_size=8', # TODO: mess around with this
-    'b_pch=true', # precompiled headers
-  ],
+    '4jcraft',
+    ['cpp', 'c'],
+    version: '0.1.0',
+    meson_version: '>= 1.3',
+    default_options: [
+        'cpp_std=c++23',
+        'warning_level=0',
+        'buildtype=debugoptimized', # for now
+        'unity=on', # merge source files per target
+        'unity_size=8', # TODO: mess around with this
+        'b_pch=true', # precompiled headers
+    ],
 )
 
 pymod = import('python')
@@ -19,30 +19,30 @@ python = pymod.find_installation('python3', required: true)
 cc = meson.get_compiler('cpp')
 
 global_cpp_defs = [
-  '-DSPLIT_SAVES',
-  '-D_LARGE_WORLDS',
-  '-D_EXTENDED_ACHIEVEMENTS',
-  '-D_DEBUG_MENUS_ENABLED',
-  '-D_DEBUG',
-  '-D_FORTIFY_SOURCE=2',
-  '-DDEBUG',
+    '-DSPLIT_SAVES',
+    '-D_LARGE_WORLDS',
+    '-D_EXTENDED_ACHIEVEMENTS',
+    '-D_DEBUG_MENUS_ENABLED',
+    '-D_DEBUG',
+    '-D_FORTIFY_SOURCE=2',
+    '-DDEBUG',
 ]
 
 if host_machine.system() == 'linux'
-  global_cpp_defs += ['-Dlinux', '-D__linux', '-D__linux__']
+    global_cpp_defs += ['-Dlinux', '-D__linux', '-D__linux__']
 endif
 
 if get_option('renderer') == 'gles'
-  global_cpp_defs += ['-DGLES']
-  gl_dep = dependency('glesv2', required: true)
-  glu_dep = dependency('', required: false)
+    global_cpp_defs += ['-DGLES']
+    gl_dep = dependency('glesv2', required: true)
+    glu_dep = dependency('', required: false)
 else
-  gl_dep = dependency('gl', required: true)
-  glu_dep = dependency('glu', required: true)
+    gl_dep = dependency('gl', required: true)
+    glu_dep = dependency('glu', required: true)
 endif
 
 if get_option('enable_vsync')
-  global_cpp_defs += ['-DENABLE_VSYNC']
+    global_cpp_defs += ['-DENABLE_VSYNC']
 endif
 
 if get_option('classic_panorama')
@@ -50,22 +50,26 @@ if get_option('classic_panorama')
 endif
 
 if get_option('enable_frame_profiler')
-  global_cpp_defs += ['-DENABLE_FRAME_PROFILER']
+    global_cpp_defs += ['-DENABLE_FRAME_PROFILER']
+endif
+
+if get_option('enable_greedy_meshing')
+    global_cpp_defs += ['-DENABLE_GREEDY_MESHING']
 endif
 
 if get_option('ui_backend') == 'shiggy'
-  global_cpp_defs += ['-D_ENABLEIGGY']
+    global_cpp_defs += ['-D_ENABLEIGGY']
 endif
 
 if get_option('ui_backend') == 'java'
-  global_cpp_defs += '-DENABLE_JAVA_GUIS'
+    global_cpp_defs += '-DENABLE_JAVA_GUIS'
 endif
 
 add_project_arguments(global_cpp_defs, language: ['cpp', 'c'])
 
 global_cpp_args = [
-  '-Wshift-count-overflow',
-  '-pipe',
+    '-Wshift-count-overflow',
+    '-pipe',
 ]
 add_project_arguments(global_cpp_args, language: 'cpp')
 
