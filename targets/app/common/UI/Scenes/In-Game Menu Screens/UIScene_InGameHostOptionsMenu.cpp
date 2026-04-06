@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "platform/InputActions.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/common/UI/All Platforms/UIStructs.h"

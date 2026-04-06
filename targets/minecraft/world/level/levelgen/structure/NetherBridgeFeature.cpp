@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "NetherBridgeFeature.h"
 
 #include <list>
@@ -60,7 +60,7 @@ bool NetherBridgeFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
     }
 
     bool forcePlacement = false;
-    LevelGenerationOptions* levelGenOptions = GameServices::getLevelGenerationOptions();
+    LevelGenerationOptions* levelGenOptions = gameServices().getLevelGenerationOptions();
     if (levelGenOptions != nullptr) {
         forcePlacement =
             levelGenOptions->isFeatureChunk(x, z, eFeature_NetherBridge);

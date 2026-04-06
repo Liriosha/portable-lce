@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "GameRenderer.h"
 
@@ -15,7 +15,7 @@
 #include "Chunk.h"
 #include "ItemInHandRenderer.h"
 #include "LevelRenderer.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "platform/ShutdownManager.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
@@ -665,7 +665,7 @@ void GameRenderer::setupCamera(float a, int eye) {
     bool bNoBobbingAnim = (mc->player->getAnimOverrideBitmask() &
                            (1 << HumanoidModel::eAnim_NoBobbing)) != 0;
 
-    if (GameServices::getGameSettings(mc->player->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (gameServices().getGameSettings(mc->player->GetXboxPad(), eGameSetting_ViewBob) &&
         !mc->player->abilities.flying && !bNoLegAnim && !bNoBobbingAnim)
         bobView(a);
 
@@ -719,7 +719,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
         std::shared_ptr<ItemInstance> item =
             localplayer->inventory->getSelected();
         if (!(item && item->getItem()->id == Item::map_Id) &&
-            GameServices::getGameSettings(localplayer->GetXboxPad(),
+            gameServices().getGameSettings(localplayer->GetXboxPad(),
                                 eGameSetting_DisplayHand) == 0)
             renderHand = false;
     }
@@ -760,7 +760,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
     bool bNoLegAnim = (localplayer->getAnimOverrideBitmask() &
                        ((1 << HumanoidModel::eAnim_NoLegAnim) |
                         (1 << HumanoidModel::eAnim_NoBobbing))) != 0;
-    if (GameServices::getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (gameServices().getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
         !localplayer->abilities.flying && !bNoLegAnim)
         bobView(a);
 
@@ -792,7 +792,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
 
     // 4J-PB - changing this to be per player
     // if (mc->options->bobView) bobView(a);
-    if (GameServices::getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (gameServices().getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
         !localplayer->abilities.flying && !bNoLegAnim)
         bobView(a);
 }

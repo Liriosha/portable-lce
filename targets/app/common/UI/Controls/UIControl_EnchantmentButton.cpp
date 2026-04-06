@@ -6,7 +6,7 @@
 #include <sstream>
 
 #include "platform/sdl2/Render.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_EnchantingMenu.h"

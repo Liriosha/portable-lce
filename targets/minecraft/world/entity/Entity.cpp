@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "Entity.h"
 
@@ -17,7 +17,7 @@
 #include "EntityIO.h"
 #include "EntityPos.h"
 #include "SyncedEntityData.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "java/Class.h"
@@ -1867,7 +1867,7 @@ void Entity::setAnimOverrideBitmask(unsigned int uiBitmask) {
     Log::info("!!! Setting anim override bitmask to %d\n", uiBitmask);
 }
 unsigned int Entity::getAnimOverrideBitmask() {
-    if (GameServices::getGameSettings(eGameSetting_CustomSkinAnim) == 0) {
+    if (gameServices().getGameSettings(eGameSetting_CustomSkinAnim) == 0) {
         // We have a force animation for some skins (claptrap)
         // 4J-PB - treat all the eAnim_Disable flags as a force anim
         unsigned int uiIgnoreUserCustomSkinAnimSettingMask =

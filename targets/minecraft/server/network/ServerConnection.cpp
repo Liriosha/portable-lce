@@ -1,4 +1,4 @@
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "ServerConnection.h"
 
@@ -176,7 +176,7 @@ void ServerConnection::handleServerSettingsChanged(
     // if(packet->action==ServerSettingsChangedPacket::HOST_IN_GAME_SETTINGS)//
     // options
     // 	{
-    // 		GameHostOptions::set(eGameHostOption_All,packet->m_serverSettings)
+    // 		gameServices().setGameHostOption(eGameHostOption_All,packet->m_serverSettings)
     // 	}
     // 	else
     // 	{

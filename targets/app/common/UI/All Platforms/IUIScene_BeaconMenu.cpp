@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/IUIScene_AbstractContainerMenu.h"
 #include "app/linux/LinuxGame.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"

@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "BeaconTileEntity.h"
 
 #include <format>
@@ -282,7 +282,7 @@ void BeaconTileEntity::setItem(unsigned int slot,
 }
 
 std::wstring BeaconTileEntity::getName() {
-    return hasCustomName() ? name : Strings::get(IDS_CONTAINER_BEACON);
+    return hasCustomName() ? name : gameServices().getString(IDS_CONTAINER_BEACON);
 }
 
 std::wstring BeaconTileEntity::getCustomName() {

@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "Villager.h"
 
 #include <algorithm>
@@ -797,5 +797,5 @@ std::wstring Villager::getDisplayName() {
             name = IDS_VILLAGER_BUTCHER;
             break;
     };
-    return Strings::get(name);
+    return gameServices().getString(name);
 }

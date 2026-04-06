@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "CustomLevelSource.h"
 
@@ -53,7 +53,7 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
             Log::info("Heightmap binary is too large!!\n");
             __debugbreak();
         } else if (result.status != IPlatformFileIO::ReadStatus::Ok) {
-            GameServices::fatalLoadError();
+            gameServices().fatalLoadError();
             assert(false);
         }
     }
@@ -73,7 +73,7 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
             Log::info("waterheight binary is too large!!\n");
             __debugbreak();
         } else if (result.status != IPlatformFileIO::ReadStatus::Ok) {
-            GameServices::fatalLoadError();
+            gameServices().fatalLoadError();
         }
     }
 
@@ -262,7 +262,7 @@ void CustomLevelSource::buildSurfaces(int xOffs, int zOffs,
             uint8_t top = b->topMaterial;
             uint8_t material = b->material;
 
-            LevelGenerationOptions* lgo = GameServices::getLevelGenerationOptions();
+            LevelGenerationOptions* lgo = gameServices().getLevelGenerationOptions();
             if (lgo != nullptr) {
                 lgo->getBiomeOverride(b->id, material, top);
             }
@@ -529,7 +529,7 @@ void CustomLevelSource::postProcess(ChunkSource* parent, int xt, int zt) {
 
     biome->decorate(level, pprandom, xo, zo);
 
-    GameServices::processSchematics(parent->getChunk(xt, zt));
+    gameServices().processSchematics(parent->getChunk(xt, zt));
 
     MobSpawner::postProcessSpawnMobs(level, biome, xo + 8, zo + 8, 16, 16,
                                      pprandom);

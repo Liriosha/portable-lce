@@ -1,6 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "MinecraftServer.h"
 
@@ -19,7 +17,7 @@
 #include "platform/sdl2/Storage.h"
 #include "ConsoleInput.h"
 #include "DispenserBootstrap.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/GameRules/GameRuleManager.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/common/Network/GameNetworkManager.h"
@@ -154,27 +152,27 @@ bool MinecraftServer::initServer(int64_t seed, NetworkGameInitData* initData,
     Log::info("\n*** SERVER SETTINGS ***\n");
     Log::info(
         "ServerSettings: host-friends-only is %s\n",
-        (GameHostOptions::get(eGameHostOption_FriendsOfFriends) > 0) ? "on"
+        (gameServices().getGameHostOption(eGameHostOption_FriendsOfFriends) > 0) ? "on"
                                                                       : "off");
     Log::info("ServerSettings: game-type is %s\n",
-                    (GameHostOptions::get(eGameHostOption_GameType) == 0)
+                    (gameServices().getGameHostOption(eGameHostOption_GameType) == 0)
                         ? "Survival Mode"
                         : "Creative Mode");
     Log::info(
         "ServerSettings: pvp is %s\n",
-        (GameHostOptions::get(eGameHostOption_PvP) > 0) ? "on" : "off");
+        (gameServices().getGameHostOption(eGameHostOption_PvP) > 0) ? "on" : "off");
     Log::info("ServerSettings: fire spreads is %s\n",
-                    (GameHostOptions::get(eGameHostOption_FireSpreads) > 0)
+                    (gameServices().getGameHostOption(eGameHostOption_FireSpreads) > 0)
                         ? "on"
                         : "off");
     Log::info(
         "ServerSettings: tnt explodes is %s\n",
-        (GameHostOptions::get(eGameHostOption_TNT) > 0) ? "on" : "off");
+        (gameServices().getGameHostOption(eGameHostOption_TNT) > 0) ? "on" : "off");
     Log::info("\n");
 
     // TODO 4J Stu - Init a load of settings based on data passed as params
     // settings->setBooleanAndSave( L"host-friends-only",
-    // (GameHostOptions::get(eGameHostOption_FriendsOfFriends)>0) );
+    // (gameServices().getGameHostOption(eGameHostOption_FriendsOfFriends)>0) );
 
     // 4J - Unused
     // localIp = settings->getString(L"server-ip", L"");
@@ -184,7 +182,7 @@ bool MinecraftServer::initServer(int64_t seed, NetworkGameInitData* initData,
 
     setAnimals(settings->getBoolean(L"spawn-animals", true));
     setNpcsEnabled(settings->getBoolean(L"spawn-npcs", true));
-    setPvpAllowed(GameHostOptions::get(eGameHostOption_PvP) > 0
+    setPvpAllowed(gameServices().getGameHostOption(eGameHostOption_PvP) > 0
                       ? true
                       : false);  // settings->getBoolean(L"pvp", true);
 
@@ -204,12 +202,12 @@ bool MinecraftServer::initServer(int64_t seed, NetworkGameInitData* initData,
     setPlayers(new PlayerList(this));
 
     // 4J-JEV: Need to wait for levelGenerationOptions to load.
-    while (GameServices::getLevelGenerationOptions() != nullptr &&
-           !GameServices::getLevelGenerationOptions()->hasLoadedData())
+    while (gameServices().getLevelGenerationOptions() != nullptr &&
+           !gameServices().getLevelGenerationOptions()->hasLoadedData())
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    if (GameServices::getLevelGenerationOptions() != nullptr &&
-        !GameServices::getLevelGenerationOptions()->ready()) {
+    if (gameServices().getLevelGenerationOptions() != nullptr &&
+        !gameServices().getLevelGenerationOptions()->ready()) {
         // TODO: Stop loading, add error message.
     }
 
@@ -219,12 +217,12 @@ bool MinecraftServer::initServer(int64_t seed, NetworkGameInitData* initData,
     std::wstring levelTypeString;
 
     bool gameRuleUseFlatWorld = false;
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         gameRuleUseFlatWorld =
-            GameServices::getLevelGenerationOptions()->getuseFlatWorld();
+            gameServices().getLevelGenerationOptions()->getuseFlatWorld();
     }
     if (gameRuleUseFlatWorld ||
-        GameHostOptions::get(eGameHostOption_LevelType) > 0) {
+        gameServices().getGameHostOption(eGameHostOption_LevelType) > 0) {
         levelTypeString = settings->getString(L"level-type", L"flat");
     } else {
         levelTypeString = settings->getString(L"level-type", L"default");
@@ -380,16 +378,16 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
 
     int gameTypeId = settings->getInt(
         L"gamemode",
-        GameHostOptions::get(
+        gameServices().getGameHostOption(
             eGameHostOption_GameType));  // LevelSettings::GAMETYPE_SURVIVAL);
     GameType* gameType = LevelSettings::validateGameType(gameTypeId);
     Log::info("Default game type: %d\n", gameTypeId);
 
     LevelSettings* levelSettings = new LevelSettings(
         levelSeed, gameType,
-        GameHostOptions::get(eGameHostOption_Structures) > 0 ? true : false,
+        gameServices().getGameHostOption(eGameHostOption_Structures) > 0 ? true : false,
         isHardcore(), true, pLevelType, initData->xzSize, initData->hellScale);
-    if (GameHostOptions::get(eGameHostOption_BonusChest))
+    if (gameServices().getGameHostOption(eGameHostOption_BonusChest))
         levelSettings->enableStartingBonusItems();
 
     // 4J - temp - load existing level
@@ -422,7 +420,7 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         // We are loading a save from the storage manager
 #if defined(SPLIT_SAVES)
         bool bLevelGenBaseSave = false;
-        LevelGenerationOptions* levelGen = GameServices::getLevelGenerationOptions();
+        LevelGenerationOptions* levelGen = gameServices().getLevelGenerationOptions();
         if (levelGen != nullptr && levelGen->requiresBaseSave()) {
             unsigned int fileSize = 0;
             std::uint8_t* pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -461,9 +459,9 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         if (i == 0) {
             levels[i] =
                 new ServerLevel(this, storage, name, dimension, levelSettings);
-            if (GameServices::getLevelGenerationOptions() != nullptr) {
+            if (gameServices().getLevelGenerationOptions() != nullptr) {
                 LevelGenerationOptions* mapOptions =
-                    GameServices::getLevelGenerationOptions();
+                    gameServices().getLevelGenerationOptions();
                 Pos* spawnPos = mapOptions->getSpawnPos();
                 if (spawnPos != nullptr) {
                     levels[i]->setSpawnPos(spawnPos);
@@ -485,7 +483,7 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         // ? Difficulty::EASY : Difficulty::PEACEFUL;
         Minecraft* pMinecraft = Minecraft::GetInstance();
         //		m_lastSentDifficulty = pMinecraft->options->difficulty;
-        levels[i]->difficulty = GameHostOptions::get(
+        levels[i]->difficulty = gameServices().getGameHostOption(
             eGameHostOption_Difficulty);  // pMinecraft->options->difficulty;
         Log::info("MinecraftServer::loadLevel - Difficulty = %d\n",
                         levels[i]->difficulty);
@@ -498,9 +496,9 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
 #endif
         levels[i]->getLevelData()->setGameType(gameType);
 
-        if (GameServices::getLevelGenerationOptions() != nullptr) {
+        if (gameServices().getLevelGenerationOptions() != nullptr) {
             LevelGenerationOptions* mapOptions =
-                GameServices::getLevelGenerationOptions();
+                gameServices().getLevelGenerationOptions();
             levels[i]->getLevelData()->setHasBeenInCreative(
                 mapOptions->getLevelHasBeenInCreative());
         }
@@ -513,10 +511,10 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
     } else {
         mcprogress->progressStage(IDS_PROGRESS_LOADING_SPAWN_AREA);
     }
-    GameHostOptions::set(
+    gameServices().setGameHostOption(
         eGameHostOption_HasBeenInCreative,
         gameType == GameType::CREATIVE || levels[0]->getHasBeenInCreative());
-    GameHostOptions::set(eGameHostOption_Structures,
+    gameServices().setGameHostOption(eGameHostOption_Structures,
                           levels[0]->isGenerateMapFeatures());
 
     if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
@@ -556,14 +554,14 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
                       &numberOfBytesRead);
         assert(numberOfBytesRead == ba_gameRules.size());
 
-        GameServices::getGameRules().loadGameRules(ba_gameRules.data(), ba_gameRules.size());
+        gameServices().loadGameRules(ba_gameRules.data(), ba_gameRules.size());
         csf->closeHandle(fe);
     }
 
     int64_t lastTime = System::currentTimeMillis();
 #if defined(_LARGE_WORLDS)
-    if (GameServices::getGameNewWorldSize() > levels[0]->getLevelData()->getXZSizeOld()) {
-        if (!GameServices::getGameNewWorldSizeUseMoat())  // check the moat settings to
+    if (gameServices().getGameNewWorldSize() > levels[0]->getLevelData()->getXZSizeOld()) {
+        if (!gameServices().getGameNewWorldSizeUseMoat())  // check the moat settings to
                                                 // see if we should be
                                                 // overwriting the edge tiles
         {
@@ -654,7 +652,7 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
 
         if (!levels[0]->getLevelData()->getHasStronghold()) {
             int x, z;
-            if (GameServices::getTerrainFeaturePosition(eTerrainFeature_Stronghold, &x,
+            if (gameServices().getTerrainFeaturePosition(eTerrainFeature_Stronghold, &x,
                                               &z)) {
                 levels[0]->getLevelData()->setXStronghold(x);
                 levels[0]->getLevelData()->setZStronghold(z);
@@ -833,8 +831,8 @@ void MinecraftServer::saveAllChunks() {
 // 4J-JEV: Added
 void MinecraftServer::saveGameRules() {
 #if !defined(_CONTENT_PACKAGE)
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
             (1L << eDebugSetting_DistributableSave)) {
         // Do nothing
     } else
@@ -842,7 +840,7 @@ void MinecraftServer::saveGameRules() {
     {
         uint8_t* baPtr = nullptr;
         unsigned int baSize = 0;
-        GameServices::getGameRules().saveGameRules(&baPtr, &baSize);
+        gameServices().saveGameRules(&baPtr, &baSize);
 
         if (baPtr != nullptr) {
             std::vector<uint8_t> ba(baPtr, baPtr + baSize);
@@ -928,7 +926,7 @@ void MinecraftServer::stopServer(bool didInit) {
             //}
 
             saveGameRules();
-            GameServices::getGameRules().unloadCurrentGameRules();
+            gameServices().unloadCurrentGameRules();
             if (levels[0] != nullptr)  // This can be null if stopServer happens
                                        // very quickly due to network error
             {
@@ -1065,7 +1063,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
     bool findSeed = false;
     if (lpParameter != nullptr) {
         initData = (NetworkGameInitData*)lpParameter;
-        initSettings = GameHostOptions::get(eGameHostOption_All);
+        initSettings = gameServices().getGameHostOption(eGameHostOption_All);
         findSeed = initData->findSeed;
         m_texturePackId = initData->texturePackId;
     }
@@ -1081,7 +1079,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
 
         if (pLevelData && pLevelData->getHasStronghold() == false) {
             int x, z;
-            if (GameServices::getTerrainFeaturePosition(eTerrainFeature_Stronghold, &x,
+            if (gameServices().getTerrainFeaturePosition(eTerrainFeature_Stronghold, &x,
                                               &z)) {
                 pLevelData->setXStronghold(x);
                 pLevelData->setZStronghold(z);
@@ -1184,13 +1182,13 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
             eXuiServerAction eAction;
             void* param;
             for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-                eAction = GameServices::getXuiServerAction(i);
-                param = GameServices::getXuiServerActionParam(i);
+                eAction = gameServices().getXuiServerAction(i);
+                param = gameServices().getXuiServerActionParam(i);
 
                 switch (eAction) {
                     case eXuiServerAction_AutoSaveGame:
                     case eXuiServerAction_SaveGame:
-                        GameServices::lockSaveNotification();
+                        gameServices().lockSaveNotification();
                         if (players != nullptr) {
                             players->saveAll(
                                 Minecraft::GetInstance()->progressRenderer);
@@ -1225,7 +1223,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
                                 Minecraft::GetInstance()->progressRenderer,
                                 (eAction == eXuiServerAction_AutoSaveGame));
                         }
-                        GameServices::unlockSaveNotification();
+                        gameServices().unlockSaveNotification();
                         break;
                     case eXuiServerAction_DropItem:
                         // Find the player, and drop the id at their feet
@@ -1283,7 +1281,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
                             std::shared_ptr<ServerSettingsChangedPacket>(
                                 new ServerSettingsChangedPacket(
                                     ServerSettingsChangedPacket::HOST_OPTIONS,
-                                    GameHostOptions::get(
+                                    gameServices().getGameHostOption(
                                         eGameHostOption_Gamertags))));
                         break;
                     case eXuiServerAction_ServerSettingChanged_BedrockFog:
@@ -1292,7 +1290,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
                                 new ServerSettingsChangedPacket(
                                     ServerSettingsChangedPacket::
                                         HOST_IN_GAME_SETTINGS,
-                                    GameHostOptions::get(
+                                    gameServices().getGameHostOption(
                                         eGameHostOption_All))));
                         break;
 
@@ -1306,7 +1304,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
                         break;
                     case eXuiServerAction_ExportSchematic:
 #if !defined(_CONTENT_PACKAGE)
-                        GameServices::lockSaveNotification();
+                        gameServices().lockSaveNotification();
 
                         // players->broadcastAll(
                         // shared_ptr<UpdateProgressPacket>( new
@@ -1340,7 +1338,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
 
                             delete initData;
                         }
-                        GameServices::unlockSaveNotification();
+                        gameServices().unlockSaveNotification();
 #endif
                         break;
                     case eXuiServerAction_SetCameraLocation:
@@ -1373,7 +1371,7 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
                         break;
                 }
 
-                GameServices::setXuiServerAction(i, eXuiServerAction_Idle);
+                gameServices().setXuiServerAction(i, eXuiServerAction_Idle);
             }
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
@@ -1442,7 +1440,7 @@ void MinecraftServer::tick() {
 
             // 4J Stu - We set the levels difficulty based on the minecraft
             // options
-            level->difficulty = GameHostOptions::get(
+            level->difficulty = gameServices().getGameHostOption(
                 eGameHostOption_Difficulty);  // pMinecraft->options->difficulty;
 
 #if DEBUG_SERVER_DONT_SPAWN_MOBS

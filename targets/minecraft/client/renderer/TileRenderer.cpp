@@ -12,7 +12,7 @@
 #include "platform/sdl2/Render.h"
 #include "EntityTileRenderer.h"
 #include "GameRenderer.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "util/FrameProfiler.h"
 #include "Tesselator.h"

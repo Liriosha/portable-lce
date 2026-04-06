@@ -9,7 +9,7 @@
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/rrCore.h"
 #include "platform/NetTypes.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
 
 class UILayer;

@@ -13,7 +13,7 @@
 #include "platform/sdl2/Profile.h"
 #include "platform/sdl2/Render.h"
 #include "platform/sdl2/Storage.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Game.h"
 #include "app/common/GameRules/GameRuleManager.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"

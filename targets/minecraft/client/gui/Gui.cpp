@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "Gui.h"
 
 #include <cmath>
@@ -9,7 +8,7 @@
 #include "platform/sdl2/Input.h"
 #include "platform/sdl2/Render.h"
 #include "Facing.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
@@ -114,10 +113,10 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
     // 4J-PB - selected the gui scale based on the slider settings
     if (minecraft->player->m_iScreenSection ==
         C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
-        guiScale = GameServices::getGameSettings(iPad, eGameSetting_UISize) + 2;
+        guiScale = gameServices().getGameSettings(iPad, eGameSetting_UISize) + 2;
     } else {
         guiScale =
-            GameServices::getGameSettings(iPad, eGameSetting_UISizeSplitscreen) + 2;
+            gameServices().getGameSettings(iPad, eGameSetting_UISizeSplitscreen) + 2;
     }
 
     ScreenSizeCalculator ssc(minecraft->options, minecraft->width,
@@ -248,11 +247,11 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
     // 4J-PB - turn off the slot display if a xui menu is up, or if we're
     // autosaving
     bool bDisplayGui = !ui.GetMenuDisplayed(iPad) &&
-                       !(GameServices::getXuiAction(iPad) ==
+                       !(gameServices().getXuiAction(iPad) ==
                          eAppAction_AutosaveSaveGameCapturedThumbnail);
 
     // if tooltips are off, set the y offset to zero
-    if (GameServices::getGameSettings(iPad, eGameSetting_Tooltips) == 0 && bDisplayGui) {
+    if (gameServices().getGameSettings(iPad, eGameSetting_Tooltips) == 0 && bDisplayGui) {
         switch (minecraft->player->m_iScreenSection) {
             case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
                 iTooltipsYOffset = screenHeight / 10;
@@ -276,7 +275,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 
     // 4J-PB - Turn off interface if eGameSetting_DisplayHUD is off - for screen
     // shots/videos.
-    if (GameServices::getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) {
+    if (gameServices().getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) {
         bDisplayGui = false;
     }
 
@@ -335,7 +334,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 
         // 4J - this is where to set the blend factor for gui things
         // use the primary player's settings
-        unsigned char ucAlpha = GameServices::getGameSettings(
+        unsigned char ucAlpha = gameServices().getGameSettings(
             InputManager.GetPrimaryPad(), eGameSetting_InterfaceOpacity);
 
         // If the user has started to navigate their quickselect bar, ignore the
@@ -343,7 +342,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
         float fVal = fAlphaIncrementPerCent * (float)ucAlpha;
         if (ucAlpha < 80) {
             // check if we have the timer running for the opacity
-            unsigned int uiOpacityTimer = GameServices::getOpacityTimer(iPad);
+            unsigned int uiOpacityTimer = gameServices().getOpacityTimer(iPad);
             if (uiOpacityTimer != 0) {
                 if (uiOpacityTimer < 10) {
                     float fStep = (80.0f - (float)ucAlpha) / 10.0f;
@@ -730,7 +729,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
         // positions worked out by hand from the xui implementation of the
         // crouch icon
 
-        if (GameServices::getGameSettings(iPad, eGameSetting_AnimatedCharacter)) {
+        if (gameServices().getGameSettings(iPad, eGameSetting_AnimatedCharacter)) {
             // int playerIdx = minecraft->player->GetXboxPad();
 
             static int characterDisplayTimer[4] = {0};
@@ -979,8 +978,8 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             wfeature[eTerrainFeature_Village] = L"Village: ";
             wfeature[eTerrainFeature_Ravine] = L"Ravine: ";
 
-            for (int i = 0; i < GameServices::getTerrainFeatures().size(); i++) {
-                FEATURE_DATA* pFeatureData = GameServices::getTerrainFeatures()[i];
+            for (int i = 0; i < gameServices().getTerrainFeatures().size(); i++) {
+                FEATURE_DATA* pFeatureData = gameServices().getTerrainFeatures()[i];
 
                 std::wstring itemInfo =
                     L"[" + toWString<int>(pFeatureData->x * 16) + L", " +
@@ -1467,7 +1466,7 @@ void Gui::addMessage(const std::wstring& _string, int iPad,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (minecraft->localplayers[i] &&
                 !(bIsDeathMessage &&
-                  GameServices::getGameSettings(i, eGameSetting_DeathMessages) == 0)) {
+                  gameServices().getGameSettings(i, eGameSetting_DeathMessages) == 0)) {
                 guiMessages[i].insert(guiMessages[i].begin(),
                                       GuiMessage(string));
                 while (guiMessages[i].size() > 50) {
@@ -1476,7 +1475,7 @@ void Gui::addMessage(const std::wstring& _string, int iPad,
             }
         }
     } else if (!(bIsDeathMessage &&
-                 GameServices::getGameSettings(iPad, eGameSetting_DeathMessages) == 0)) {
+                 gameServices().getGameSettings(iPad, eGameSetting_DeathMessages) == 0)) {
         guiMessages[iPad].insert(guiMessages[iPad].begin(), GuiMessage(string));
         while (guiMessages[iPad].size() > 50) {
             guiMessages[iPad].pop_back();
@@ -1511,7 +1510,7 @@ float Gui::getJukeboxOpacity(int iPad) {
 
 void Gui::setNowPlaying(const std::wstring& string) {
     //	overlayMessageString = L"Now playing: " + string;
-    overlayMessageString = Strings::get(IDS_NOWPLAYING) + string;
+    overlayMessageString = gameServices().getString(IDS_NOWPLAYING) + string;
     overlayMessageTime = 20 * 3;
     animateOverlayMessageColor = true;
 }
@@ -1519,7 +1518,7 @@ void Gui::setNowPlaying(const std::wstring& string) {
 void Gui::displayClientMessage(int messageId, int iPad) {
     // Language *language = Language::getInstance();
     std::wstring languageString =
-        Strings::get(messageId);  // language->getElement(messageId);
+        gameServices().getString(messageId);  // language->getElement(messageId);
 
     addMessage(languageString, iPad);
 }

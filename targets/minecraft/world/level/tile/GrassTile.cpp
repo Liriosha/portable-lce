@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "java/Random.h"
 #include "minecraft/Facing.h"

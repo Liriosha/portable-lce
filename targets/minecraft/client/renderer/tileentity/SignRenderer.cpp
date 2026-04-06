@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "SignRenderer.h"
 
 #include <cstdint>
@@ -6,7 +6,7 @@
 #include <string>
 
 #include "platform/sdl2/Render.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
 #include "platform/XboxStubs.h"
@@ -90,7 +90,7 @@ void SignRenderer::render(std::shared_ptr<TileEntity> _sign, double x, double y,
                         msg = L"Censored";  // In-game font, so English only
                         break;
                     default:
-                        msg = Strings::get(IDS_STRINGVERIFY_CENSORED);
+                        msg = gameServices().getString(IDS_STRINGVERIFY_CENSORED);
                         break;
                 }
             } else {
@@ -105,7 +105,7 @@ void SignRenderer::render(std::shared_ptr<TileEntity> _sign, double x, double y,
                         L"Awaiting Approval";  // In-game font, so English only
                     break;
                 default:
-                    msg = Strings::get(IDS_STRINGVERIFY_AWAITING_APPROVAL);
+                    msg = gameServices().getString(IDS_STRINGVERIFY_AWAITING_APPROVAL);
                     break;
             }
         }

@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/Components/UIComponent_Chat.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/UILayer.h"

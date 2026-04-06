@@ -1,4 +1,4 @@
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "PendingConnection.h"
 
@@ -9,7 +9,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "platform/sdl2/Storage.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/BuildVer/BuildVer.h"
 #include "app/common/Network/NetworkPlayerInterface.h"
 #include "platform/IPlatformNetwork.h"
@@ -139,7 +139,7 @@ void PendingConnection::sendPreLoginResponse() {
         connection->send(std::shared_ptr<PreLoginPacket>(
             new PreLoginPacket(L"-", ugcXuids, ugcXuidCount, ugcFriendsOnlyBits,
                                server->m_ugcPlayersVersion, szUniqueMapName,
-                               GameHostOptions::get(eGameHostOption_All),
+                               gameServices().getGameHostOption(eGameHostOption_All),
                                hostIndex, server->m_texturePackId)));
     }
 }

@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "PlayerList.h"
 
@@ -12,7 +11,7 @@
 #include <cstdint>
 
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/LevelRuleset.h"
 #include "app/common/GameRules/LevelRules/Rules/GameRulesInstance.h"
@@ -188,14 +187,14 @@ void PlayerList::placeNewPlayer(Connection* connection,
                    Item::map_Id, 1,
                    level->getAuxValueForMap(player->getXuid(), 0, centreXC,
                                             centreZC, mapScale)));
-        if (GameServices::getGameRuleDefinitions() != nullptr) {
-            GameServices::getGameRuleDefinitions()->postProcessPlayer(player);
+        if (gameServices().getGameRuleDefinitions() != nullptr) {
+            gameServices().getGameRuleDefinitions()->postProcessPlayer(player);
         }
     }
 
     if (!player->customTextureUrl.empty() &&
         player->customTextureUrl.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(player->customTextureUrl)) {
+        !gameServices().isFileInMemoryTextures(player->customTextureUrl)) {
         if (server->getConnection()->addPendingTextureRequest(
                 player->customTextureUrl)) {
 #if !defined(_CONTENT_PACKAGE)
@@ -209,14 +208,14 @@ void PlayerList::placeNewPlayer(Connection* connection,
                                              0)));
         }
     } else if (!player->customTextureUrl.empty() &&
-               GameServices::isFileInMemoryTextures(player->customTextureUrl)) {
+               gameServices().isFileInMemoryTextures(player->customTextureUrl)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(player->customTextureUrl, nullptr, 0);
+        gameServices().addMemoryTextureFile(player->customTextureUrl, nullptr, 0);
     }
 
     if (!player->customTextureUrl2.empty() &&
         player->customTextureUrl2.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(player->customTextureUrl2)) {
+        !gameServices().isFileInMemoryTextures(player->customTextureUrl2)) {
         if (server->getConnection()->addPendingTextureRequest(
                 player->customTextureUrl2)) {
 #if !defined(_CONTENT_PACKAGE)
@@ -229,9 +228,9 @@ void PlayerList::placeNewPlayer(Connection* connection,
                 new TexturePacket(player->customTextureUrl2, nullptr, 0)));
         }
     } else if (!player->customTextureUrl2.empty() &&
-               GameServices::isFileInMemoryTextures(player->customTextureUrl2)) {
+               gameServices().isFileInMemoryTextures(player->customTextureUrl2)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
+        gameServices().addMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
     }
 
     player->setIsGuest(packet->m_isGuest);
@@ -604,11 +603,11 @@ std::shared_ptr<ServerPlayer> PlayerList::getPlayerForLogin(
         pendingConnection->connection->getSocket()->getPlayer();
     if (networkPlayer != nullptr && !networkPlayer->IsHost()) {
         player->enableAllPlayerPrivileges(
-            GameHostOptions::get(eGameHostOption_TrustPlayers) > 0);
+            gameServices().getGameHostOption(eGameHostOption_TrustPlayers) > 0);
     }
 
     // 4J Added
-    LevelRuleset* serverRuleDefs = GameServices::getGameRuleDefinitions();
+    LevelRuleset* serverRuleDefs = gameServices().getGameRuleDefinitions();
     if (serverRuleDefs != nullptr) {
         player->gameMode->setGameRules(
             GameRuleDefinition::generateNewGameRulesInstance(
@@ -819,7 +818,7 @@ std::shared_ptr<ServerPlayer> PlayerList::respawn(
     if (Minecraft::GetInstance()->isTutorial() &&
         (!Minecraft::GetInstance()->gameMode->getTutorial()->isStateCompleted(
             e_Tutorial_State_Food_Bar))) {
-        GameServices::getGameRuleDefinitions()->postProcessPlayer(player);
+        gameServices().getGameRuleDefinitions()->postProcessPlayer(player);
     }
 
     if (oldDimension == 1 && player->dimension != 1) {
@@ -1168,9 +1167,9 @@ bool PlayerList::isWhiteListed(const std::wstring& name) { return true; }
 bool PlayerList::isOp(const std::wstring& name) { return false; }
 
 bool PlayerList::isOp(std::shared_ptr<ServerPlayer> player) {
-    bool cheatsEnabled = GameHostOptions::get(eGameHostOption_CheatsEnabled);
+    bool cheatsEnabled = gameServices().getGameHostOption(eGameHostOption_CheatsEnabled);
 #if defined(_DEBUG_MENUS_ENABLED)
-    cheatsEnabled = cheatsEnabled || GameServices::getUseDPadForDebug();
+    cheatsEnabled = cheatsEnabled || gameServices().getUseDPadForDebug();
 #endif
     INetworkPlayer* networkPlayer = player->connection->getNetworkPlayer();
     bool isOp = cheatsEnabled &&

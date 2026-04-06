@@ -1,5 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "Dimension.h"
 
 #include <math.h>
@@ -8,7 +7,7 @@
 
 #include "HellDimension.h"
 #include "IPlatformInput.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
@@ -56,8 +55,8 @@ void Dimension::init() {
 #ifdef _OVERRIDE_HEIGHTMAP
     // 4J Stu - Added to enable overriding the heightmap from a loaded in data
     // file
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         biomeSource = new BiomeSource(level);
     } else
@@ -91,8 +90,8 @@ ChunkSource* Dimension::createRandomLevelSource() const {
 #ifdef _OVERRIDE_HEIGHTMAP
     // 4J Stu - Added to enable overriding the heightmap from a loaded in data
     // file
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableHeightWaterOverride)) {
         return new CustomLevelSource(
             level, level->getSeed(),
@@ -218,7 +217,7 @@ int Dimension::getSpawnYPosition() {
 
 bool Dimension::hasBedrockFog() {
     // 4J-PB - turn off bedrock fog if the host player doesn't want it
-    if (GameHostOptions::get(eGameHostOption_BedrockFog) == 0) {
+    if (gameServices().getGameHostOption(eGameHostOption_BedrockFog) == 0) {
         return false;
     }
 

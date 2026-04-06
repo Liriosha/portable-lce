@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "GenericStats.h"
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "app/linux/LinuxGame.h"
 #include "StatFormatter.h"
 
@@ -63,7 +63,7 @@ public:
     // 4J-JEV, for Durango stats
     virtual void handleParamBlob(std::shared_ptr<LocalPlayer> plr,
                                  std::vector<uint8_t>& param) {
-        GameServices::debugPrintf("'Stat.h', Unhandled AwardStat blob.\n");
+        gameServices().debugPrintf("'Stat.h', Unhandled AwardStat blob.\n");
         return;
     }
 };

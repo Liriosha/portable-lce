@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "BasicTreeFeature.h"
 
@@ -452,9 +452,9 @@ bool BasicTree::checkLocation() {
 
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            GameServices::getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         bool intersects = levelGenOptions->checkIntersects(
             startPosition[0], startPosition[1], startPosition[2],
             endPosition[0], endPosition[1], endPosition[2]);

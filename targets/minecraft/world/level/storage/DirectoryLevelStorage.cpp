@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "DirectoryLevelStorage.h"
 
@@ -459,8 +458,8 @@ void DirectoryLevelStorage::clearOldPlayerFiles() {
 
     if (playerFiles != nullptr) {
 #if !defined(_FINAL_BUILD)
-        if (DebugSettings::isOn() &&
-            DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+        if (gameServices().debugSettingsOn() &&
+            gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
                 (1L << eDebugSetting_DistributableSave)) {
             for (unsigned int i = 0; i < playerFiles->size(); ++i) {
                 FileEntry* file = playerFiles->at(i);
@@ -505,8 +504,8 @@ std::wstring DirectoryLevelStorage::getLevelId() { return levelId; }
 
 void DirectoryLevelStorage::flushSaveFile(bool autosave) {
 #if !defined(_CONTENT_PACKAGE)
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_DistributableSave)) {
         // Delete gamerules files if it exists
         ConsoleSavePath gameRulesFiles(GAME_RULE_SAVENAME);
@@ -521,7 +520,7 @@ void DirectoryLevelStorage::flushSaveFile(bool autosave) {
 
 // 4J Added
 void DirectoryLevelStorage::resetNetherPlayerPositions() {
-    if (GameServices::getResetNether()) {
+    if (gameServices().getResetNether()) {
         std::vector<FileEntry*>* playerFiles =
             m_saveFile->getFilesWithPrefix(playerDir.getName());
 

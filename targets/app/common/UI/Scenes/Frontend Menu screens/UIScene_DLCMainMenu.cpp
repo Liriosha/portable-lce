@@ -2,7 +2,7 @@
 #include "UIScene_DLCMainMenu.h"
 
 #include "platform/InputActions.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
 #include "app/common/UI/Controls/UIControl_Label.h"

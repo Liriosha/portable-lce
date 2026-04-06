@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "TexturePackRepository.h"
 
@@ -10,7 +10,7 @@
 #include "platform/sdl2/Input.h"
 #include "DLCTexturePack.h"
 #include "DefaultTexturePack.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
 #include "app/linux/LinuxGame.h"
@@ -142,7 +142,7 @@ bool TexturePackRepository::selectTexturePackById(std::uint32_t id) {
     // invite games
     //  (where they don't have the texture pack) can check this when the texture
     //  pack is installed
-    GameServices::setRequiredTexturePackID(id);
+    gameServices().setRequiredTexturePackID(id);
 
     auto it = cacheById.find(id);
     if (it != cacheById.end()) {
@@ -151,7 +151,7 @@ bool TexturePackRepository::selectTexturePackById(std::uint32_t id) {
             selectSkin(newPack);
 
             if (newPack->hasData()) {
-                GameServices::setAction(InputManager.GetPrimaryPad(),
+                gameServices().setAction(InputManager.GetPrimaryPad(),
                               eAppAction_ReloadTexturePack);
             } else {
                 newPack->loadData();
@@ -167,7 +167,7 @@ bool TexturePackRepository::selectTexturePackById(std::uint32_t id) {
             "Failed to select texture pack %d as it is not in the list\n", id);
         // Fail safely
         if (selectSkin(DEFAULT_TEXTURE_PACK)) {
-            GameServices::setAction(InputManager.GetPrimaryPad(),
+            gameServices().setAction(InputManager.GetPrimaryPad(),
                           eAppAction_ReloadTexturePack);
         }
     }

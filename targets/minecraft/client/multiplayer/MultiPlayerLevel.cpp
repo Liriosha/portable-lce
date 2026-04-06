@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "MultiPlayerLevel.h"
 
 #include <float.h>
@@ -122,8 +122,8 @@ void MultiPlayerLevel::tick() {
         // 4J: Debug setting added to keep it at day time
 #if !defined(_FINAL_BUILD)
         bool freezeTime =
-            DebugSettings::isOn() &&
-            DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+            gameServices().debugSettingsOn() &&
+            gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
                 (1L << eDebugSetting_FreezeTime);
         if (!freezeTime)
 #endif

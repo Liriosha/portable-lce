@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "McRegionChunkStorage.h"
 
@@ -184,8 +184,8 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
         delete chunkData;
     }
 #if !defined(_CONTENT_PACKAGE)
-    if (levelChunk && DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (levelChunk && gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // 4J Stu - This will force an update of the chunk's biome array
         levelChunk->reloadBiomes();

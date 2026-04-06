@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 
 #include "minecraft/world/level/levelgen/structure/MineShaftFeature.h"
 
@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
 #include "java/Random.h"
@@ -35,7 +35,7 @@ MineShaftFeature::MineShaftFeature(
 
 bool MineShaftFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
     bool forcePlacement = false;
-    LevelGenerationOptions* levelGenOptions = GameServices::getLevelGenerationOptions();
+    LevelGenerationOptions* levelGenOptions = gameServices().getLevelGenerationOptions();
     if (levelGenOptions != nullptr) {
         forcePlacement =
             levelGenOptions->isFeatureChunk(x, z, eFeature_Mineshaft);
@@ -47,7 +47,7 @@ bool MineShaftFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
 
 StructureStart* MineShaftFeature::createStructureStart(int x, int z) {
     // 4J added
-    GameServices::addTerrainFeaturePosition(eTerrainFeature_Mineshaft, x, z);
+    gameServices().addTerrainFeaturePosition(eTerrainFeature_Mineshaft, x, z);
 
     return new MineShaftStart(level, random, x, z);
 }

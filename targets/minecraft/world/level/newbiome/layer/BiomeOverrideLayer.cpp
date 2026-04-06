@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "platform/PlatformServices.h"
 #include "minecraft/world/level/newbiome/layer/Layer.h"
 #if defined(__linux__)
@@ -26,7 +26,7 @@ BiomeOverrideLayer::BiomeOverrideLayer(int seedMixup) : Layer(seedMixup) {
             Log::info("Biomemap binary is too large!!\n");
             __debugbreak();
         } else if (result.status != IPlatformFileIO::ReadStatus::Ok) {
-            GameServices::fatalLoadError();
+            gameServices().fatalLoadError();
         }
     }
 }

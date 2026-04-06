@@ -1,5 +1,5 @@
 #include "minecraft/client/IMenuService.h"
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "LocalPlayer.h"
 
@@ -117,7 +117,7 @@ LocalPlayer::LocalPlayer(Minecraft* minecraft, Level* level, User* user,
         this->name = user->name;
         // wprintf(L"Created LocalPlayer with name %ls\n", name.c_str() );
         //  check to see if this player's xuid is in the list of special players
-        MOJANG_DATA* pMojangData = GameServices::getMojangDataForXuid(getOnlineXuid());
+        MOJANG_DATA* pMojangData = gameServices().getMojangDataForXuid(getOnlineXuid());
         if (pMojangData) {
             customTextureUrl = pMojangData->wchSkin;
         }
@@ -592,11 +592,11 @@ void LocalPlayer::openTextEdit(std::shared_ptr<TileEntity> tileEntity) {
     bool success;
 
     if (tileEntity->GetType() == eTYPE_SIGNTILEENTITY) {
-        success = GameServices::menus().openSign(
+        success = gameServices().menus().openSign(
             GetXboxPad(),
             std::dynamic_pointer_cast<SignTileEntity>(tileEntity));
     } else if (tileEntity->GetType() == eTYPE_COMMANDBLOCKTILEENTITY) {
-        success = GameServices::menus().openCommandBlock(
+        success = gameServices().menus().openCommandBlock(
             GetXboxPad(),
             std::dynamic_pointer_cast<CommandBlockEntity>(tileEntity));
     }
@@ -610,7 +610,7 @@ bool LocalPlayer::openContainer(std::shared_ptr<Container> container) {
     minecraft->setScreen(new ContainerScreen(inventory, container));
     bool success = true;
 #else
-    bool success = GameServices::menus().openContainer(GetXboxPad(), inventory, container);
+    bool success = gameServices().menus().openContainer(GetXboxPad(), inventory, container);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     // minecraft->setScreen(new ContainerScreen(inventory, container));
@@ -622,7 +622,7 @@ bool LocalPlayer::openHopper(std::shared_ptr<HopperTileEntity> container) {
     minecraft->setScreen(new HopperScreen(inventory, container));
     bool success = true;
 #else
-    bool success = GameServices::menus().openHopper(GetXboxPad(), inventory, container);
+    bool success = gameServices().menus().openHopper(GetXboxPad(), inventory, container);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -633,7 +633,7 @@ bool LocalPlayer::openHopper(std::shared_ptr<MinecartHopper> container) {
     minecraft->setScreen(new HopperScreen(inventory, container));
     bool success = true;
 #else
-    bool success = GameServices::menus().openHopperMinecart(GetXboxPad(), inventory, container);
+    bool success = gameServices().menus().openHopperMinecart(GetXboxPad(), inventory, container);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -645,7 +645,7 @@ bool LocalPlayer::openHorseInventory(std::shared_ptr<EntityHorse> horse,
     minecraft->setScreen(new HorseInventoryScreen(inventory, container, horse));
     bool success = true;
 #else
-    bool success = GameServices::menus().openHorse(GetXboxPad(), inventory, container, horse);
+    bool success = gameServices().menus().openHorse(GetXboxPad(), inventory, container, horse);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -656,7 +656,7 @@ bool LocalPlayer::startCrafting(int x, int y, int z) {
     minecraft->setScreen(new CraftingScreen(inventory, level, x, y, z));
     bool success = true;
 #else
-    bool success = GameServices::menus().openCrafting3x3(
+    bool success = gameServices().menus().openCrafting3x3(
         GetXboxPad(),
         std::dynamic_pointer_cast<LocalPlayer>(shared_from_this()), x, y, z);
     if (success) ui.PlayUISFX(eSFX_Press);
@@ -667,7 +667,7 @@ bool LocalPlayer::startCrafting(int x, int y, int z) {
 }
 
 bool LocalPlayer::openFireworks(int x, int y, int z) {
-    bool success = GameServices::menus().openFireworks(
+    bool success = gameServices().menus().openFireworks(
         GetXboxPad(),
         std::dynamic_pointer_cast<LocalPlayer>(shared_from_this()), x, y, z);
     if (success) ui.PlayUISFX(eSFX_Press);
@@ -681,7 +681,7 @@ bool LocalPlayer::startEnchanting(int x, int y, int z,
     bool success = true;
 #else
     bool success =
-        GameServices::menus().openEnchanting(GetXboxPad(), inventory, x, y, z, level, name);
+        gameServices().menus().openEnchanting(GetXboxPad(), inventory, x, y, z, level, name);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -693,7 +693,7 @@ bool LocalPlayer::startRepairing(int x, int y, int z) {
     bool success = true;
 #else
     bool success =
-        GameServices::menus().openRepairing(GetXboxPad(), inventory, level, x, y, z);
+        gameServices().menus().openRepairing(GetXboxPad(), inventory, level, x, y, z);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -704,7 +704,7 @@ bool LocalPlayer::openFurnace(std::shared_ptr<FurnaceTileEntity> furnace) {
     minecraft->setScreen(new FurnaceScreen(inventory, furnace));
     bool success = true;
 #else
-    bool success = GameServices::menus().openFurnace(GetXboxPad(), inventory, furnace);
+    bool success = gameServices().menus().openFurnace(GetXboxPad(), inventory, furnace);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -717,7 +717,7 @@ bool LocalPlayer::openBrewingStand(
     bool success = true;
 #else
     bool success =
-        GameServices::menus().openBrewingStand(GetXboxPad(), inventory, brewingStand);
+        gameServices().menus().openBrewingStand(GetXboxPad(), inventory, brewingStand);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -728,7 +728,7 @@ bool LocalPlayer::openBeacon(std::shared_ptr<BeaconTileEntity> beacon) {
     minecraft->setScreen(new BeaconScreen(inventory, beacon));
     bool success = true;
 #else
-    bool success = GameServices::menus().openBeacon(GetXboxPad(), inventory, beacon);
+    bool success = gameServices().menus().openBeacon(GetXboxPad(), inventory, beacon);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -739,7 +739,7 @@ bool LocalPlayer::openTrap(std::shared_ptr<DispenserTileEntity> trap) {
     minecraft->setScreen(new TrapScreen(inventory, trap));
     bool success = true;
 #else
-    bool success = GameServices::menus().openTrap(GetXboxPad(), inventory, trap);
+    bool success = gameServices().menus().openTrap(GetXboxPad(), inventory, trap);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -752,7 +752,7 @@ bool LocalPlayer::openTrading(std::shared_ptr<Merchant> traderTarget,
     bool success = true;
 #else
     bool success =
-        GameServices::menus().openTrading(GetXboxPad(), inventory, traderTarget, level, name);
+        gameServices().menus().openTrading(GetXboxPad(), inventory, traderTarget, level, name);
     if (success) ui.PlayUISFX(eSFX_Press);
 #endif
     return success;
@@ -826,7 +826,7 @@ void LocalPlayer::displayClientMessage(int messageId) {
 void LocalPlayer::awardStat(Stat* stat, const std::vector<uint8_t>& param) {
     int count = CommonStats::readParam(param);
 
-    if (!GameServices::canRecordStatsAndAchievements()) return;
+    if (!gameServices().canRecordStatsAndAchievements()) return;
     if (stat == nullptr) return;
 
     if (stat->isAchievement()) {
@@ -1576,39 +1576,39 @@ void LocalPlayer::updateRichPresence() {
         std::shared_ptr<ItemInstance> selectedItem = inventory->getSelected();
         if (selectedItem != nullptr &&
             selectedItem->id == Item::fishingRod_Id) {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_FISHING);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_FISHING);
         } else if (selectedItem != nullptr &&
                    selectedItem->id == Item::map_Id) {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_MAP);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_MAP);
         } else if ((riding != nullptr) && riding->instanceof(eTYPE_MINECART)) {
-            GameServices::setRichPresenceContext(m_iPad,
+            gameServices().setRichPresenceContext(m_iPad,
                                        CONTEXT_GAME_STATE_RIDING_MINECART);
         } else if ((riding != nullptr) && riding->instanceof(eTYPE_BOAT)) {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_BOATING);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_BOATING);
         } else if ((riding != nullptr) && riding->instanceof(eTYPE_PIG)) {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_RIDING_PIG);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_RIDING_PIG);
         } else if (this->dimension == -1) {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_NETHER);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_NETHER);
         } else if (minecraft->soundEngine->GetIsPlayingStreamingCDMusic()) {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_CD);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_CD);
         } else {
-            GameServices::setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_BLANK);
+            gameServices().setRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_BLANK);
         }
     }
 }
 
 // 4J Stu - Added for telemetry
 void LocalPlayer::SetSessionTimerStart(void) {
-    m_sessionTimeStart = GameServices::getAppTime();
+    m_sessionTimeStart = gameServices().getAppTime();
     m_dimensionTimeStart = m_sessionTimeStart;
 }
 
 float LocalPlayer::getSessionTimer(void) {
-    return GameServices::getAppTime() - m_sessionTimeStart;
+    return gameServices().getAppTime() - m_sessionTimeStart;
 }
 
 float LocalPlayer::getAndResetChangeDimensionTimer() {
-    float appTime = GameServices::getAppTime();
+    float appTime = gameServices().getAppTime();
     float returnVal = appTime - m_dimensionTimeStart;
     m_dimensionTimeStart = appTime;
     return returnVal;

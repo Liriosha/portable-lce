@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <utility>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCGameRulesHeader.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"

@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "TheEndPortalTileEntity.h"
 #include "java/Class.h"
 #include "java/Random.h"
@@ -71,7 +71,7 @@ void TheEndPortal::entityInside(Level* level, int x, int y, int z,
                 x = z = 0;
                 if (level->dimension == 0 &&
                     !level->getLevelData()->getHasStrongholdEndPortal() &&
-                    GameServices::getTerrainFeaturePosition(
+                    gameServices().getTerrainFeaturePosition(
                         eTerrainFeature_StrongholdEndPortal, &x, &z)) {
                     level->getLevelData()->setXStrongholdEndPortal(x);
                     level->getLevelData()->setZStrongholdEndPortal(z);

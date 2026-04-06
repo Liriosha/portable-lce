@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "app/common/Colours/ColourTable.h"
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/BufferedImage.h"
@@ -194,14 +194,14 @@ void AbstractTexturePack::loadDefaultColourTable() {
 
     } else {
         Log::info("Failed to load the default colours table\n");
-        GameServices::fatalLoadError();
+        gameServices().fatalLoadError();
     }
 }
 
 void AbstractTexturePack::loadDefaultHTMLColourTable() {
-    if (GameServices::hasArchiveFile(L"HTMLColours.col")) {
+    if (gameServices().hasArchiveFile(L"HTMLColours.col")) {
         std::vector<uint8_t> textColours =
-            GameServices::getArchiveFile(L"HTMLColours.col");
+            gameServices().getArchiveFile(L"HTMLColours.col");
         m_colourTable->loadColoursFromData(textColours.data(),
                                            textColours.size());
     }

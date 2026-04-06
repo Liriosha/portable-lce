@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "CaveFeature.h"
 
@@ -48,9 +48,9 @@ bool CaveFeature::place(Level* level, Random* random, int x, int y, int z) {
 
         // 4J Stu Added to stop cave features generating areas previously place
         // by game rule generation
-        if (GameServices::getLevelGenerationOptions() != nullptr) {
+        if (gameServices().getLevelGenerationOptions() != nullptr) {
             LevelGenerationOptions* levelGenOptions =
-                GameServices::getLevelGenerationOptions();
+                gameServices().getLevelGenerationOptions();
             bool intersects = levelGenOptions->checkIntersects(
                 (xx - r / 2), (yy - hr / 2), (zz - r / 2), (xx + r / 2),
                 (yy + hr / 2), (zz + r / 2));

@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <string>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 
 class InputStream;
 class Minecraft;

@@ -3,7 +3,7 @@
 #include <string>
 
 #include "platform/NetTypes.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "MobRenderer.h"
 #include "minecraft/client/renderer/entity/LivingEntityRenderer.h"
 #include "minecraft/world/entity/player/Player.h"

@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "Inventory.h"
 
@@ -490,7 +490,7 @@ std::shared_ptr<ItemInstance> Inventory::getItem(unsigned int slot) {
     */
 }
 
-std::wstring Inventory::getName() { return Strings::get(IDS_INVENTORY); }
+std::wstring Inventory::getName() { return gameServices().getString(IDS_INVENTORY); }
 
 std::wstring Inventory::getCustomName() { return L""; }
 

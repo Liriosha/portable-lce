@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "LakeFeature.h"
 
@@ -26,8 +26,8 @@ bool LakeFeature::place(Level* level, Random* random, int x, int y, int z) {
     bool grid[16 * 16 * 8] = {0};
 
     LevelGenerationOptions* levelGenOptions = nullptr;
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
-        levelGenOptions = GameServices::getLevelGenerationOptions();
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
+        levelGenOptions = gameServices().getLevelGenerationOptions();
 
         int minX = x;
         int minY = y;

@@ -8,7 +8,7 @@
 
 #include "platform/InputActions.h"
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/common/Tutorial/Constraints/TutorialConstraint.h"
 #include "app/common/Tutorial/Hints/DiggerItemHint.h"

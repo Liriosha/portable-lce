@@ -1,6 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileOriginal.h"
 
@@ -17,7 +15,7 @@
 #include <vector>
 
 #include "platform/PlatformTypes.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/BuildVer/BuildVer.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
@@ -70,7 +68,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
 
     // Load a save from the game rules
     bool bLevelGenBaseSave = false;
-    LevelGenerationOptions* levelGen = GameServices::getLevelGenerationOptions();
+    LevelGenerationOptions* levelGen = gameServices().getLevelGenerationOptions();
     if (pvSaveData == nullptr && levelGen != nullptr &&
         levelGen->requiresBaseSave()) {
         pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -647,7 +645,7 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
         unsigned int dwDataSizeSaveImage = 0;
 
 #ifdef _WINDOWS64
-        GameServices::getSaveThumbnail(&pbThumbnailData, &dwThumbnailDataSize,
+        gameServices().getSaveThumbnail(&pbThumbnailData, &dwThumbnailDataSize,
                              &pbDataSaveImage, &dwDataSizeSaveImage);
 #endif
 
@@ -664,9 +662,9 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
             hasSeed = true;
         }
 
-        int iTextMetadataBytes = GameServices::createImageTextData(
+        int iTextMetadataBytes = gameServices().createImageTextData(
             bTextMetadata, seed, hasSeed,
-            GameHostOptions::get(eGameHostOption_All),
+            gameServices().getGameHostOption(eGameHostOption_All),
             Minecraft::GetInstance()->getCurrentTexturePackId());
 
         int32_t saveOrCheckpointId = 0;
@@ -683,8 +681,8 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
         PlatformStorage.SaveSaveData(
             &ConsoleSaveFileOriginal::SaveSaveDataCallback, this);
 #ifndef _CONTENT_PACKAGE
-        if (DebugSettings::isOn()) {
-            if (GameServices::getWriteSavesToFolderEnabled()) {
+        if (gameServices().debugSettingsOn()) {
+            if (gameServices().getWriteSavesToFolderEnabled()) {
                 DebugFlushToFile(compData, compLength + 8);
             }
         }

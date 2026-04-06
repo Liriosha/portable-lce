@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "java/Class.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/world/damageSource/DamageSource.h"

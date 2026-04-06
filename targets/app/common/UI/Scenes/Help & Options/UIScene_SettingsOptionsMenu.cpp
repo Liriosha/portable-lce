@@ -6,7 +6,7 @@
 #include "platform/InputActions.h"
 #include "platform/sdl2/Profile.h"
 #include "platform/sdl2/Render.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"

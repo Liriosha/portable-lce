@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "MinecartContainer.h"
 
 #include <stdint.h>
@@ -120,7 +120,7 @@ bool MinecartContainer::canPlaceItem(int slot,
 
 std::wstring MinecartContainer::getName() {
     return hasCustomName() ? getCustomName()
-                           : Strings::get(IDS_CONTAINER_MINECART);
+                           : gameServices().getString(IDS_CONTAINER_MINECART);
 }
 
 int MinecartContainer::getMaxStackSize() {

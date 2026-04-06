@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "CreativeInventoryScreen.h"
 
 #include <GL/gl.h>
@@ -412,7 +412,7 @@ void CreativeInventoryScreen::renderLabels() {
         IUIScene_CreativeMenu::TabSpec* spec =
             IUIScene_CreativeMenu::specs[selectedTabIndex];
         if (spec) {
-            std::wstring tabName = Strings::get(spec->m_descriptionId);
+            std::wstring tabName = gameServices().getString(spec->m_descriptionId);
             font->draw(tabName, 8, 6, 0x404040);
         }
     }
@@ -590,7 +590,7 @@ bool CreativeInventoryScreen::renderIconTooltip(int tab, int mouseX,
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         renderTooltip(
-            Strings::get(IUIScene_CreativeMenu::specs[tab]->m_descriptionId),
+            gameServices().getString(IUIScene_CreativeMenu::specs[tab]->m_descriptionId),
             mouseX, mouseY);
         glEnable(GL_LIGHTING);
         glEnable(GL_DEPTH_TEST);

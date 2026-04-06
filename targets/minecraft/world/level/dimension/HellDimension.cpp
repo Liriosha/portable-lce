@@ -1,10 +1,10 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "HellDimension.h"
 
 #include <cmath>
 
 #include "IPlatformInput.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
@@ -50,8 +50,8 @@ void HellDimension::updateLightRamp() {
 
 ChunkSource* HellDimension::createRandomLevelSource() const {
 #ifdef _DEBUG_MENUS_ENABLED
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_SuperflatNether)) {
         return new HellFlatLevelSource(level, level->getSeed());
     } else

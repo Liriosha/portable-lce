@@ -9,7 +9,7 @@
 #include "platform/PlatformTypes.h"
 #include "platform/InputActions.h"
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/LinuxGame.h"

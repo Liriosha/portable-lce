@@ -1,6 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "ServerPlayer.h"
 
@@ -587,7 +585,7 @@ void ServerPlayer::doChunkSendingTick(bool dontDelayChunks) {
 void ServerPlayer::doTickB() {
 #if !defined(_CONTENT_PACKAGE)
     // check if there's a debug dimension change requested
-    // if(DebugSettings::getMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToNether))
+    // if(gameServices().debugGetMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToNether))
     //{
     //	if(level->dimension->id == 0 )
     //	{
@@ -595,11 +593,11 @@ void ServerPlayer::doTickB() {
     //		portalTime=1;
     //	}
     //	unsigned int
-    // uiVal=DebugSettings::getMask(InputManager.GetPrimaryPad());
-    //	GameServices::setGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToNether));
+    // uiVal=gameServices().debugGetMask(InputManager.GetPrimaryPad());
+    //	gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToNether));
     //}
     // 	else if
-    // (DebugSettings::getMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToEnd))
+    // (gameServices().debugGetMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToEnd))
     // 	{
     // 		if(level->dimension->id == 0 )
     // 		{
@@ -607,19 +605,19 @@ void ServerPlayer::doTickB() {
     // std::dynamic_pointer_cast<ServerPlayer>( shared_from_this() ), 1 );
     // 		}
     // 		unsigned int
-    // uiVal=DebugSettings::getMask(InputManager.GetPrimaryPad());
-    // 		GameServices::setGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToEnd));
+    // uiVal=gameServices().debugGetMask(InputManager.GetPrimaryPad());
+    // 		gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToEnd));
     // 	}
     // else
-    if (DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
         (1L << eDebugSetting_GoToOverworld)) {
         if (level->dimension->id != 0) {
             isInsidePortal = true;
             portalTime = 1;
         }
         unsigned int uiVal =
-            DebugSettings::getMask(InputManager.GetPrimaryPad());
-        GameServices::setGameSettingsDebugMask(
+            gameServices().debugGetMask(InputManager.GetPrimaryPad());
+        gameServices().setGameSettingsDebugMask(
             InputManager.GetPrimaryPad(),
             uiVal & ~(1L << eDebugSetting_GoToOverworld));
     }
@@ -1553,7 +1551,7 @@ void ServerPlayer::displayClientMessage(int messageId) {
 
     // Language *language = Language::getInstance();
     // wstring languageString =
-    // Strings::get(messageId);//language->getElement(messageId);
+    // gameServices().getString(messageId);//language->getElement(messageId);
     // connection->send( shared_ptr<ChatPacket>( new ChatPacket(L"",
     // messageType) ) );
 }

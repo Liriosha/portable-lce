@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "SpringFeature.h"
 
@@ -12,9 +12,9 @@ SpringFeature::SpringFeature(int tile) { this->tile = tile; }
 bool SpringFeature::place(Level* level, Random* random, int x, int y, int z) {
     // 4J Stu Added to stop spring features generating areas previously place by
     // game rule generation
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            GameServices::getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         bool intersects = levelGenOptions->checkIntersects(x, y, z, x, y, z);
         if (intersects) {
             // Log::info("Skipping spring feature generation as it

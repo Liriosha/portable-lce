@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "SpruceFeature.h"
 
@@ -30,9 +30,9 @@ bool SpruceFeature::place(Level* level, Random* random, int x, int y, int z) {
 
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            GameServices::getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         bool intersects = levelGenOptions->checkIntersects(
             x - leafRadius, y - 1, z - leafRadius, x + leafRadius,
             y + treeHeight, z + leafRadius);

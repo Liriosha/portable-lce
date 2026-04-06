@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "Painting.h"
 
 #include <memory>
@@ -78,7 +78,7 @@ Painting::Painting(Level* level, int xTile, int yTile, int zTile, int dir)
 // needed in the ctor 4J Stu - Added motive param for debugging/artists only
 void Painting::PaintingPostConstructor(int dir, int motive) {
 #ifndef _CONTENT_PACKAGE
-    if (DebugSettings::artToolsOn() && motive >= 0) {
+    if (gameServices().debugArtToolsOn() && motive >= 0) {
         this->motive = (Motive*)Motive::values[motive];
         setDir(dir);
     } else

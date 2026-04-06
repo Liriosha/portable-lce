@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "SimpleContainer.h"
 
 #include <vector>
@@ -82,7 +82,7 @@ void SimpleContainer::setItem(unsigned int slot,
 unsigned int SimpleContainer::getContainerSize() { return size; }
 
 std::wstring SimpleContainer::getName() {
-    return stringName.empty() ? Strings::get(name) : stringName;
+    return stringName.empty() ? gameServices().getString(name) : stringName;
 }
 
 std::wstring SimpleContainer::getCustomName() {

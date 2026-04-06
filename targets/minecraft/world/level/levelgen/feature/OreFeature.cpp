@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "OreFeature.h"
 
@@ -39,8 +39,8 @@ bool OreFeature::place(Level* level, Random* random, int x, int y, int z) {
     bool collisionsExpected = false;
 
     LevelGenerationOptions* levelGenOptions = nullptr;
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
-        levelGenOptions = GameServices::getLevelGenerationOptions();
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
+        levelGenOptions = gameServices().getLevelGenerationOptions();
 
         // 4J Stu - Optimise schematic intersection checks by first checking the
         // max possible bounding box of this place call

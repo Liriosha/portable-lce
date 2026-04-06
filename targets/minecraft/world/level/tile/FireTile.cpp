@@ -1,11 +1,11 @@
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "FireTile.h"
 
 #include <string.h>
 
 #include <optional>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "java/Random.h"
 #include "minecraft/core/particles/ParticleTypes.h"
@@ -162,7 +162,7 @@ void FireTile::tick(Level* level, int x, int y, int z, Random* random) {
     checkBurnOut(level, x, y + 1, z, 250 + extra, random, age);
     checkBurnOut(level, x, y, z - 1, 300 + extra, random, age);
     checkBurnOut(level, x, y, z + 1, 300 + extra, random, age);
-    if (GameHostOptions::get(eGameHostOption_FireSpreads)) {
+    if (gameServices().getGameHostOption(eGameHostOption_FireSpreads)) {
         for (int xx = x - 1; xx <= x + 1; xx++) {
             for (int zz = z - 1; zz <= z + 1; zz++) {
                 for (int yy = y - 1; yy <= y + 4; yy++) {
@@ -208,7 +208,7 @@ void FireTile::checkBurnOut(Level* level, int x, int y, int z, int chance,
     if (random->nextInt(chance) < odds) {
         bool wasTnt = level->getTile(x, y, z) == Tile::tnt_Id;
         if (random->nextInt(age + 10) < 5 && !level->isRainingAt(x, y, z) &&
-            GameHostOptions::get(eGameHostOption_FireSpreads)) {
+            gameServices().getGameHostOption(eGameHostOption_FireSpreads)) {
             int tAge = age + random->nextInt(5) / 4;
             if (tAge > 15) tAge = 15;
             level->setTileAndData(x, y, z, id, tAge, Tile::UPDATE_ALL);

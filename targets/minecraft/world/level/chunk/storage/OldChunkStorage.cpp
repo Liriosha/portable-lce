@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "OldChunkStorage.h"
 
@@ -447,8 +447,8 @@ LevelChunk* OldChunkStorage::load(Level* level, DataInputStream* dis) {
     }
 
 #if !defined(_CONTENT_PACKAGE)
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // Read the biome data from the stream, but don't use it
         std::vector<uint8_t> dummyBiomes(levelChunk->biomes.size());
@@ -557,8 +557,8 @@ LevelChunk* OldChunkStorage::load(Level* level, CompoundTag* tag) {
     // 4J removed - we shouldn't need this any more
 
 #if !defined(_CONTENT_PACKAGE)
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // Do nothing
     } else

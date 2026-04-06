@@ -20,7 +20,7 @@
 #include "app/common/UI/UIScene.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "util/StringHelpers.h"
 
 #include "minecraft/client/Minecraft.h"

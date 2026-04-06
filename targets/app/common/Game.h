@@ -31,7 +31,7 @@
 #include "app/common/UI/All Platforms/ArchiveFile.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "platform/NetTypes.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
 #include "minecraft/world/entity/item/MinecartHopper.h"

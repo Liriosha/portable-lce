@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "BirchFeature.h"
 
@@ -46,9 +46,9 @@ bool BirchFeature::place(Level* level, Random* random, int x, int y, int z) {
 
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            GameServices::getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         int radius = 3;
         bool intersects = levelGenOptions->checkIntersects(
             x - radius, y - 1, z - radius, x + radius, y + treeHeight,

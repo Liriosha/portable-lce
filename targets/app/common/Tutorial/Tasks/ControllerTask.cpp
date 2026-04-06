@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "platform/sdl2/Input.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Tutorial/Constraints/InputConstraint.h"
 #include "app/common/Tutorial/Tasks/TutorialTask.h"
 #include "app/linux/LinuxGame.h"

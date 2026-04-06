@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "BiomeCache.h"
 
 #include <utility>
@@ -90,7 +90,7 @@ BiomeCache::Block* BiomeCache::getBlockAt(int x, int z) {
     } else {
         block = it->second;
     }
-    block->lastUse = GameServices::getAppTime();
+    block->lastUse = gameServices().getAppTime();
     return block;
 }
 
@@ -108,7 +108,7 @@ float BiomeCache::getDownfall(int x, int z) {
 
 void BiomeCache::update() {
     std::lock_guard<std::mutex> lock(m_CS);
-    int64_t now = GameServices::getAppTime();
+    int64_t now = gameServices().getAppTime();
     int64_t utime = now - lastUpdateTime;
     if (utime > DECAY_TIME / 4 || utime < 0) {
         lastUpdateTime = now;

@@ -3,7 +3,7 @@
 
 #include "AbstractTexturePack.h"
 #include "java/InputOutputStream/InputStream.h"
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "strings.h"
 
 class DefaultTexturePack : public AbstractTexturePack {
@@ -22,7 +22,7 @@ public:
     bool hasFile(const std::wstring& name);
     bool isTerrainUpdateCompatible();
 
-    std::wstring getDesc1() { return Strings::get(IDS_DEFAULT_TEXTUREPACK); }
+    std::wstring getDesc1() { return gameServices().getString(IDS_DEFAULT_TEXTUREPACK); }
 
 protected:
     //@Override

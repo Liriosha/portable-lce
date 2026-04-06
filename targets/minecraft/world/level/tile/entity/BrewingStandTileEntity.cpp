@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "BrewingStandTileEntity.h"
 
 #include <stdint.h>
@@ -41,7 +41,7 @@ BrewingStandTileEntity::BrewingStandTileEntity() {
 BrewingStandTileEntity::~BrewingStandTileEntity() {}
 
 std::wstring BrewingStandTileEntity::getName() {
-    return hasCustomName() ? name : Strings::get(IDS_TILE_BREWINGSTAND);
+    return hasCustomName() ? name : gameServices().getString(IDS_TILE_BREWINGSTAND);
 }
 
 std::wstring BrewingStandTileEntity::getCustomName() {

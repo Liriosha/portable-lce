@@ -2,7 +2,7 @@
 
 #include "platform/sdl2/Profile.h"
 #include "platform/sdl2/Render.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"

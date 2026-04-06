@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 
 
@@ -167,8 +167,8 @@ bool TileItem::useOn(std::shared_ptr<ItemInstance> instance,
 #ifndef _FINAL_BUILD
                 // 4J-PB - If we have the debug option on, don't reduce the
                 // number of this item
-                if (!(DebugSettings::isOn() &&
-                      DebugSettings::getMask() &
+                if (!(gameServices().debugSettingsOn() &&
+                      gameServices().debugGetMask() &
                           (1L << eDebugSetting_CraftAnything)))
 #endif
                 {

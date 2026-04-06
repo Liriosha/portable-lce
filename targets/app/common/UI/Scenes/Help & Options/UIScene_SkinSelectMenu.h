@@ -15,7 +15,7 @@
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
 #include "app/linux/Iggy/include/rrCore.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "minecraft/world/entity/player/SkinTypes.h"
 #include "minecraft/client/renderer/Textures.h"
 

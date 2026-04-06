@@ -9,7 +9,7 @@
 #include "platform/sdl2/Profile.h"
 #include "platform/sdl2/Render.h"
 #include "app/common/App_Defines.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"

@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "ItemInHandRenderer.h"
 
@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "platform/sdl2/Render.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
 #include "Tesselator.h"
@@ -549,7 +549,7 @@ void ItemInHandRenderer::render(float a) {
                     player->inventory->getSelected();
                 if ((itemInstance &&
                      (itemInstance->getItem()->id == Item::map_Id)) ||
-                    GameServices::getGameSettings(localPlayer->GetXboxPad(),
+                    gameServices().getGameSettings(localPlayer->GetXboxPad(),
                                         eGameSetting_DisplayHand) != 0) {
                     playerRenderer->renderHand();
                 }
@@ -766,7 +766,7 @@ void ItemInHandRenderer::render(float a) {
             player->inventory->getSelected();
 
         if ((itemInstance && (itemInstance->getItem()->id == Item::map_Id)) ||
-            GameServices::getGameSettings(localPlayer->GetXboxPad(),
+            gameServices().getGameSettings(localPlayer->GetXboxPad(),
                                 eGameSetting_DisplayHand) != 0) {
             playerRenderer->renderHand();
         }

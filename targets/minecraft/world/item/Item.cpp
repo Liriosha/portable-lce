@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 
 #include "Item.h"
@@ -1541,12 +1541,12 @@ Item* Item::setDescriptionId(unsigned int id) {
 }
 
 const wchar_t* Item::getDescription() {
-    return Strings::get(getDescriptionId());
+    return gameServices().getString(getDescriptionId());
     // return I18n::get(getDescriptionId());
 }
 
 const wchar_t* Item::getDescription(std::shared_ptr<ItemInstance> instance) {
-    return Strings::get(getDescriptionId(instance));
+    return gameServices().getString(getDescriptionId(instance));
     // return I18n::get(getDescriptionId(instance));
 }
 
@@ -1640,7 +1640,7 @@ std::wstring Item::getHoverName(std::shared_ptr<ItemInstance> itemInstance) {
     // String elementName = ("" +
     // Language.getInstance().getElementName(getDescription(itemInstance))).trim();
     // return elementName;
-    return Strings::get(getDescriptionId(itemInstance));
+    return gameServices().getString(getDescriptionId(itemInstance));
 }
 
 bool Item::isFoil(std::shared_ptr<ItemInstance> itemInstance) {

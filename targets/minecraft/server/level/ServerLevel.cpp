@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "ServerLevel.h"
 
@@ -325,8 +325,8 @@ void ServerLevel::tick() {
         // 4J: Debug setting added to keep it at day time
 #if !defined(_FINAL_BUILD)
         bool freezeTime =
-            DebugSettings::isOn() &&
-            DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+            gameServices().debugSettingsOn() &&
+            gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
                 (1L << eDebugSetting_FreezeTime);
         if (!freezeTime)
 #endif
@@ -491,7 +491,7 @@ void ServerLevel::tickTiles() {
 
     // AP moved this outside of the loop
     int prob = 100000;
-    if (DebugSettings::getMask() & (1L << eDebugSetting_RegularLightning))
+    if (gameServices().debugGetMask() & (1L << eDebugSetting_RegularLightning))
         prob = 100;
 
     auto itEndCtp = chunksToPoll.end();

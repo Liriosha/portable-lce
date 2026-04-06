@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "SwampTreeFeature.h"
 
@@ -22,9 +22,9 @@ bool SwampTreeFeature::place(Level* level, Random* random, int x, int y,
 
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            GameServices::getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         bool intersects = levelGenOptions->checkIntersects(
             x - 3, y - 1, z - 3, x + 3, y + treeHeight, z + 3);
         if (intersects) {

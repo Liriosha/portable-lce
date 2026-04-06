@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "DLCTexturePack.h"
 
@@ -9,7 +9,7 @@
 
 #include "platform/sdl2/Input.h"
 #include "platform/sdl2/Storage.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/DLC/DLCAudioFile.h"
@@ -79,8 +79,8 @@ DLCTexturePack::DLCTexturePack(std::uint32_t id, DLCPack* pack,
     m_bLoadingData = false;
     m_bHasLoadedData = false;
     m_archiveFile = nullptr;
-    if (GameServices::getLevelGenerationOptions())
-        GameServices::getLevelGenerationOptions()->setLoadedData();
+    if (gameServices().getLevelGenerationOptions())
+        gameServices().getLevelGenerationOptions()->setLoadedData();
     m_bUsingDefaultColourTable = true;
 
     m_stringTable = nullptr;
@@ -226,9 +226,9 @@ void DLCTexturePack::loadColourTable() {
     }
 
     // Load the text colours
-    if (GameServices::hasArchiveFile(L"HTMLColours.col")) {
+    if (gameServices().hasArchiveFile(L"HTMLColours.col")) {
         std::vector<uint8_t> textColours =
-            GameServices::getArchiveFile(L"HTMLColours.col");
+            gameServices().getArchiveFile(L"HTMLColours.col");
         m_colourTable->loadColoursFromData(textColours.data(),
                                            textColours.size());
     }
@@ -246,8 +246,8 @@ void DLCTexturePack::loadData() {
                 "TPACK") != ERROR_IO_PENDING) {
             // corrupt DLC
             m_bHasLoadedData = true;
-            if (GameServices::getLevelGenerationOptions())
-                GameServices::getLevelGenerationOptions()->setLoadedData();
+            if (gameServices().getLevelGenerationOptions())
+                gameServices().getLevelGenerationOptions()->setLoadedData();
             Log::info("Failed to mount texture pack DLC %d for pad %d\n",
                             mountIndex, InputManager.GetPrimaryPad());
         } else {
@@ -257,9 +257,9 @@ void DLCTexturePack::loadData() {
         }
     } else {
         m_bHasLoadedData = true;
-        if (GameServices::getLevelGenerationOptions())
-            GameServices::getLevelGenerationOptions()->setLoadedData();
-        GameServices::setAction(InputManager.GetPrimaryPad(),
+        if (gameServices().getLevelGenerationOptions())
+            gameServices().getLevelGenerationOptions()->setLoadedData();
+        gameServices().setAction(InputManager.GetPrimaryPad(),
                       eAppAction_ReloadTexturePack);
     }
 }
@@ -267,7 +267,7 @@ void DLCTexturePack::loadData() {
 std::wstring DLCTexturePack::getFilePath(std::uint32_t packId,
                                          std::wstring filename,
                                          bool bAddDataFolder) {
-    return GameServices::getFilePath(packId, filename, bAddDataFolder);
+    return gameServices().getFilePath(packId, filename, bAddDataFolder);
 }
 
 int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
@@ -288,7 +288,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
         std::wstring dataFilePath =
             texturePack->m_dlcInfoPack->getFullDataPath();
         if (!dataFilePath.empty()) {
-            if (!GameServices::getDLCManager().readDLCDataFile(
+            if (!gameServices().dlcReadDataFile(
                     dwFilesProcessed,
                     getFilePath(texturePack->m_dlcInfoPack->GetPackID(),
                                 dataFilePath),
@@ -311,7 +311,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
                 */
                 DLCPack* pack = texturePack->m_dlcInfoPack->GetParentPack();
                 LevelGenerationOptions* levelGen =
-                    GameServices::getLevelGenerationOptions();
+                    gameServices().getLevelGenerationOptions();
                 if (levelGen != nullptr && !levelGen->hasLoadedData()) {
                     int gameRulesCount = pack->getDLCItemsCount(
                         DLCManager::e_DLCType_GameRulesHeader);
@@ -338,10 +338,10 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
 
                                     delete[] pbData;
 
-                                    GameServices::getGameRules().setLevelGenerationOptions(
+                                    gameServices().setLevelGenerationOptions(
                                         dlcFile->lgo);
                                 } else {
-                                    GameServices::fatalLoadError();
+                                    gameServices().fatalLoadError();
                                 }
                             }
                         }
@@ -359,7 +359,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
                                 // after a read fail and it's not an error?
                                 levelGen->setBaseSaveData(pbData, fileSize);
                             } else {
-                                GameServices::fatalLoadError();
+                                gameServices().fatalLoadError();
                             }
                         }
                     }
@@ -402,9 +402,9 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
     }
 
     texturePack->m_bHasLoadedData = true;
-    if (GameServices::getLevelGenerationOptions())
-        GameServices::getLevelGenerationOptions()->setLoadedData();
-    GameServices::setAction(InputManager.GetPrimaryPad(), eAppAction_ReloadTexturePack);
+    if (gameServices().getLevelGenerationOptions())
+        gameServices().getLevelGenerationOptions()->setLoadedData();
+    gameServices().setAction(InputManager.GetPrimaryPad(), eAppAction_ReloadTexturePack);
 
     return 0;
 }
@@ -431,7 +431,7 @@ void DLCTexturePack::unloadUI() {
     }
     AbstractTexturePack::unloadUI();
 
-    GameServices::getDLCManager().removePack(m_dlcDataPack);
+    gameServices().dlcRemovePack(m_dlcDataPack);
     m_dlcDataPack = nullptr;
     delete m_archiveFile;
     m_bHasLoadedData = false;

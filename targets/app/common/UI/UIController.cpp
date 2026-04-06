@@ -12,7 +12,7 @@
 
 #include "platform/sdl2/Input.h"
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/Network/GameNetworkManager.h"

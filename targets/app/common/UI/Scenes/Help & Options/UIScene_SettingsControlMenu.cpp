@@ -3,7 +3,7 @@
 #include <wchar.h>
 
 #include "platform/InputActions.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl_Slider.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"

@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "FlowerFeature.h"
 
@@ -14,9 +14,9 @@ FlowerFeature::FlowerFeature(int tile) { this->tile = tile; }
 bool FlowerFeature::place(Level* level, Random* random, int x, int y, int z) {
     // 4J Stu Added to stop tree features generating areas previously place by
     // game rule generation
-    if (GameServices::getLevelGenerationOptions() != nullptr) {
+    if (gameServices().getLevelGenerationOptions() != nullptr) {
         LevelGenerationOptions* levelGenOptions =
-            GameServices::getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         bool intersects = levelGenOptions->checkIntersects(x - 8, y - 4, z - 8,
                                                            x + 8, y + 4, z + 8);
         if (intersects) {

@@ -6,7 +6,7 @@
 #include <qnet.h>
 #endif
 #include "platform/NetTypes.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "NetworkPlayerInterface.h"
 #include "SessionInfo.h"
 #include "platform/C4JThread.h"

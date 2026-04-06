@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "RandomLevelSource.h"
 
 #include <stdlib.h>
@@ -409,7 +409,7 @@ void RandomLevelSource::buildSurfaces(int xOffs, int zOffs,
             uint8_t top = b->topMaterial;
             uint8_t material = b->material;
 
-            LevelGenerationOptions* lgo = GameServices::getLevelGenerationOptions();
+            LevelGenerationOptions* lgo = gameServices().getLevelGenerationOptions();
             if (lgo != nullptr) {
                 lgo->getBiomeOverride(b->id, material, top);
             }
@@ -799,7 +799,7 @@ void RandomLevelSource::postProcess(ChunkSource* parent, int xt, int zt) {
 
     biome->decorate(level, pprandom, xo, zo);
 
-    GameServices::processSchematics(parent->getChunk(xt, zt));
+    gameServices().processSchematics(parent->getChunk(xt, zt));
 
     MobSpawner::postProcessSpawnMobs(level, biome, xo + 8, zo + 8, 16, 16,
                                      pprandom);

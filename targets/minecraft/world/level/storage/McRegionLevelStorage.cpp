@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "McRegionLevelStorage.h"
 
@@ -38,7 +38,7 @@ ChunkStorage* McRegionLevelStorage::createChunkStorage(Dimension* dimension) {
     // File folder = getFolder();
 
     if (dynamic_cast<HellDimension*>(dimension) != nullptr) {
-        if (GameServices::getResetNether()) {
+        if (gameServices().getResetNether()) {
 #ifdef SPLIT_SAVES
             std::vector<FileEntry*>* netherFiles =
                 m_saveFile->getRegionFilesByDimension(1);

@@ -6,7 +6,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "platform/NetTypes.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
 #include "NetworkPlayerInterface.h"
 #include "platform/IPlatformNetwork.h"

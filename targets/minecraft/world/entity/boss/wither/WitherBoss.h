@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "java/Class.h"
 #include "minecraft/stdafx.h"
 #include "minecraft/world/entity/EntitySelector.h"
@@ -120,5 +120,5 @@ public:
     // 4J Stu - These are required for the BossMob interface
     virtual float getMaxHealth() { return Monster::getMaxHealth(); };
     virtual float getHealth() { return Monster::getHealth(); };
-    virtual std::wstring getAName() { return Strings::get(IDS_WITHER); };
+    virtual std::wstring getAName() { return gameServices().getString(IDS_WITHER); };
 };

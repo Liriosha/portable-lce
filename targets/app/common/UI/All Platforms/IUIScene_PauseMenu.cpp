@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
 #include "app/common/GameRules/GameRuleManager.h"

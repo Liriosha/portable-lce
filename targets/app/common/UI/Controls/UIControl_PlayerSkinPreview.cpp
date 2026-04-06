@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "platform/sdl2/Render.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY

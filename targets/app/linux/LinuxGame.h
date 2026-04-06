@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Game.h"
 
 class C4JStringTable;

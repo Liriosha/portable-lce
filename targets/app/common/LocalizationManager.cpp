@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/common/Localisation/StringTable.h"
 #include "app/common/Colours/ColourTable.h"

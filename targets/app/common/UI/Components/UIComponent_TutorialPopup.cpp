@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/UI/Controls/UIControl_Label.h"

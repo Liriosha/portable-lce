@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "Silverfish.h"
 
 #include <memory>
@@ -44,7 +44,7 @@ bool Silverfish::makeStepSound() { return false; }
 
 std::shared_ptr<Entity> Silverfish::findAttackTarget() {
 #ifndef _FINAL_BUILD
-    if (DebugSettings::mobsDontAttack()) {
+    if (gameServices().debugMobsDontAttack()) {
         return std::shared_ptr<Player>();
     }
 #endif

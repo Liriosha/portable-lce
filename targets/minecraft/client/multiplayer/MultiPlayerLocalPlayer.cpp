@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "MultiPlayerLocalPlayer.h"
 
@@ -74,11 +74,11 @@ void MultiplayerLocalPlayer::tick() {
     // bool bIsisPrimaryHost=g_NetworkManager.IsHost() &&
     // (InputManager.GetPrimaryPad()==m_iPad);
 
-    /*if((GameServices::getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0) !=
+    /*if((gameServices().getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0) !=
     m_bShownOnMaps)
     {
             m_bShownOnMaps =
-    (GameServices::getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0); if
+    (gameServices().getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0); if
     (m_bShownOnMaps) connection->send( std::shared_ptr<PlayerCommandPacket>( new
     PlayerCommandPacket(shared_from_this(), PlayerCommandPacket::SHOW_ON_MAPS) )
     ); else connection->send( std::shared_ptr<PlayerCommandPacket>( new
@@ -379,7 +379,7 @@ void MultiplayerLocalPlayer::setAndBroadcastCustomSkin(std::uint32_t skinId) {
     if (getCustomSkin() != oldSkinIndex)
         connection->send(std::shared_ptr<TextureAndGeometryChangePacket>(
             new TextureAndGeometryChangePacket(
-                shared_from_this(), GameServices::getPlayerSkinName(GetXboxPad()))));
+                shared_from_this(), gameServices().getPlayerSkinName(GetXboxPad()))));
 }
 
 void MultiplayerLocalPlayer::setAndBroadcastCustomCape(std::uint32_t capeId) {
@@ -392,7 +392,7 @@ void MultiplayerLocalPlayer::setAndBroadcastCustomCape(std::uint32_t capeId) {
     if (getCustomCape() != oldCapeIndex)
         connection->send(std::make_shared<TextureChangePacket>(
             shared_from_this(), TextureChangePacket::e_TextureChange_Cape,
-            GameServices::getPlayerCapeName(GetXboxPad())));
+            gameServices().getPlayerCapeName(GetXboxPad())));
 }
 
 // 4J added for testing. This moves the player in a repeated sequence of 2

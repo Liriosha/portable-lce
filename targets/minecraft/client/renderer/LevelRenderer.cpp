@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "LevelRenderer.h"
 
@@ -21,7 +20,7 @@
 #include "platform/sdl2/Render.h"
 #include "Chunk.h"
 #include "GameRenderer.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/Console_Debug_enum.h"
@@ -448,8 +447,8 @@ void LevelRenderer::setLevel(int playerIndex, MultiPlayerLevel* level) {
 }
 
 void LevelRenderer::AddDLCSkinsToMemTextures() {
-    for (int i = 0; i < GameServices::getSkinNames().size(); i++) {
-        textures->addMemTexture(GameServices::getSkinNames()[i],
+    for (int i = 0; i < gameServices().getSkinNames().size(); i++) {
+        textures->addMemTexture(gameServices().getSkinNames()[i],
                                 new MobSkinMemTextureProcessor());
     }
 }
@@ -1165,7 +1164,7 @@ void LevelRenderer::renderClouds(float alpha) {
     int playerIndex = mc->player->GetXboxPad();
 
     // if the primary player has clouds off, so do all players on this machine
-    if (GameServices::getGameSettings(InputManager.GetPrimaryPad(),
+    if (gameServices().getGameSettings(InputManager.GetPrimaryPad(),
                             eGameSetting_Clouds) == 0) {
         return;
     }
@@ -1178,8 +1177,8 @@ void LevelRenderer::renderClouds(float alpha) {
         return;
     }
 
-    if (DebugSettings::isOn()) {
-        if (DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
             (1L << eDebugSetting_FreezeTime)) {
             iTicks = m_freezeticks;
         }
@@ -1256,8 +1255,8 @@ void LevelRenderer::renderClouds(float alpha) {
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 
-    if (DebugSettings::isOn()) {
-        if (!(DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (!(gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
               (1L << eDebugSetting_FreezeTime))) {
             m_freezeticks = iTicks;
         }
@@ -1442,8 +1441,8 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 
     int iTicks = ticks;
 
-    if (DebugSettings::isOn()) {
-        if (DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
             (1L << eDebugSetting_FreezeTime)) {
             iTicks = m_freezeticks;
         }
@@ -1689,8 +1688,8 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 
-    if (DebugSettings::isOn()) {
-        if (!(DebugSettings::getMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (!(gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
               (1L << eDebugSetting_FreezeTime))) {
             m_freezeticks = iTicks;
         }
@@ -2221,7 +2220,7 @@ void LevelRenderer::renderHitOutline(std::shared_ptr<Player> player,
         const float ss = 0.002f;
 
         // 4J-PB - If Display HUD is false, don't render the hit outline
-        if (GameServices::getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) return;
+        if (gameServices().getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) return;
         RenderManager.StateSetLightingEnable(false);
         glDisable(GL_TEXTURE_2D);
 

@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 
 class ColourTable {
 private:

@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "Textures.h"
 
 #include <assert.h>
@@ -1004,7 +1004,7 @@ int Textures::loadMemTexture(const std::wstring& url,
     if (it != memTextures.end()) {
         texture = (*it).second;
     }
-    if (texture == nullptr && GameServices::isFileInMemoryTextures(url)) {
+    if (texture == nullptr && gameServices().isFileInMemoryTextures(url)) {
         // If we haven't loaded it yet, but we have the data for it then add it
         texture = addMemTexture(url, new MobSkinMemTextureProcessor());
     }
@@ -1041,7 +1041,7 @@ int Textures::loadMemTexture(const std::wstring& url, int backup) {
     if (it != memTextures.end()) {
         texture = (*it).second;
     }
-    if (texture == nullptr && GameServices::isFileInMemoryTextures(url)) {
+    if (texture == nullptr && gameServices().isFileInMemoryTextures(url)) {
         // If we haven't loaded it yet, but we have the data for it then add it
         texture = addMemTexture(url, new MobSkinMemTextureProcessor());
     }
@@ -1082,7 +1082,7 @@ MemTexture* Textures::addMemTexture(const std::wstring& name,
         // can we find it in the app mem files?
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        GameServices::getMemFileDetails(name, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(name, &pbData, &dwBytes);
 
         if (dwBytes != 0) {
             texture = new MemTexture(name, pbData, dwBytes, processor);

@@ -5,7 +5,7 @@
 
 #include "platform/InputActions.h"
 #include "app/common/App_Defines.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_DynamicLabel.h"
 #include "app/common/UI/UILayer.h"

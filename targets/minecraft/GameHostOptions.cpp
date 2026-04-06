@@ -1,24 +1,6 @@
 #include "minecraft/GameHostOptions.h"
 
-#include <cassert>
-
 namespace GameHostOptions {
-
-static unsigned int* s_settings = nullptr;
-
-void init(unsigned int* settingsPtr) {
-    s_settings = settingsPtr;
-}
-
-unsigned int get(eGameHostOption option) {
-    assert(s_settings);
-    return get(*s_settings, option);
-}
-
-void set(eGameHostOption option, unsigned int value) {
-    assert(s_settings);
-    set(*s_settings, option, value);
-}
 
 unsigned int get(unsigned int settings, eGameHostOption option) {
     switch (option) {

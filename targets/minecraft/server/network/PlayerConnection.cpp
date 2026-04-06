@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/GameHostOptions.h"
 #include "minecraft/util/Log.h"
 #include "PlayerConnection.h"
@@ -12,7 +11,7 @@
 #include <format>
 #include <utility>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCSkinFile.h"
@@ -20,7 +19,7 @@
 #include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/common/Network/Socket.h"
 #include "app/linux/LinuxGame.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "ServerConnection.h"
 #include "java/Class.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
@@ -141,7 +140,7 @@ PlayerConnection::PlayerConnection(MinecraftServer* server,
     m_bHasClientTickedOnce = false;
 
     setShowOnMaps(
-        GameHostOptions::get(eGameHostOption_Gamertags) != 0 ? true : false);
+        gameServices().getGameHostOption(eGameHostOption_Gamertags) != 0 ? true : false);
 }
 
 PlayerConnection::~PlayerConnection() { delete connection; }
@@ -815,7 +814,7 @@ void PlayerConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        GameServices::getMemFileDetails(packet->textureName, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwBytes);
 
         if (dwBytes != 0) {
             send(std::shared_ptr<TexturePacket>(
@@ -829,7 +828,7 @@ void PlayerConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
         wprintf(L"Server received custom texture %ls\n",
                 packet->textureName.c_str());
 #endif
-        GameServices::addMemoryTextureFile(packet->textureName, packet->pbData,
+        gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
                                  packet->dataBytes);
         server->connection->handleTextureReceived(packet->textureName);
     }
@@ -848,9 +847,9 @@ void PlayerConnection::handleTextureAndGeometry(
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwTextureBytes = 0;
-        GameServices::getMemFileDetails(packet->textureName, &pbData, &dwTextureBytes);
+        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwTextureBytes);
         DLCSkinFile* pDLCSkinFile =
-            GameServices::getDLCManager().getSkinFile(packet->textureName);
+            gameServices().getDLCSkinFile(packet->textureName);
 
         if (dwTextureBytes != 0) {
             if (pDLCSkinFile) {
@@ -868,9 +867,9 @@ void PlayerConnection::handleTextureAndGeometry(
                 // we don't have the dlc skin, so retrieve the data from the app
                 // store
                 std::vector<SKIN_BOX*>* pvSkinBoxes =
-                    GameServices::getAdditionalSkinBoxes(packet->dwSkinID);
+                    gameServices().getAdditionalSkinBoxes(packet->dwSkinID);
                 unsigned int uiAnimOverrideBitmask =
-                    GameServices::getAnimOverrideBitmask(packet->dwSkinID);
+                    gameServices().getAnimOverrideBitmask(packet->dwSkinID);
 
                 send(std::shared_ptr<TextureAndGeometryPacket>(
                     new TextureAndGeometryPacket(packet->textureName, pbData,
@@ -886,7 +885,7 @@ void PlayerConnection::handleTextureAndGeometry(
         wprintf(L"Server received custom texture %ls and geometry\n",
                 packet->textureName.c_str());
 #endif
-        GameServices::addMemoryTextureFile(packet->textureName, packet->pbData,
+        gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
                                  packet->dwTextureBytes);
 
         // add the geometry to the app list
@@ -895,11 +894,11 @@ void PlayerConnection::handleTextureAndGeometry(
             wprintf(L"Adding skin boxes for skin id %X, box count %d\n",
                     packet->dwSkinID, packet->dwBoxC);
 #endif
-            GameServices::setAdditionalSkinBoxes(packet->dwSkinID, packet->BoxDataA,
+            gameServices().setAdditionalSkinBoxes(packet->dwSkinID, packet->BoxDataA,
                                        packet->dwBoxC);
         }
         // Add the anim override
-        GameServices::setAnimOverrideBitmask(packet->dwSkinID,
+        gameServices().setAnimOverrideBitmask(packet->dwSkinID,
                                    packet->uiAnimOverrideBitmask);
 
         player->setCustomSkin(packet->dwSkinID);
@@ -917,7 +916,7 @@ void PlayerConnection::handleTextureReceived(const std::wstring& textureName) {
     if (it != m_texturesRequested.end()) {
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        GameServices::getMemFileDetails(textureName, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(textureName, &pbData, &dwBytes);
 
         if (dwBytes != 0) {
             send(std::shared_ptr<TexturePacket>(
@@ -936,8 +935,8 @@ void PlayerConnection::handleTextureAndGeometryReceived(
     if (it != m_texturesRequested.end()) {
         std::uint8_t* pbData = nullptr;
         unsigned int dwTextureBytes = 0;
-        GameServices::getMemFileDetails(textureName, &pbData, &dwTextureBytes);
-        DLCSkinFile* pDLCSkinFile = GameServices::getDLCManager().getSkinFile(textureName);
+        gameServices().getMemFileDetails(textureName, &pbData, &dwTextureBytes);
+        DLCSkinFile* pDLCSkinFile = gameServices().getDLCSkinFile(textureName);
 
         if (dwTextureBytes != 0) {
             if (pDLCSkinFile &&
@@ -947,11 +946,11 @@ void PlayerConnection::handleTextureAndGeometryReceived(
                         textureName, pbData, dwTextureBytes, pDLCSkinFile)));
             } else {
                 // get the data from the app
-                std::uint32_t dwSkinID = GameServices::getSkinIdFromPath(textureName);
+                std::uint32_t dwSkinID = gameServices().getSkinIdFromPath(textureName);
                 std::vector<SKIN_BOX*>* pvSkinBoxes =
-                    GameServices::getAdditionalSkinBoxes(dwSkinID);
+                    gameServices().getAdditionalSkinBoxes(dwSkinID);
                 unsigned int uiAnimOverrideBitmask =
-                    GameServices::getAnimOverrideBitmask(dwSkinID);
+                    gameServices().getAnimOverrideBitmask(dwSkinID);
 
                 send(std::shared_ptr<TextureAndGeometryPacket>(
                     new TextureAndGeometryPacket(textureName, pbData,
@@ -967,7 +966,7 @@ void PlayerConnection::handleTextureChange(
     std::shared_ptr<TextureChangePacket> packet) {
     switch (packet->action) {
         case TextureChangePacket::e_TextureChange_Skin:
-            player->setCustomSkin(GameServices::getSkinIdFromPath(packet->path));
+            player->setCustomSkin(gameServices().getSkinIdFromPath(packet->path));
 #if !defined(_CONTENT_PACKAGE)
             wprintf(L"Skin for server player %ls has changed to %ls (%d)\n",
                     player->name.c_str(), player->customTextureUrl.c_str(),
@@ -985,7 +984,7 @@ void PlayerConnection::handleTextureChange(
     }
     if (!packet->path.empty() &&
         packet->path.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(packet->path)) {
+        !gameServices().isFileInMemoryTextures(packet->path)) {
         if (server->connection->addPendingTextureRequest(packet->path)) {
 #if !defined(_CONTENT_PACKAGE)
             wprintf(
@@ -997,9 +996,9 @@ void PlayerConnection::handleTextureChange(
                 new TexturePacket(packet->path, nullptr, 0)));
         }
     } else if (!packet->path.empty() &&
-               GameServices::isFileInMemoryTextures(packet->path)) {
+               gameServices().isFileInMemoryTextures(packet->path)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(packet->path, nullptr, 0);
+        gameServices().addMemoryTextureFile(packet->path, nullptr, 0);
     }
     server->getPlayers()->broadcastAll(
         std::shared_ptr<TextureChangePacket>(
@@ -1009,7 +1008,7 @@ void PlayerConnection::handleTextureChange(
 
 void PlayerConnection::handleTextureAndGeometryChange(
     std::shared_ptr<TextureAndGeometryChangePacket> packet) {
-    player->setCustomSkin(GameServices::getSkinIdFromPath(packet->path));
+    player->setCustomSkin(gameServices().getSkinIdFromPath(packet->path));
 #if !defined(_CONTENT_PACKAGE)
     wprintf(
         L"PlayerConnection::handleTextureAndGeometryChange - Skin for server "
@@ -1020,7 +1019,7 @@ void PlayerConnection::handleTextureAndGeometryChange(
 
     if (!packet->path.empty() &&
         packet->path.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(packet->path)) {
+        !gameServices().isFileInMemoryTextures(packet->path)) {
         if (server->connection->addPendingTextureRequest(packet->path)) {
 #if !defined(_CONTENT_PACKAGE)
             wprintf(
@@ -1032,15 +1031,15 @@ void PlayerConnection::handleTextureAndGeometryChange(
                 new TextureAndGeometryPacket(packet->path, nullptr, 0)));
         }
     } else if (!packet->path.empty() &&
-               GameServices::isFileInMemoryTextures(packet->path)) {
+               gameServices().isFileInMemoryTextures(packet->path)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(packet->path, nullptr, 0);
+        gameServices().addMemoryTextureFile(packet->path, nullptr, 0);
 
         player->setCustomSkin(packet->dwSkinID);
 
         // If we already have the texture, then we already have the model parts
         // too
-        // GameServices::setAdditionalSkinBoxes(packet->dwSkinID,)
+        // gameServices().setAdditionalSkinBoxes(packet->dwSkinID,)
         // DebugBreak();
     }
     server->getPlayers()->broadcastAll(
@@ -1058,37 +1057,37 @@ void PlayerConnection::handleServerSettingsChanged(
         INetworkPlayer* networkPlayer = getNetworkPlayer();
         if ((networkPlayer != nullptr && networkPlayer->IsHost()) ||
             player->isModerator()) {
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_FireSpreads,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_FireSpreads));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_TNT,
                 GameHostOptions::get(packet->data, eGameHostOption_TNT));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_MobGriefing,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_MobGriefing));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_KeepInventory,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_KeepInventory));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_DoMobSpawning,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_DoMobSpawning));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_DoMobLoot,
                 GameHostOptions::get(packet->data, eGameHostOption_DoMobLoot));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_DoTileDrops,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_DoTileDrops));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_DoDaylightCycle,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_DoDaylightCycle));
-            GameHostOptions::set(
+            gameServices().setGameHostOption(
                 eGameHostOption_NaturalRegeneration,
                 GameHostOptions::get(packet->data,
                                       eGameHostOption_NaturalRegeneration));
@@ -1097,7 +1096,7 @@ void PlayerConnection::handleServerSettingsChanged(
                 std::shared_ptr<ServerSettingsChangedPacket>(
                     new ServerSettingsChangedPacket(
                         ServerSettingsChangedPacket::HOST_IN_GAME_SETTINGS,
-                        GameHostOptions::get(eGameHostOption_All))));
+                        gameServices().getGameHostOption(eGameHostOption_All))));
 
             // Update the QoS data
             g_NetworkManager.UpdateAndSetGameSessionData();
@@ -1410,9 +1409,9 @@ void PlayerConnection::handlePlayerInfo(
             unsigned int origPrivs = serverPlayer->getAllPlayerGamePrivileges();
 
             bool trustPlayers =
-                GameHostOptions::get(eGameHostOption_TrustPlayers) != 0;
+                gameServices().getGameHostOption(eGameHostOption_TrustPlayers) != 0;
             bool cheats =
-                GameHostOptions::get(eGameHostOption_CheatsEnabled) != 0;
+                gameServices().getGameHostOption(eGameHostOption_CheatsEnabled) != 0;
             if (serverPlayer == player) {
                 GameType* gameType =
                     Player::getPlayerGamePrivilege(
@@ -1692,7 +1691,7 @@ void PlayerConnection::handleCraftItem(
     std::shared_ptr<ItemInstance> pTempItemInst =
         pRecipeIngredientsRequired[iRecipe].pRecipy->assemble(nullptr);
 
-    if (DebugSettings::isOn() &&
+    if (gameServices().debugSettingsOn() &&
         (player->GetDebugOptions() & (1L << eDebugSetting_CraftAnything))) {
         pTempItemInst->onCraftedBy(
             player->level,

@@ -1,7 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/util/DebugSettings.h"
-#include "minecraft/GameHostOptions.h"
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "ClientConnection.h"
 
@@ -18,7 +15,7 @@
 #include "platform/PlatformTypes.h"
 #include "platform/sdl2/Input.h"
 #include "platform/sdl2/Profile.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/common/ConsoleGameMode.h"
 #include "app/common/DLC/DLCManager.h"
@@ -279,7 +276,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
     MOJANG_DATA* pMojangData = nullptr;
 
     if (!g_NetworkManager.IsLocalGame()) {
-        pMojangData = GameServices::getMojangDataForXuid(OnlineXuid);
+        pMojangData = gameServices().getMojangDataForXuid(OnlineXuid);
     }
 
     if (!g_NetworkManager.IsHost()) {
@@ -319,12 +316,12 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
             if (pMojangData->wchSkin[0] != 0L) {
                 std::wstring wstr = pMojangData->wchSkin;
                 // check the file is not already in
-                bRes = GameServices::isFileInMemoryTextures(wstr);
+                bRes = gameServices().isFileInMemoryTextures(wstr);
                 if (!bRes) {
                 }
 
                 if (bRes) {
-                    GameServices::addMemoryTextureFile(wstr, pBuffer, dwSize);
+                    gameServices().addMemoryTextureFile(wstr, pBuffer, dwSize);
                 }
             }
 
@@ -332,25 +329,25 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
             if (pMojangData->wchCape[0] != 0L) {
                 std::wstring wstr = pMojangData->wchCape;
                 // check the file is not already in
-                bRes = GameServices::isFileInMemoryTextures(wstr);
+                bRes = gameServices().isFileInMemoryTextures(wstr);
                 if (!bRes) {
                 }
 
                 if (bRes) {
-                    GameServices::addMemoryTextureFile(wstr, pBuffer, dwSize);
+                    gameServices().addMemoryTextureFile(wstr, pBuffer, dwSize);
                 }
             }
         }
 
         // If we're online, read the banned game list
-        GameServices::readBannedList(iUserID);
+        gameServices().readBannedList(iUserID);
         // mark the level as not checked against banned levels - it'll be
         // checked once the level starts
-        GameServices::setBanListCheck(iUserID, false);
+        gameServices().setBanListCheck(iUserID, false);
     }
 
     if (m_userIndex == InputManager.GetPrimaryPad()) {
-        if (GameServices::getTutorialMode()) {
+        if (gameServices().getTutorialMode()) {
             minecraft->gameMode = new FullTutorialMode(
                 InputManager.GetPrimaryPad(), minecraft, this);
         } else {
@@ -387,8 +384,8 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         }
 
         minecraft->player->setPlayerIndex(packet->m_playerIndex);
-        minecraft->player->setCustomSkin(GameServices::getPlayerSkinId(m_userIndex));
-        minecraft->player->setCustomCape(GameServices::getPlayerCapeId(m_userIndex));
+        minecraft->player->setCustomSkin(gameServices().getPlayerSkinId(m_userIndex));
+        minecraft->player->setCustomCape(gameServices().getPlayerCapeId(m_userIndex));
 
         minecraft->createPrimaryLocalPlayer(InputManager.GetPrimaryPad());
 
@@ -397,7 +394,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         minecraft->player->entityId = packet->clientVersion;
 
         std::uint8_t networkSmallId = getSocket()->getSmallId();
-        GameServices::updatePlayerInfo(networkSmallId, packet->m_playerIndex,
+        gameServices().updatePlayerInfo(networkSmallId, packet->m_playerIndex,
                              packet->m_uiGamePrivileges);
         minecraft->player->setPlayerGamePrivilege(
             Player::ePlayerGamePrivilege_All, packet->m_uiGamePrivileges);
@@ -415,8 +412,8 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         displayPrivilegeChanges(minecraft->player, startingPrivileges);
 
         // update the debugoptions
-        GameServices::setGameSettingsDebugMask(InputManager.GetPrimaryPad(),
-                                     DebugSettings::getMask(-1, true));
+        gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),
+                                     gameServices().debugGetMask(-1, true));
     } else {
         // 4J-PB - this isn't the level we want
         // level = (MultiPlayerLevel *)minecraft->level;
@@ -474,11 +471,11 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         player->entityId = packet->clientVersion;
 
         player->setPlayerIndex(packet->m_playerIndex);
-        player->setCustomSkin(GameServices::getPlayerSkinId(m_userIndex));
-        player->setCustomCape(GameServices::getPlayerCapeId(m_userIndex));
+        player->setCustomSkin(gameServices().getPlayerSkinId(m_userIndex));
+        player->setCustomCape(gameServices().getPlayerCapeId(m_userIndex));
 
         std::uint8_t networkSmallId = getSocket()->getSmallId();
-        GameServices::updatePlayerInfo(networkSmallId, packet->m_playerIndex,
+        gameServices().updatePlayerInfo(networkSmallId, packet->m_playerIndex,
                              packet->m_uiGamePrivileges);
         player->setPlayerGamePrivilege(Player::ePlayerGamePrivilege_All,
                                        packet->m_uiGamePrivileges);
@@ -923,7 +920,7 @@ void ClientConnection::handleAddPlayer(
 
     if (!player->customTextureUrl.empty() &&
         player->customTextureUrl.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(player->customTextureUrl)) {
+        !gameServices().isFileInMemoryTextures(player->customTextureUrl)) {
         if (minecraft->addPendingClientTextureRequest(
                 player->customTextureUrl)) {
             Log::info(
@@ -936,9 +933,9 @@ void ClientConnection::handleAddPlayer(
                                              0)));
         }
     } else if (!player->customTextureUrl.empty() &&
-               GameServices::isFileInMemoryTextures(player->customTextureUrl)) {
+               gameServices().isFileInMemoryTextures(player->customTextureUrl)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(player->customTextureUrl, nullptr, 0);
+        gameServices().addMemoryTextureFile(player->customTextureUrl, nullptr, 0);
     }
 
     Log::info("Custom skin for player %ls is %ls\n", player->name.c_str(),
@@ -946,7 +943,7 @@ void ClientConnection::handleAddPlayer(
 
     if (!player->customTextureUrl2.empty() &&
         player->customTextureUrl2.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(player->customTextureUrl2)) {
+        !gameServices().isFileInMemoryTextures(player->customTextureUrl2)) {
         if (minecraft->addPendingClientTextureRequest(
                 player->customTextureUrl2)) {
             Log::info(
@@ -957,9 +954,9 @@ void ClientConnection::handleAddPlayer(
                 new TexturePacket(player->customTextureUrl2, nullptr, 0)));
         }
     } else if (!player->customTextureUrl2.empty() &&
-               GameServices::isFileInMemoryTextures(player->customTextureUrl2)) {
+               gameServices().isFileInMemoryTextures(player->customTextureUrl2)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
+        gameServices().addMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
     }
 
     Log::info("Custom cape for player %ls is %ls\n", player->name.c_str(),
@@ -1119,7 +1116,7 @@ void ClientConnection::handleMovePlayer(
         // Minecraft::createExtraLocalPlayer 4J-PB - can't call this when this
         // function is called from the qnet thread (GetGameStarted will be
         // false)
-        if (GameServices::getGameStarted()) {
+        if (gameServices().getGameStarted()) {
             ui.CloseUIScenes(m_userIndex);
         }
     }
@@ -1342,9 +1339,9 @@ void ClientConnection::handleDisconnect(
 
     Minecraft* pMinecraft = Minecraft::GetInstance();
     pMinecraft->connectionDisconnected(m_userIndex, packet->reason);
-    GameServices::setDisconnectReason(packet->reason);
+    gameServices().setDisconnectReason(packet->reason);
 
-    GameServices::setAction(m_userIndex, eAppAction_ExitWorld, (void*)true);
+    gameServices().setAction(m_userIndex, eAppAction_ExitWorld, (void*)true);
     // minecraft->setLevel(nullptr);
     // minecraft->setScreen(new DisconnectedScreen(L"disconnect.disconnected",
     // L"disconnect.genericReason", &packet->reason));
@@ -1374,7 +1371,7 @@ void ClientConnection::onDisconnect(DisconnectPacket::eDisconnectReason reason,
                                &ClientConnection::HostDisconnectReturned,
                                nullptr);
     } else {
-        GameServices::setAction(m_userIndex, eAppAction_ExitWorld, (void*)true);
+        gameServices().setAction(m_userIndex, eAppAction_ExitWorld, (void*)true);
     }
 
     // minecraft->setLevel(nullptr);
@@ -1499,327 +1496,327 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
 
     switch (packet->m_messageType) {
         case ChatPacket::e_ChatBedOccupied:
-            message = Strings::get(IDS_TILE_BED_OCCUPIED);
+            message = gameServices().getString(IDS_TILE_BED_OCCUPIED);
             break;
         case ChatPacket::e_ChatBedNoSleep:
-            message = Strings::get(IDS_TILE_BED_NO_SLEEP);
+            message = gameServices().getString(IDS_TILE_BED_NO_SLEEP);
             break;
         case ChatPacket::e_ChatBedNotValid:
-            message = Strings::get(IDS_TILE_BED_NOT_VALID);
+            message = gameServices().getString(IDS_TILE_BED_NOT_VALID);
             break;
         case ChatPacket::e_ChatBedNotSafe:
-            message = Strings::get(IDS_TILE_BED_NOTSAFE);
+            message = gameServices().getString(IDS_TILE_BED_NOTSAFE);
             break;
         case ChatPacket::e_ChatBedPlayerSleep:
-            message = Strings::get(IDS_TILE_BED_PLAYERSLEEP);
+            message = gameServices().getString(IDS_TILE_BED_PLAYERSLEEP);
             iPos = message.find(L"%s");
             message.replace(iPos, 2, playerDisplayName);
             break;
         case ChatPacket::e_ChatBedMeSleep:
-            message = Strings::get(IDS_TILE_BED_MESLEEP);
+            message = gameServices().getString(IDS_TILE_BED_MESLEEP);
             break;
         case ChatPacket::e_ChatPlayerJoinedGame:
-            message = Strings::get(IDS_PLAYER_JOINED);
+            message = gameServices().getString(IDS_PLAYER_JOINED);
             iPos = message.find(L"%s");
             message.replace(iPos, 2, playerDisplayName);
             break;
         case ChatPacket::e_ChatPlayerLeftGame:
-            message = Strings::get(IDS_PLAYER_LEFT);
+            message = gameServices().getString(IDS_PLAYER_LEFT);
             iPos = message.find(L"%s");
             message.replace(iPos, 2, playerDisplayName);
             break;
         case ChatPacket::e_ChatPlayerKickedFromGame:
-            message = Strings::get(IDS_PLAYER_KICKED);
+            message = gameServices().getString(IDS_PLAYER_KICKED);
             iPos = message.find(L"%s");
             message.replace(iPos, 2, playerDisplayName);
             break;
         case ChatPacket::e_ChatCannotPlaceLava:
             displayOnGui = false;
-            GameServices::setGlobalXuiAction(eAppAction_DisplayLavaMessage);
+            gameServices().setGlobalXuiAction(eAppAction_DisplayLavaMessage);
             break;
         case ChatPacket::e_ChatDeathInFire:
-            message = Strings::get(IDS_DEATH_INFIRE);
+            message = gameServices().getString(IDS_DEATH_INFIRE);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathOnFire:
-            message = Strings::get(IDS_DEATH_ONFIRE);
+            message = gameServices().getString(IDS_DEATH_ONFIRE);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathLava:
-            message = Strings::get(IDS_DEATH_LAVA);
+            message = gameServices().getString(IDS_DEATH_LAVA);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathInWall:
-            message = Strings::get(IDS_DEATH_INWALL);
+            message = gameServices().getString(IDS_DEATH_INWALL);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathDrown:
-            message = Strings::get(IDS_DEATH_DROWN);
+            message = gameServices().getString(IDS_DEATH_DROWN);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathStarve:
-            message = Strings::get(IDS_DEATH_STARVE);
+            message = gameServices().getString(IDS_DEATH_STARVE);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathCactus:
-            message = Strings::get(IDS_DEATH_CACTUS);
+            message = gameServices().getString(IDS_DEATH_CACTUS);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFall:
-            message = Strings::get(IDS_DEATH_FALL);
+            message = gameServices().getString(IDS_DEATH_FALL);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathOutOfWorld:
-            message = Strings::get(IDS_DEATH_OUTOFWORLD);
+            message = gameServices().getString(IDS_DEATH_OUTOFWORLD);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathGeneric:
-            message = Strings::get(IDS_DEATH_GENERIC);
+            message = gameServices().getString(IDS_DEATH_GENERIC);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathExplosion:
-            message = Strings::get(IDS_DEATH_EXPLOSION);
+            message = gameServices().getString(IDS_DEATH_EXPLOSION);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathMagic:
-            message = Strings::get(IDS_DEATH_MAGIC);
+            message = gameServices().getString(IDS_DEATH_MAGIC);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathAnvil:
-            message = Strings::get(IDS_DEATH_FALLING_ANVIL);
+            message = gameServices().getString(IDS_DEATH_FALLING_ANVIL);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFallingBlock:
-            message = Strings::get(IDS_DEATH_FALLING_TILE);
+            message = gameServices().getString(IDS_DEATH_FALLING_TILE);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathDragonBreath:
-            message = Strings::get(IDS_DEATH_DRAGON_BREATH);
+            message = gameServices().getString(IDS_DEATH_DRAGON_BREATH);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathMob:
-            message = Strings::get(IDS_DEATH_MOB);
+            message = gameServices().getString(IDS_DEATH_MOB);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathPlayer:
-            message = Strings::get(IDS_DEATH_PLAYER);
+            message = gameServices().getString(IDS_DEATH_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathArrow:
-            message = Strings::get(IDS_DEATH_ARROW);
+            message = gameServices().getString(IDS_DEATH_ARROW);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathFireball:
-            message = Strings::get(IDS_DEATH_FIREBALL);
+            message = gameServices().getString(IDS_DEATH_FIREBALL);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathThrown:
-            message = Strings::get(IDS_DEATH_THROWN);
+            message = gameServices().getString(IDS_DEATH_THROWN);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathIndirectMagic:
-            message = Strings::get(IDS_DEATH_INDIRECT_MAGIC);
+            message = gameServices().getString(IDS_DEATH_INDIRECT_MAGIC);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathThorns:
-            message = Strings::get(IDS_DEATH_THORNS);
+            message = gameServices().getString(IDS_DEATH_THORNS);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
 
         case ChatPacket::e_ChatDeathFellAccidentLadder:
-            message = Strings::get(IDS_DEATH_FELL_ACCIDENT_LADDER);
+            message = gameServices().getString(IDS_DEATH_FELL_ACCIDENT_LADDER);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFellAccidentVines:
-            message = Strings::get(IDS_DEATH_FELL_ACCIDENT_VINES);
+            message = gameServices().getString(IDS_DEATH_FELL_ACCIDENT_VINES);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFellAccidentWater:
-            message = Strings::get(IDS_DEATH_FELL_ACCIDENT_WATER);
+            message = gameServices().getString(IDS_DEATH_FELL_ACCIDENT_WATER);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFellAccidentGeneric:
-            message = Strings::get(IDS_DEATH_FELL_ACCIDENT_GENERIC);
+            message = gameServices().getString(IDS_DEATH_FELL_ACCIDENT_GENERIC);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFellKiller:
-            // message=Strings::get(IDS_DEATH_FELL_KILLER);
+            // message=gameServices().getString(IDS_DEATH_FELL_KILLER);
             // replacePlayer = true;
             // replaceEntitySource = true;
 
             // 4J Stu - The correct string for here, IDS_DEATH_FELL_KILLER is
             // incorrect. We can't change localisation, so use a different
             // string for now
-            message = Strings::get(IDS_DEATH_FALL);
+            message = gameServices().getString(IDS_DEATH_FALL);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathFellAssist:
-            message = Strings::get(IDS_DEATH_FELL_ASSIST);
+            message = gameServices().getString(IDS_DEATH_FELL_ASSIST);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathFellAssistItem:
-            message = Strings::get(IDS_DEATH_FELL_ASSIST_ITEM);
+            message = gameServices().getString(IDS_DEATH_FELL_ASSIST_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
         case ChatPacket::e_ChatDeathFellFinish:
-            message = Strings::get(IDS_DEATH_FELL_FINISH);
+            message = gameServices().getString(IDS_DEATH_FELL_FINISH);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathFellFinishItem:
-            message = Strings::get(IDS_DEATH_FELL_FINISH_ITEM);
+            message = gameServices().getString(IDS_DEATH_FELL_FINISH_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
         case ChatPacket::e_ChatDeathInFirePlayer:
-            message = Strings::get(IDS_DEATH_INFIRE_PLAYER);
+            message = gameServices().getString(IDS_DEATH_INFIRE_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathOnFirePlayer:
-            message = Strings::get(IDS_DEATH_ONFIRE_PLAYER);
+            message = gameServices().getString(IDS_DEATH_ONFIRE_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathLavaPlayer:
-            message = Strings::get(IDS_DEATH_LAVA_PLAYER);
+            message = gameServices().getString(IDS_DEATH_LAVA_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathDrownPlayer:
-            message = Strings::get(IDS_DEATH_DROWN_PLAYER);
+            message = gameServices().getString(IDS_DEATH_DROWN_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathCactusPlayer:
-            message = Strings::get(IDS_DEATH_CACTUS_PLAYER);
+            message = gameServices().getString(IDS_DEATH_CACTUS_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathExplosionPlayer:
-            message = Strings::get(IDS_DEATH_EXPLOSION_PLAYER);
+            message = gameServices().getString(IDS_DEATH_EXPLOSION_PLAYER);
             replacePlayer = true;
             replaceEntitySource = true;
             break;
         case ChatPacket::e_ChatDeathWither:
-            message = Strings::get(IDS_DEATH_WITHER);
+            message = gameServices().getString(IDS_DEATH_WITHER);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatDeathPlayerItem:
-            message = Strings::get(IDS_DEATH_PLAYER_ITEM);
+            message = gameServices().getString(IDS_DEATH_PLAYER_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
         case ChatPacket::e_ChatDeathArrowItem:
-            message = Strings::get(IDS_DEATH_ARROW_ITEM);
+            message = gameServices().getString(IDS_DEATH_ARROW_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
         case ChatPacket::e_ChatDeathFireballItem:
-            message = Strings::get(IDS_DEATH_FIREBALL_ITEM);
+            message = gameServices().getString(IDS_DEATH_FIREBALL_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
         case ChatPacket::e_ChatDeathThrownItem:
-            message = Strings::get(IDS_DEATH_THROWN_ITEM);
+            message = gameServices().getString(IDS_DEATH_THROWN_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
         case ChatPacket::e_ChatDeathIndirectMagicItem:
-            message = Strings::get(IDS_DEATH_INDIRECT_MAGIC_ITEM);
+            message = gameServices().getString(IDS_DEATH_INDIRECT_MAGIC_ITEM);
             replacePlayer = true;
             replaceEntitySource = true;
             replaceItem = true;
             break;
 
         case ChatPacket::e_ChatPlayerEnteredEnd:
-            message = Strings::get(IDS_PLAYER_ENTERED_END);
+            message = gameServices().getString(IDS_PLAYER_ENTERED_END);
             iPos = message.find(L"%s");
             message.replace(iPos, 2, playerDisplayName);
             break;
         case ChatPacket::e_ChatPlayerLeftEnd:
-            message = Strings::get(IDS_PLAYER_LEFT_END);
+            message = gameServices().getString(IDS_PLAYER_LEFT_END);
             iPos = message.find(L"%s");
             message.replace(iPos, 2, playerDisplayName);
             break;
 
         case ChatPacket::e_ChatPlayerMaxEnemies:
-            message = Strings::get(IDS_MAX_ENEMIES_SPAWNED);
+            message = gameServices().getString(IDS_MAX_ENEMIES_SPAWNED);
             break;
             // Spawn eggs
         case ChatPacket::e_ChatPlayerMaxVillagers:
-            message = Strings::get(IDS_MAX_VILLAGERS_SPAWNED);
+            message = gameServices().getString(IDS_MAX_VILLAGERS_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxPigsSheepCows:
-            message = Strings::get(IDS_MAX_PIGS_SHEEP_COWS_CATS_SPAWNED);
+            message = gameServices().getString(IDS_MAX_PIGS_SHEEP_COWS_CATS_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxChickens:
-            message = Strings::get(IDS_MAX_CHICKENS_SPAWNED);
+            message = gameServices().getString(IDS_MAX_CHICKENS_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxSquid:
-            message = Strings::get(IDS_MAX_SQUID_SPAWNED);
+            message = gameServices().getString(IDS_MAX_SQUID_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxMooshrooms:
-            message = Strings::get(IDS_MAX_MOOSHROOMS_SPAWNED);
+            message = gameServices().getString(IDS_MAX_MOOSHROOMS_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxWolves:
-            message = Strings::get(IDS_MAX_WOLVES_SPAWNED);
+            message = gameServices().getString(IDS_MAX_WOLVES_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxBats:
-            message = Strings::get(IDS_MAX_BATS_SPAWNED);
+            message = gameServices().getString(IDS_MAX_BATS_SPAWNED);
             break;
 
             // Breeding
         case ChatPacket::e_ChatPlayerMaxBredPigsSheepCows:
-            message = Strings::get(IDS_MAX_PIGS_SHEEP_COWS_CATS_BRED);
+            message = gameServices().getString(IDS_MAX_PIGS_SHEEP_COWS_CATS_BRED);
             break;
         case ChatPacket::e_ChatPlayerMaxBredChickens:
-            message = Strings::get(IDS_MAX_CHICKENS_BRED);
+            message = gameServices().getString(IDS_MAX_CHICKENS_BRED);
             break;
         case ChatPacket::e_ChatPlayerMaxBredMooshrooms:
-            message = Strings::get(IDS_MAX_MUSHROOMCOWS_BRED);
+            message = gameServices().getString(IDS_MAX_MUSHROOMCOWS_BRED);
             break;
 
         case ChatPacket::e_ChatPlayerMaxBredWolves:
-            message = Strings::get(IDS_MAX_WOLVES_BRED);
+            message = gameServices().getString(IDS_MAX_WOLVES_BRED);
             break;
 
             // can't shear the mooshroom
         case ChatPacket::e_ChatPlayerCantShearMooshroom:
-            message = Strings::get(IDS_CANT_SHEAR_MOOSHROOM);
+            message = gameServices().getString(IDS_CANT_SHEAR_MOOSHROOM);
             break;
 
             // Paintings/Item Frames
         case ChatPacket::e_ChatPlayerMaxHangingEntities:
-            message = Strings::get(IDS_MAX_HANGINGENTITIES);
+            message = gameServices().getString(IDS_MAX_HANGINGENTITIES);
             break;
             // Enemy spawn eggs in peaceful
         case ChatPacket::e_ChatPlayerCantSpawnInPeaceful:
-            message = Strings::get(IDS_CANT_SPAWN_IN_PEACEFUL);
+            message = gameServices().getString(IDS_CANT_SPAWN_IN_PEACEFUL);
             break;
 
             // Enemy spawn eggs in peaceful
         case ChatPacket::e_ChatPlayerMaxBoats:
-            message = Strings::get(IDS_MAX_BOATS);
+            message = gameServices().getString(IDS_MAX_BOATS);
             break;
 
         case ChatPacket::e_ChatCommandTeleportSuccess:
-            message = Strings::get(IDS_COMMAND_TELEPORT_SUCCESS);
+            message = gameServices().getString(IDS_COMMAND_TELEPORT_SUCCESS);
             replacePlayer = true;
             if (packet->m_intArgs[0] == eTYPE_SERVERPLAYER) {
                 message =
@@ -1827,15 +1824,15 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
             } else {
                 message = replaceAll(
                     message, L"{*DESTINATION*}",
-                    GameServices::getEntityName((EntityTypeId)packet->m_intArgs[0]));
+                    gameServices().getEntityName((EntityTypeId)packet->m_intArgs[0]));
             }
             break;
         case ChatPacket::e_ChatCommandTeleportMe:
-            message = Strings::get(IDS_COMMAND_TELEPORT_ME);
+            message = gameServices().getString(IDS_COMMAND_TELEPORT_ME);
             replacePlayer = true;
             break;
         case ChatPacket::e_ChatCommandTeleportToMe:
-            message = Strings::get(IDS_COMMAND_TELEPORT_TO_ME);
+            message = gameServices().getString(IDS_COMMAND_TELEPORT_TO_ME);
             replacePlayer = true;
             break;
 
@@ -1860,7 +1857,7 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
                 entityName = packet->m_stringArgs[1];
             } else {
                 entityName =
-                    GameServices::getEntityName((EntityTypeId)packet->m_intArgs[0]);
+                    gameServices().getEntityName((EntityTypeId)packet->m_intArgs[0]);
             }
 
             message = replaceAll(message, L"{*SOURCE*}", entityName);
@@ -1934,12 +1931,12 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
 
     if (!g_NetworkManager.IsHost()) {
         // set the game host settings
-        GameHostOptions::set(eGameHostOption_All, packet->m_serverSettings);
+        gameServices().setGameHostOption(eGameHostOption_All, packet->m_serverSettings);
 
         // 4J-PB - if we go straight in from the menus via an invite, we won't
         // have the DLC info
-        if (GameServices::getTMSGlobalFileListRead() == false) {
-            GameServices::setTMSAction(InputManager.GetPrimaryPad(),
+        if (gameServices().getTMSGlobalFileListRead() == false) {
+            gameServices().setTMSAction(InputManager.GetPrimaryPad(),
                              eTMSAction_TMSPP_RetrieveFiles_RunPlayGame);
         }
     }
@@ -1969,8 +1966,8 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
                 "Exiting world on handling Pre-Login packet due UGC "
                 "privileges: %d\n",
                 reason);
-            GameServices::setDisconnectReason(reason);
-            GameServices::setAction(InputManager.GetPrimaryPad(), eAppAction_ExitWorld,
+            gameServices().setDisconnectReason(reason);
+            gameServices().setAction(InputManager.GetPrimaryPad(), eAppAction_ExitWorld,
                           (void*)true);
         } else {
             if (!isFriendsWithHost)
@@ -1997,7 +1994,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
                     IDS_NO_USER_CREATED_CONTENT_PRIVILEGE_SINGLE_LOCAL, uiIDA,
                     1, m_userIndex);
 
-            GameServices::setDisconnectReason(reason);
+            gameServices().setDisconnectReason(reason);
 
             // 4J-PB - this locks up on the read and write threads not closing
             // down, because they are trying to lock the incoming critsec when
@@ -2005,10 +2002,10 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
             // 			Minecraft::GetInstance()->connectionDisconnected(
             // m_userIndex , reason ); 			done = true;
             // connection->flush(); connection->close(reason);
-            //			GameServices::setAction(m_userIndex,eAppAction_ExitPlayer);
+            //			gameServices().setAction(m_userIndex,eAppAction_ExitPlayer);
 
             // 4J-PB - doing this instead
-            GameServices::setAction(m_userIndex, eAppAction_ExitPlayerPreLogin);
+            gameServices().setAction(m_userIndex, eAppAction_ExitPlayerPreLogin);
         }
     } else {
         // Texture pack handling
@@ -2069,8 +2066,8 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
         send(std::make_shared<LoginPacket>(
             minecraft->user->name, SharedConstants::NETWORK_PROTOCOL_VERSION,
             offlineXUID, onlineXUID, (!allAllowed && friendsAllowed),
-            packet->m_ugcPlayersVersion, GameServices::getPlayerSkinId(m_userIndex),
-            GameServices::getPlayerCapeId(m_userIndex),
+            packet->m_ugcPlayersVersion, gameServices().getPlayerSkinId(m_userIndex),
+            gameServices().getPlayerCapeId(m_userIndex),
             ProfileManager.IsGuest(m_userIndex)));
         fprintf(stderr, "[LOGIN] LoginPacket sent successfully\n");
 
@@ -2271,7 +2268,7 @@ void ClientConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        GameServices::getMemFileDetails(packet->textureName, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwBytes);
 
         if (dwBytes != 0) {
             send(std::shared_ptr<TexturePacket>(
@@ -2283,7 +2280,7 @@ void ClientConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
         wprintf(L"Client received custom texture %ls\n",
                 packet->textureName.c_str());
 #endif
-        GameServices::addMemoryTextureFile(packet->textureName, packet->pbData,
+        gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
                                  packet->dataBytes);
         Minecraft::GetInstance()->handleClientTextureReceived(
             packet->textureName);
@@ -2306,9 +2303,9 @@ void ClientConnection::handleTextureAndGeometry(
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        GameServices::getMemFileDetails(packet->textureName, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwBytes);
         DLCSkinFile* pDLCSkinFile =
-            GameServices::getDLCManager().getSkinFile(packet->textureName);
+            gameServices().getDLCSkinFile(packet->textureName);
 
         if (dwBytes != 0) {
             if (pDLCSkinFile) {
@@ -2324,12 +2321,12 @@ void ClientConnection::handleTextureAndGeometry(
                 }
             } else {
                 unsigned int uiAnimOverrideBitmask =
-                    GameServices::getAnimOverrideBitmask(packet->dwSkinID);
+                    gameServices().getAnimOverrideBitmask(packet->dwSkinID);
 
                 send(std::shared_ptr<TextureAndGeometryPacket>(
                     new TextureAndGeometryPacket(
                         packet->textureName, pbData, dwBytes,
-                        GameServices::getAdditionalSkinBoxes(packet->dwSkinID),
+                        gameServices().getAdditionalSkinBoxes(packet->dwSkinID),
                         uiAnimOverrideBitmask)));
             }
         }
@@ -2340,15 +2337,15 @@ void ClientConnection::handleTextureAndGeometry(
                 packet->textureName.c_str());
 #endif
         // Add the texture data
-        GameServices::addMemoryTextureFile(packet->textureName, packet->pbData,
+        gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
                                  packet->dwTextureBytes);
         // Add the geometry data
         if (packet->dwBoxC != 0) {
-            GameServices::setAdditionalSkinBoxes(packet->dwSkinID, packet->BoxDataA,
+            gameServices().setAdditionalSkinBoxes(packet->dwSkinID, packet->BoxDataA,
                                        packet->dwBoxC);
         }
         // Add the anim override
-        GameServices::setAnimOverrideBitmask(packet->dwSkinID,
+        gameServices().setAnimOverrideBitmask(packet->dwSkinID,
                                    packet->uiAnimOverrideBitmask);
 
         // clear out the pending texture request
@@ -2376,7 +2373,7 @@ void ClientConnection::handleTextureChange(
 
     switch (packet->action) {
         case TextureChangePacket::e_TextureChange_Skin:
-            player->setCustomSkin(GameServices::getSkinIdFromPath(packet->path));
+            player->setCustomSkin(gameServices().getSkinIdFromPath(packet->path));
 #if !defined(_CONTENT_PACKAGE)
             wprintf(L"Skin for remote player %ls has changed to %ls (%d)\n",
                     player->name.c_str(), player->customTextureUrl.c_str(),
@@ -2395,7 +2392,7 @@ void ClientConnection::handleTextureChange(
 
     if (!packet->path.empty() &&
         packet->path.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(packet->path)) {
+        !gameServices().isFileInMemoryTextures(packet->path)) {
         if (minecraft->addPendingClientTextureRequest(packet->path)) {
 #if !defined(_CONTENT_PACKAGE)
             wprintf(
@@ -2407,9 +2404,9 @@ void ClientConnection::handleTextureChange(
                 new TexturePacket(packet->path, nullptr, 0)));
         }
     } else if (!packet->path.empty() &&
-               GameServices::isFileInMemoryTextures(packet->path)) {
+               gameServices().isFileInMemoryTextures(packet->path)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(packet->path, nullptr, 0);
+        gameServices().addMemoryTextureFile(packet->path, nullptr, 0);
     }
 }
 
@@ -2431,7 +2428,7 @@ void ClientConnection::handleTextureAndGeometryChange(
     }
     if (isLocalPlayer) return;
 
-    player->setCustomSkin(GameServices::getSkinIdFromPath(packet->path));
+    player->setCustomSkin(gameServices().getSkinIdFromPath(packet->path));
 
 #if !defined(_CONTENT_PACKAGE)
     wprintf(L"Skin for remote player %ls has changed to %ls (%d)\n",
@@ -2441,7 +2438,7 @@ void ClientConnection::handleTextureAndGeometryChange(
 
     if (!packet->path.empty() &&
         packet->path.substr(0, 3).compare(L"def") != 0 &&
-        !GameServices::isFileInMemoryTextures(packet->path)) {
+        !gameServices().isFileInMemoryTextures(packet->path)) {
         if (minecraft->addPendingClientTextureRequest(packet->path)) {
 #if !defined(_CONTENT_PACKAGE)
             wprintf(
@@ -2454,9 +2451,9 @@ void ClientConnection::handleTextureAndGeometryChange(
                 new TextureAndGeometryPacket(packet->path, nullptr, 0)));
         }
     } else if (!packet->path.empty() &&
-               GameServices::isFileInMemoryTextures(packet->path)) {
+               gameServices().isFileInMemoryTextures(packet->path)) {
         // Update the ref count on the memory texture data
-        GameServices::addMemoryTextureFile(packet->path, nullptr, 0);
+        gameServices().addMemoryTextureFile(packet->path, nullptr, 0);
     }
 }
 
@@ -2548,13 +2545,13 @@ void ClientConnection::handleRespawn(std::shared_ptr<RespawnPacket> packet) {
         // with the inventory menu open
         ui.CloseUIScenes(m_userIndex);
 
-        if (GameServices::getLocalPlayerCount() > 1) {
+        if (gameServices().getLocalPlayerCount() > 1) {
             ui.NavigateToScene(m_userIndex, eUIScene_ConnectingProgress, param);
         } else {
             ui.NavigateToScene(m_userIndex, eUIScene_ConnectingProgress, param);
         }
 
-        GameServices::setAction(m_userIndex, eAppAction_WaitForDimensionChangeComplete);
+        gameServices().setAction(m_userIndex, eAppAction_WaitForDimensionChangeComplete);
     }
 
     // minecraft->respawnPlayer(minecraft->player->GetXboxPad(),true,
@@ -3023,12 +3020,12 @@ void ClientConnection::handleGameEvent(
             // Move app started to here so that it happens immediately otherwise
             // back-to-back START/STOP packets leave the client stuck in the
             // loading screen
-            GameServices::setGameStarted(false);
-            GameServices::setAction(InputManager.GetPrimaryPad(),
+            gameServices().setGameStarted(false);
+            gameServices().setAction(InputManager.GetPrimaryPad(),
                           eAppAction_RemoteServerSave);
         }
     } else if (event == GameEventPacket::STOP_SAVING) {
-        if (!g_NetworkManager.IsHost()) GameServices::setGameStarted(true);
+        if (!g_NetworkManager.IsHost()) gameServices().setGameStarted(true);
     } else if (event == GameEventPacket::SUCCESSFUL_BOW_HIT) {
         std::shared_ptr<MultiplayerLocalPlayer> player =
             minecraft->localplayers[m_userIndex];
@@ -3111,7 +3108,7 @@ bool ClientConnection::isServerPacketListener() { return false; }
 void ClientConnection::handlePlayerInfo(
     std::shared_ptr<PlayerInfoPacket> packet) {
     unsigned int startingPrivileges =
-        GameServices::getPlayerPrivileges(packet->m_networkSmallId);
+        gameServices().getPlayerPrivileges(packet->m_networkSmallId);
 
     INetworkPlayer* networkPlayer =
         g_NetworkManager.GetPlayerBySmallId(packet->m_networkSmallId);
@@ -3124,7 +3121,7 @@ void ClientConnection::handlePlayerInfo(
     }
 
     // 4J Stu - Repurposed this packet for player info that we want
-    GameServices::updatePlayerInfo(packet->m_networkSmallId, packet->m_playerColourIndex,
+    gameServices().updatePlayerInfo(packet->m_networkSmallId, packet->m_playerColourIndex,
                          packet->m_playerPrivileges);
 
     std::shared_ptr<Entity> entity = getEntity(packet->m_entityId);
@@ -3166,58 +3163,58 @@ void ClientConnection::displayPrivilegeChanges(
             Player::getPlayerGamePrivilege(oldPrivileges, priv)) {
             privOn = Player::getPlayerGamePrivilege(newPrivileges, priv);
             std::wstring message = L"";
-            if (GameHostOptions::get(eGameHostOption_TrustPlayers) == 0) {
+            if (gameServices().getGameHostOption(eGameHostOption_TrustPlayers) == 0) {
                 switch (priv) {
                     case Player::ePlayerGamePrivilege_CannotMine:
                         if (privOn)
-                            message = Strings::get(IDS_PRIV_MINE_TOGGLE_ON);
+                            message = gameServices().getString(IDS_PRIV_MINE_TOGGLE_ON);
                         else
-                            message = Strings::get(IDS_PRIV_MINE_TOGGLE_OFF);
+                            message = gameServices().getString(IDS_PRIV_MINE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotBuild:
                         if (privOn)
-                            message = Strings::get(IDS_PRIV_BUILD_TOGGLE_ON);
+                            message = gameServices().getString(IDS_PRIV_BUILD_TOGGLE_ON);
                         else
-                            message = Strings::get(IDS_PRIV_BUILD_TOGGLE_OFF);
+                            message = gameServices().getString(IDS_PRIV_BUILD_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanUseDoorsAndSwitches:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_USE_DOORS_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_USE_DOORS_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_USE_DOORS_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_USE_DOORS_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanUseContainers:
                         if (privOn)
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_USE_CONTAINERS_TOGGLE_ON);
                         else
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_USE_CONTAINERS_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotAttackAnimals:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_ATTACK_ANIMAL_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_ATTACK_ANIMAL_TOGGLE_ON);
                         else
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_ATTACK_ANIMAL_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotAttackMobs:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_ATTACK_MOB_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_ATTACK_MOB_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_ATTACK_MOB_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_ATTACK_MOB_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotAttackPlayers:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_ATTACK_PLAYER_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_ATTACK_PLAYER_TOGGLE_ON);
                         else
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_ATTACK_PLAYER_TOGGLE_OFF);
                         break;
                     default:
@@ -3227,75 +3224,75 @@ void ClientConnection::displayPrivilegeChanges(
             switch (priv) {
                 case Player::ePlayerGamePrivilege_Op:
                     if (privOn)
-                        message = Strings::get(IDS_PRIV_MODERATOR_TOGGLE_ON);
+                        message = gameServices().getString(IDS_PRIV_MODERATOR_TOGGLE_ON);
                     else
-                        message = Strings::get(IDS_PRIV_MODERATOR_TOGGLE_OFF);
+                        message = gameServices().getString(IDS_PRIV_MODERATOR_TOGGLE_OFF);
                     break;
                 default:
                     break;
             };
-            if (GameHostOptions::get(eGameHostOption_CheatsEnabled) != 0) {
+            if (gameServices().getGameHostOption(eGameHostOption_CheatsEnabled) != 0) {
                 switch (priv) {
                     case Player::ePlayerGamePrivilege_CanFly:
                         if (privOn)
-                            message = Strings::get(IDS_PRIV_FLY_TOGGLE_ON);
+                            message = gameServices().getString(IDS_PRIV_FLY_TOGGLE_ON);
                         else
-                            message = Strings::get(IDS_PRIV_FLY_TOGGLE_OFF);
+                            message = gameServices().getString(IDS_PRIV_FLY_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_ClassicHunger:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_EXHAUSTION_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_EXHAUSTION_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_EXHAUSTION_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_EXHAUSTION_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_Invisible:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_INVISIBLE_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_INVISIBLE_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_INVISIBLE_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_INVISIBLE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_Invulnerable:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_INVULNERABLE_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_INVULNERABLE_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_INVULNERABLE_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_INVULNERABLE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanToggleInvisible:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_CAN_INVISIBLE_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_CAN_INVISIBLE_TOGGLE_ON);
                         else
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_CAN_INVISIBLE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanToggleFly:
                         if (privOn)
-                            message = Strings::get(IDS_PRIV_CAN_FLY_TOGGLE_ON);
+                            message = gameServices().getString(IDS_PRIV_CAN_FLY_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_CAN_FLY_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_CAN_FLY_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanToggleClassicHunger:
                         if (privOn)
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_CAN_EXHAUSTION_TOGGLE_ON);
                         else
-                            message = Strings::get(
+                            message = gameServices().getString(
                                 IDS_PRIV_CAN_EXHAUSTION_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanTeleport:
                         if (privOn)
                             message =
-                                Strings::get(IDS_PRIV_CAN_TELEPORT_TOGGLE_ON);
+                                gameServices().getString(IDS_PRIV_CAN_TELEPORT_TOGGLE_ON);
                         else
                             message =
-                                Strings::get(IDS_PRIV_CAN_TELEPORT_TOGGLE_OFF);
+                                gameServices().getString(IDS_PRIV_CAN_TELEPORT_TOGGLE_OFF);
                         break;
                     default:
                         break;
@@ -3370,7 +3367,7 @@ Connection* ClientConnection::getConnection() { return connection; }
 void ClientConnection::handleServerSettingsChanged(
     std::shared_ptr<ServerSettingsChangedPacket> packet) {
     if (packet->action == ServerSettingsChangedPacket::HOST_IN_GAME_SETTINGS) {
-        GameHostOptions::set(eGameHostOption_All, packet->data);
+        gameServices().setGameHostOption(eGameHostOption_All, packet->data);
     } else if (packet->action == ServerSettingsChangedPacket::HOST_DIFFICULTY) {
         for (unsigned int i = 0; i < minecraft->levels.size(); ++i) {
             if (minecraft->levels[i] != nullptr) {
@@ -3384,7 +3381,7 @@ void ClientConnection::handleServerSettingsChanged(
     } else {
         // options
         // minecraft->options->SetGamertagSetting((packet->data==0)?false:true);
-        GameHostOptions::set(eGameHostOption_Gamertags, packet->data);
+        gameServices().setGameHostOption(eGameHostOption_Gamertags, packet->data);
     }
 }
 
@@ -3405,7 +3402,7 @@ void ClientConnection::handleUpdateProgress(
 
 void ClientConnection::handleUpdateGameRuleProgressPacket(
     std::shared_ptr<UpdateGameRuleProgressPacket> packet) {
-    const wchar_t* string = GameServices::getGameRulesString(packet->m_messageId);
+    const wchar_t* string = gameServices().getGameRulesString(packet->m_messageId);
     if (string != nullptr) {
         std::wstring message(string);
         message = GameRuleDefinition::generateDescriptionString(
@@ -3422,7 +3419,7 @@ void ClientConnection::handleUpdateGameRuleProgressPacket(
         Log::info(
             "handleUpdateGameRuleProgressPacket: Data tag is in range, so "
             "updating profile data\n");
-        GameServices::setSpecialTutorialCompletionFlag(m_userIndex,
+        gameServices().setSpecialTutorialCompletionFlag(m_userIndex,
                                              packet->m_dataTag - 1);
     }
 }
@@ -3444,7 +3441,7 @@ int ClientConnection::HostDisconnectReturned(
             // no upsell, we're about to quit
             MinecraftServer::getInstance()->setSaveOnExit(false);
             // flag a app action of exit game
-            GameServices::setAction(iPad, eAppAction_ExitWorld);
+            gameServices().setAction(iPad, eAppAction_ExitWorld);
         }
     }
 
@@ -3465,7 +3462,7 @@ int ClientConnection::HostDisconnectReturned(
     } else {
         MinecraftServer::getInstance()->setSaveOnExit(true);
         // flag a app action of exit game
-        GameServices::setAction(iPad, eAppAction_ExitWorld);
+        gameServices().setAction(iPad, eAppAction_ExitWorld);
     }
 
     return 0;
@@ -3485,7 +3482,7 @@ int ClientConnection::ExitGameAndSaveReturned(
         MinecraftServer::getInstance()->setSaveOnExit(false);
     }
     // flag a app action of exit game
-    GameServices::setAction(iPad, eAppAction_ExitWorld);
+    gameServices().setAction(iPad, eAppAction_ExitWorld);
     return 0;
 }
 

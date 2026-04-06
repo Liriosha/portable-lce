@@ -1,4 +1,4 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "EnchantmentTableTileEntity.h"
 
 #include <cmath>
@@ -94,7 +94,7 @@ void EnchantmentTableEntity::tick() {
 }
 
 std::wstring EnchantmentTableEntity::getName() {
-    return hasCustomName() ? name : Strings::get(IDS_ENCHANT);
+    return hasCustomName() ? name : gameServices().getString(IDS_ENCHANT);
 }
 
 std::wstring EnchantmentTableEntity::getCustomName() {

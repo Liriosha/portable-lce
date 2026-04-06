@@ -7,7 +7,7 @@
 #include "platform/sdl2/Render.h"
 #include "platform/sdl2/Storage.h"
 #include "app/common/App_Defines.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/DLC/DLCManager.h"
@@ -23,7 +23,7 @@
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "platform/NetTypes.h"
-#include "minecraft/client/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
 #include "platform/PlatformServices.h"
 #include "java/Class.h"
@@ -114,8 +114,6 @@ const float Game::fSafeZoneX = 64.0f;  // 5% of 1280
 const float Game::fSafeZoneY = 36.0f;  // 5% of 720
 
 Game::Game() {
-    GameHostOptions::init(&m_uiGameHostSettings);
-
     if (GAME_SETTINGS_PROFILE_DATA_BYTES != sizeof(GAME_SETTINGS)) {
         DebugPrintf(
             "WARNING: The size of the profile GAME_SETTINGS struct has "
@@ -414,12 +412,12 @@ void Game::FatalLoadError() {}
 
 void Game::SetGameHostOption(eGameHostOption eVal,
                                       unsigned int uiVal) {
-    GameHostOptions::set(eVal, uiVal);
+    GameHostOptions::set(m_uiGameHostSettings, eVal, uiVal);
 }
 
 
 unsigned int Game::GetGameHostOption(eGameHostOption eVal) {
-    return GameHostOptions::get(eVal);
+    return GameHostOptions::get(m_uiGameHostSettings, eVal);
 }
 
 

@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "BiomeSource.h"
 
@@ -369,8 +369,8 @@ int64_t BiomeSource::findSeed(LevelType* generator) {
     mcprogress->progressStage(IDS_PROGRESS_NEW_WORLD_SEED);
 
 #if !defined(_CONTENT_PACKAGE)
-    if (DebugSettings::isOn() &&
-        DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // Do nothing
     } else

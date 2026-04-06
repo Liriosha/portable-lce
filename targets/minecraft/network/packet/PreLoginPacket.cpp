@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "PreLoginPacket.h"
 
@@ -6,7 +7,6 @@
 
 #include "app/common/BuildVer/BuildVer.h"
 #include "platform/IPlatformNetwork.h"
-#include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "PacketListener.h"
 #include "java/InputOutputStream/DataInputStream.h"
@@ -83,7 +83,7 @@ void PreLoginPacket::read(DataInputStream* dis)  // throws IOException
     m_texturePackId = static_cast<std::uint32_t>(dis->readInt());
 
     // Set the name of the map so we can check it for players banned lists
-    app.SetUniqueMapName((char*)m_szUniqueSaveName);
+    gameServices().setUniqueMapName((char*)m_szUniqueSaveName);
 }
 
 void PreLoginPacket::write(DataOutputStream* dos)  // throws IOException

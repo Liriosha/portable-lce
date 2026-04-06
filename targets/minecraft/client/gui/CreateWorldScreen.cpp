@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "CreateWorldScreen.h"
 
@@ -13,7 +12,7 @@
 #include "Button.h"
 #include "EditBox.h"
 #include "MessageScreen.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
@@ -253,38 +252,38 @@ void CreateWorldScreen::buttonClicked(Button* button) {
         param->texturePackId = 0;
         param->settings = 0;
 
-        GameHostOptions::set(eGameHostOption_Difficulty,
+        gameServices().setGameHostOption(eGameHostOption_Difficulty,
                               minecraft->options->difficulty);
-        GameHostOptions::set(eGameHostOption_FriendsOfFriends,
+        gameServices().setGameHostOption(eGameHostOption_FriendsOfFriends,
                               moreOptionsParams->bAllowFriendsOfFriends);
-        GameHostOptions::set(eGameHostOption_Gamertags, 1);
-        GameHostOptions::set(eGameHostOption_BedrockFog, 0);
-        GameHostOptions::set(eGameHostOption_GameType,
+        gameServices().setGameHostOption(eGameHostOption_Gamertags, 1);
+        gameServices().setGameHostOption(eGameHostOption_BedrockFog, 0);
+        gameServices().setGameHostOption(eGameHostOption_GameType,
                               (gameMode == L"survival")
                                   ? GameType::SURVIVAL->getId()
                                   : GameType::CREATIVE->getId());
-        GameHostOptions::set(eGameHostOption_LevelType,
+        gameServices().setGameHostOption(eGameHostOption_LevelType,
                               moreOptionsParams->bFlatWorld);
-        GameHostOptions::set(eGameHostOption_Structures,
+        gameServices().setGameHostOption(eGameHostOption_Structures,
                               moreOptionsParams->bStructures);
-        GameHostOptions::set(eGameHostOption_BonusChest,
+        gameServices().setGameHostOption(eGameHostOption_BonusChest,
                               moreOptionsParams->bBonusChest);
-        GameHostOptions::set(eGameHostOption_PvP, moreOptionsParams->bPVP);
-        GameHostOptions::set(eGameHostOption_TrustPlayers,
+        gameServices().setGameHostOption(eGameHostOption_PvP, moreOptionsParams->bPVP);
+        gameServices().setGameHostOption(eGameHostOption_TrustPlayers,
                               moreOptionsParams->bTrust);
-        GameHostOptions::set(eGameHostOption_FireSpreads,
+        gameServices().setGameHostOption(eGameHostOption_FireSpreads,
                               moreOptionsParams->bFireSpreads);
-        GameHostOptions::set(eGameHostOption_TNT, moreOptionsParams->bTNT);
-        GameHostOptions::set(eGameHostOption_HostCanFly,
+        gameServices().setGameHostOption(eGameHostOption_TNT, moreOptionsParams->bTNT);
+        gameServices().setGameHostOption(eGameHostOption_HostCanFly,
                               moreOptionsParams->bHostPrivileges);
-        GameHostOptions::set(eGameHostOption_HostCanChangeHunger,
+        gameServices().setGameHostOption(eGameHostOption_HostCanChangeHunger,
                               moreOptionsParams->bHostPrivileges);
-        GameHostOptions::set(eGameHostOption_HostCanBeInvisible,
+        gameServices().setGameHostOption(eGameHostOption_HostCanBeInvisible,
                               moreOptionsParams->bHostPrivileges);
-        GameHostOptions::set(eGameHostOption_CheatsEnabled,
+        gameServices().setGameHostOption(eGameHostOption_CheatsEnabled,
                               moreOptionsParams->bHostPrivileges);
 
-        param->settings = GameHostOptions::get(eGameHostOption_All);
+        param->settings = gameServices().getGameHostOption(eGameHostOption_All);
         param->xzSize = LEVEL_MAX_WIDTH;
         param->hellScale = HELL_LEVEL_MAX_SCALE;
 
@@ -297,7 +296,7 @@ void CreateWorldScreen::buttonClicked(Button* button) {
         loadingParams->func = &CGameNetworkManager::RunNetworkGameThreadProc;
         loadingParams->lpParam = param;
 
-        GameServices::setAutosaveTimerTime();
+        gameServices().setAutosaveTimerTime();
 
         UIFullscreenProgressCompletionData* completionData =
             new UIFullscreenProgressCompletionData();

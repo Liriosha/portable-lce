@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "ServerLevel.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
@@ -560,7 +560,7 @@ void ServerChunkCache::flagPostProcessComplete(short flag, int x, int z) {
     // Are all neighbouring chunks And this one now post-processed?
     if (lc->terrainPopulated == LevelChunk::sTerrainPopulatedAllNeighbours) {
         // Special lighting patching for schematics first
-        GameServices::processSchematicsLighting(lc);
+        gameServices().processSchematicsLighting(lc);
 
         // This would be a good time to fix up any lighting for this chunk since
         // all the geometry that could affect it should now be in place

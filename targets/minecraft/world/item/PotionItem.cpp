@@ -1,9 +1,9 @@
-#include "minecraft/locale/Strings.h"
+#include "minecraft/IGameServices.h"
 #include "PotionItem.h"
 
 #include <utility>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "util/StringHelpers.h"
 #include "java/Random.h"
@@ -206,7 +206,7 @@ bool PotionItem::hasInstantenousEffects(int itemAuxValue) {
 std::wstring PotionItem::getHoverName(
     std::shared_ptr<ItemInstance> itemInstance) {
     if (itemInstance->getAuxValue() == 0) {
-        return Strings::get(
+        return gameServices().getString(
             IDS_ITEM_WATER_BOTTLE);  // I18n.get("item.emptyPotion.name").trim();
     }
 
@@ -215,7 +215,7 @@ std::wstring PotionItem::getHoverName(
         // elementName = I18n.get("potion.prefix.grenade").trim() + " " +
         // elementName;
         elementName = replaceAll(elementName, L"{*splash*}",
-                                 Strings::get(IDS_POTION_PREFIX_GRENADE));
+                                 gameServices().getString(IDS_POTION_PREFIX_GRENADE));
     } else {
         elementName = replaceAll(elementName, L"{*splash*}", L"");
     }
@@ -230,14 +230,14 @@ std::wstring PotionItem::getHoverName(
         elementName = replaceAll(elementName, L"{*prefix*}", L"");
         elementName = replaceAll(
             elementName, L"{*postfix*}",
-            Strings::get(effects->at(0)->getPostfixDescriptionId()));
+            gameServices().getString(effects->at(0)->getPostfixDescriptionId()));
     } else {
         // String appearanceName =
         // PotionBrewing.getAppearanceName(itemInstance.getAuxValue()); return
         // I18n.get(appearanceName).trim() + " " + elementName;
 
         elementName = replaceAll(elementName, L"{*prefix*}",
-                                 Strings::get(PotionBrewing::getAppearanceName(
+                                 gameServices().getString(PotionBrewing::getAppearanceName(
                                      itemInstance->getAuxValue())));
         elementName = replaceAll(elementName, L"{*postfix*}", L"");
     }
@@ -259,7 +259,7 @@ void PotionItem::appendHoverText(std::shared_ptr<ItemInstance> itemInstance,
         for (auto it = effects->begin(); it != effects->end(); ++it) {
             MobEffectInstance* effect = *it;
             std::wstring effectString =
-                Strings::get(effect->getDescriptionId());
+                gameServices().getString(effect->getDescriptionId());
 
             MobEffect* mobEffect = MobEffect::effects[effect->getId()];
             std::unordered_map<Attribute*, AttributeModifier*>*
@@ -289,18 +289,18 @@ void PotionItem::appendHoverText(std::shared_ptr<ItemInstance> itemInstance,
                 switch (effect->getAmplifier()) {
                     case 1:
                         potencyString = L" ";
-                        potencyString += Strings::get(IDS_POTION_POTENCY_1);
+                        potencyString += gameServices().getString(IDS_POTION_POTENCY_1);
                         break;
                     case 2:
                         potencyString = L" ";
-                        potencyString += Strings::get(IDS_POTION_POTENCY_2);
+                        potencyString += gameServices().getString(IDS_POTION_POTENCY_2);
                         break;
                     case 3:
                         potencyString = L" ";
-                        potencyString += Strings::get(IDS_POTION_POTENCY_3);
+                        potencyString += gameServices().getString(IDS_POTION_POTENCY_3);
                         break;
                     default:
-                        potencyString = Strings::get(IDS_POTION_POTENCY_0);
+                        potencyString = gameServices().getString(IDS_POTION_POTENCY_0);
                         break;
                 }
                 effectString +=
@@ -323,7 +323,7 @@ void PotionItem::appendHoverText(std::shared_ptr<ItemInstance> itemInstance,
             lines->push_back(HtmlString(effectString, color));
         }
     } else {
-        std::wstring effectString = Strings::get(
+        std::wstring effectString = gameServices().getString(
             IDS_POTION_EMPTY);  // I18n.get("potion.empty").trim();
 
         lines->push_back(HtmlString(effectString, eHTMLColor_7));  //"�7"
@@ -332,7 +332,7 @@ void PotionItem::appendHoverText(std::shared_ptr<ItemInstance> itemInstance,
     if (!modifiers.empty()) {
         // Add new line
         lines->push_back(HtmlString(L""));
-        lines->push_back(HtmlString(Strings::get(IDS_POTION_EFFECTS_WHENDRANK),
+        lines->push_back(HtmlString(gameServices().getString(IDS_POTION_EFFECTS_WHENDRANK),
                                     eHTMLColor_5));
 
         // Add modifier descriptions

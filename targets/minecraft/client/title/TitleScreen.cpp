@@ -1,4 +1,4 @@
-#include "minecraft/GameServices.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "TitleScreen.h"
 
@@ -43,8 +43,8 @@ TitleScreen::TitleScreen() {
     int splashIndex;
 
     std::wstring filename = L"splashes.txt";
-    if (GameServices::hasArchiveFile(filename)) {
-        std::vector<uint8_t> splashesArray = GameServices::getArchiveFile(filename);
+    if (gameServices().hasArchiveFile(filename)) {
+        std::vector<uint8_t> splashesArray = gameServices().getArchiveFile(filename);
         ByteArrayInputStream bais(splashesArray);
         InputStreamReader isr(&bais);
         BufferedReader br(&isr);

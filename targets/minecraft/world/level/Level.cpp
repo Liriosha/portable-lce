@@ -1,4 +1,4 @@
-#include "minecraft/util/DebugSettings.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Log.h"
 #include "Level.h"
 
@@ -17,7 +17,7 @@
 #include "Explosion.h"
 #include "IPlatformInput.h"
 #include "LevelListener.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/Network/GameNetworkManager.h"
@@ -2115,7 +2115,7 @@ void Level::tickEntities() {
 
             if (!e->removed) {
 #if !defined(_FINAL_BUILD)
-                if (!(DebugSettings::isOn() && DebugSettings::mobsDontTick() &&
+                if (!(gameServices().debugSettingsOn() && gameServices().debugMobsDontTick() &&
                       e->instanceof(eTYPE_MOB) && !e->instanceof(eTYPE_PLAYER)))
 #endif
                 {
@@ -2814,8 +2814,8 @@ void Level::tickWeather() {
 
 #if !defined(_FINAL_BUILD)
     // debug setting added to disable weather
-    if (DebugSettings::isOn()) {
-        if (DebugSettings::getMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_DisableWeather)) {
             levelData->setThundering(false);
             levelData->setThunderTime(random->nextInt(TICKS_PER_DAY * 7) +

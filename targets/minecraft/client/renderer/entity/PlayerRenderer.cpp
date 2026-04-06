@@ -1,5 +1,4 @@
-#include "minecraft/GameServices.h"
-#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "PlayerRenderer.h"
 
 #include <cmath>
@@ -9,7 +8,7 @@
 #include "platform/sdl2/Render.h"
 #include "EntityRenderDispatcher.h"
 #include "HumanoidMobRenderer.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "java/Class.h"
 #include "minecraft/Facing.h"
@@ -303,7 +302,7 @@ void PlayerRenderer::additionalRendering(std::shared_ptr<LivingEntity> _mob,
     }
 
     // need to add a custom texture for deadmau5
-    if (mob != nullptr && GameServices::isXuidDeadmau5(mob->getXuid()) &&
+    if (mob != nullptr && gameServices().isXuidDeadmau5(mob->getXuid()) &&
         bindTexture(mob->customTextureUrl, L"")) {
         for (int i = 0; i < 2; i++) {
             float yr = (mob->yRotO + (mob->yRot - mob->yRotO) * a) -
@@ -524,7 +523,7 @@ void PlayerRenderer::setupRotations(std::shared_ptr<LivingEntity> _mob,
 // 4J Added override to stop rendering shadow if player is invisible
 void PlayerRenderer::renderShadow(std::shared_ptr<Entity> e, double x, double y,
                                   double z, float pow, float a) {
-    if (GameHostOptions::get(eGameHostOption_HostCanBeInvisible) > 0) {
+    if (gameServices().getGameHostOption(eGameHostOption_HostCanBeInvisible) > 0) {
         std::shared_ptr<Player> player = std::dynamic_pointer_cast<Player>(e);
         if (player != nullptr && player->hasInvisiblePrivilege()) return;
     }
