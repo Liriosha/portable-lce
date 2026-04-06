@@ -9,13 +9,12 @@
 #include <cmath>
 #include <numbers>
 
-#include "platform/sdl2/Render.h"
 #include "EntityTileRenderer.h"
 #include "GameRenderer.h"
+#include "Tesselator.h"
 #include "app/common/App_enums.h"
 #include "app/common/src/Colours/ColourTable.h"
 #include "app/include/FrameProfiler.h"
-#include "Tesselator.h"
 #include "minecraft/Direction.h"
 #include "minecraft/Facing.h"
 #include "minecraft/SharedConstants.h"
@@ -65,6 +64,7 @@
 #include "minecraft/world/level/tile/piston/PistonBaseTile.h"
 #include "minecraft/world/level/tile/piston/PistonExtensionTile.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/sdl2/Render.h"
 
 bool TileRenderer::fancy = true;
 
@@ -75,6 +75,7 @@ void TileRenderer::_init() {
     xFlipTexture = false;
     noCulling = false;
     applyAmbienceOcclusion = false;
+    waterTopSkipMask = nullptr;
     setColor = true;
     northFlip = FLIP_NONE;
     southFlip = FLIP_NONE;
@@ -235,6 +236,40 @@ void TileRenderer::setFixedTexture(Icon* fixedTexture) {
 void TileRenderer::clearFixedTexture() { this->fixedTexture = nullptr; }
 
 bool TileRenderer::hasFixedTexture() { return fixedTexture != nullptr; }
+
+void TileRenderer::setApplyAmbienceOcclusion(bool enabled) {
+    applyAmbienceOcclusion = enabled;
+}
+
+void TileRenderer::setWaterTopSkipMask(const uint8_t* mask) {
+    waterTopSkipMask = mask;
+}
+
+void TileRenderer::setGreedyAO(float baseR, float baseG, float baseB, float ao1,
+                               float ao2, float ao3, float ao4, int tex2) {
+    applyAmbienceOcclusion = true;
+
+    c1r = baseR * ao1;
+    c1g = baseG * ao1;
+    c1b = baseB * ao1;
+
+    c2r = baseR * ao2;
+    c2g = baseG * ao2;
+    c2b = baseB * ao2;
+
+    c3r = baseR * ao3;
+    c3g = baseG * ao3;
+    c3b = baseB * ao3;
+
+    c4r = baseR * ao4;
+    c4g = baseG * ao4;
+    c4b = baseB * ao4;
+
+    tc1 = tex2;
+    tc2 = tex2;
+    tc3 = tex2;
+    tc4 = tex2;
+}
 
 void TileRenderer::setShape(float x0, float y0, float z0, float x1, float y1,
                             float z1) {
@@ -4569,6 +4604,17 @@ bool TileRenderer::tesselateWaterInWorld(Tile* tt, int x, int y, int z) {
     float g = (col >> 8 & 0xff) / 255.0f;
     float b = (col & 0xff) / 255.0f;
     bool up = tt->shouldRenderFace(level, x, y + 1, z, 1);
+    if (waterTopSkipMask) {
+        int lx = x - xMin;
+        int ly = y - yMin;
+        int lz = z - zMin;
+        if ((unsigned)lx < 16 && (unsigned)ly < 16 && (unsigned)lz < 16) {
+            int idx = (ly << 8) | (lz << 4) | lx;
+            if (waterTopSkipMask[idx]) {
+                up = false;
+            }
+        }
+    }
     bool down = tt->shouldRenderFace(level, x, y - 1, z, 0);
     bool dirs[4];
     dirs[0] = tt->shouldRenderFace(level, x, y, z - 1, 2);
@@ -4774,6 +4820,10 @@ bool TileRenderer::tesselateWaterInWorld(Tile* tt, int x, int y, int z) {
     tileShapeY1 = yo1;
 
     return changed;
+}
+
+float TileRenderer::getWaterHeightAt(int x, int y, int z, Material* m) {
+    return getWaterHeight(x, y, z, m);
 }
 
 float TileRenderer::getWaterHeight(int x, int y, int z, Material* m) {

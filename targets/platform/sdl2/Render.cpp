@@ -196,8 +196,7 @@ struct ShaderUniforms {
     GLint uFogDensity = -1, uFogColor = -1, uFogEnable = -1;
     GLint uLMTransform = -1, uUseLightmap = -1, uAlphaRef = -1;
     GLint uTex0 = -1, uTex1 = -1, uGlobalLM = -1;
-    GLint uUseTexture = -1;
-    GLint uInvGamma = -1;
+    GLint uUseTexture = -1, uUseTileUV = -1, uInvGamma = -1;
     GLint uChunkOffset = -1;
 
     void build(const char* vs, const char* fs) {
@@ -233,6 +232,7 @@ struct ShaderUniforms {
         L(uTex1);
         L(uGlobalLM);
         L(uUseTexture);
+        L(uUseTileUV);
         L(uInvGamma);
         L(uChunkOffset);
 #undef L
@@ -380,8 +380,8 @@ static void glShadowSetDepthTest(bool e) {
 }
 
 static void glShadowSetBlendFunc(GLint s, GLint d) {
-    if (!(s_gl_shadow_mask & SHADOW_BLEND_FUNC) ||
-        s_gl_state.blendSrc != s || s_gl_state.blendDst != d) {
+    if (!(s_gl_shadow_mask & SHADOW_BLEND_FUNC) || s_gl_state.blendSrc != s ||
+        s_gl_state.blendDst != d) {
         ::glBlendFunc(s, d);
         s_gl_state.blendSrc = s;
         s_gl_state.blendDst = d;
@@ -390,8 +390,7 @@ static void glShadowSetBlendFunc(GLint s, GLint d) {
 }
 
 static void glShadowSetDepthMask(GLboolean e) {
-    if (!(s_gl_shadow_mask & SHADOW_DEPTH_MASK) ||
-        s_gl_state.depthMask != e) {
+    if (!(s_gl_shadow_mask & SHADOW_DEPTH_MASK) || s_gl_state.depthMask != e) {
         ::glDepthMask(e);
         s_gl_state.depthMask = e;
         s_gl_shadow_mask |= SHADOW_DEPTH_MASK;
@@ -502,8 +501,7 @@ static void pushRenderState() {
             glUniform1f(s_shader.uFogStart, s_rs.fogStart);
             glUniform1f(s_shader.uFogEnd, s_rs.fogEnd);
             glUniform1f(s_shader.uFogDensity, s_rs.fogDensity);
-            glUniform4fv(s_shader.uFogColor, 1,
-                         glm::value_ptr(s_rs.fogColor));
+            glUniform4fv(s_shader.uFogColor, 1, glm::value_ptr(s_rs.fogColor));
             glUniform1i(s_shader.uFogEnable, s_rs.fogEnable ? 1 : 0);
         }
         if (s_rs_dirty_mask & DIRTY_TEXTURE) {
@@ -515,11 +513,9 @@ static void pushRenderState() {
         if (s_rs_dirty_mask & DIRTY_GAMMA)
             glUniform1f(s_shader.uInvGamma, 1.0f / s_rs.gamma);
         if (s_rs_dirty_mask & DIRTY_LMT)
-            glUniform4fv(s_shader.uLMTransform, 1,
-                         glm::value_ptr(s_rs.lmt));
+            glUniform4fv(s_shader.uLMTransform, 1, glm::value_ptr(s_rs.lmt));
         if (s_rs_dirty_mask & DIRTY_GLOBAL_LM)
-            glUniform2fv(s_shader.uGlobalLM, 1,
-                         glm::value_ptr(s_rs.globalLM));
+            glUniform2fv(s_shader.uGlobalLM, 1, glm::value_ptr(s_rs.globalLM));
         s_rs_dirty_mask = 0;
     }
     flushMatrices();
@@ -556,6 +552,7 @@ struct ChunkDrawCall {
     GLenum prim;
     GLint first;
     GLsizei count;
+    bool useTileUV;
 };
 
 struct ChunkBuffer {
@@ -893,12 +890,16 @@ void C4JRender::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
         int first = (int)(s_recVerts.size() / stride);
         s_recVerts.insert(s_recVerts.end(), (const uint8_t*)dataIn,
                           (const uint8_t*)dataIn + bytes);
-        s_recDraws.push_back({glMode, first, (GLsizei)count});
+        bool useTileUV = (vType == VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TILEUV);
+        s_recDraws.push_back({glMode, first, (GLsizei)count, useTileUV});
         return;
     }
 
     pthread_mutex_lock(&s_glCallMtx);
     pushRenderState();
+
+    glUniform1i(s_shader.uUseTileUV,
+                (vType == VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TILEUV) ? 1 : 0);
 
     glBindVertexArray(s_sVAO_std);
     glBindBuffer(GL_ARRAY_BUFFER, s_sVBO_std);
@@ -1019,7 +1020,10 @@ bool C4JRender::CBuffCall(int index, bool) {
     pushRenderState();
 
     glBindVertexArray(cb.vao);
-    for (const auto& dc : cb.draws) glDrawArrays(dc.prim, dc.first, dc.count);
+    for (const auto& dc : cb.draws) {
+        glUniform1i(s_shader.uUseTileUV, dc.useTileUV ? 1 : 0);
+        glDrawArrays(dc.prim, dc.first, dc.count);
+    }
     glBindVertexArray(0);
 
     pthread_mutex_unlock(&s_glCallMtx);
@@ -1095,7 +1099,7 @@ void C4JRender::Set_matrixDirty() {
     s_boundProgram = 0;
     s_rs_dirty_mask = 0xFFFFFFFF;
     s_gl_shadow_mask = 0;
-    s_normalMatDirty = true; // normal matrix dirt after iggy reset
+    s_normalMatDirty = true;  // normal matrix dirt after iggy reset
     s_matDirty = true;
     s_chunkOffsetValid = false;
     if (s_shader.prog) {
@@ -1132,9 +1136,7 @@ void C4JRender::StateSetDepthMask(bool e) {
     glShadowSetDepthMask(e ? GL_TRUE : GL_FALSE);
 }
 void C4JRender::StateSetBlendEnable(bool e) { glShadowSetBlend(e); }
-void C4JRender::StateSetBlendFunc(int s, int d) {
-    glShadowSetBlendFunc(s, d);
-}
+void C4JRender::StateSetBlendFunc(int s, int d) { glShadowSetBlendFunc(s, d); }
 void C4JRender::StateSetDepthFunc(int f) { ::glDepthFunc(f); }
 void C4JRender::StateSetFaceCull(bool e) { glShadowSetCull(e); }
 void C4JRender::StateSetFaceCullCW(bool e) {
@@ -1181,7 +1183,10 @@ void C4JRender::StateSetFogEnable(bool e) {
     }
 }
 void C4JRender::StateSetFogMode(int mode) {
-    int v = (mode == GL_LINEAR) ? 1 : (mode == GL_EXP) ? 2 : (mode == 0x0801) ? 3 : 0;
+    int v = (mode == GL_LINEAR) ? 1
+            : (mode == GL_EXP)  ? 2
+            : (mode == 0x0801)  ? 3
+                                : 0;
     if (s_rs.fogMode != v) {
         s_rs.fogMode = v;
         markDirty(DIRTY_FOG);
@@ -1303,9 +1308,9 @@ void C4JRender::TextureBindVertex(int idx, bool scaleLight) {
         s_rs.useLightmap = true;
         markDirty(DIRTY_TEXTURE);
     }
-    glm::vec4 newLmt =
-        scaleLight ? glm::vec4{1.f, 1.f, 8.f / 256.f, 8.f / 256.f}
-                   : glm::vec4{1.f, 1.f, 0.f, 0.f};
+    glm::vec4 newLmt = scaleLight
+                           ? glm::vec4{1.f, 1.f, 8.f / 256.f, 8.f / 256.f}
+                           : glm::vec4{1.f, 1.f, 0.f, 0.f};
     if (s_rs.lmt != newLmt) {
         s_rs.lmt = newLmt;
         markDirty(DIRTY_LMT);

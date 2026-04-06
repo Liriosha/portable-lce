@@ -65,6 +65,7 @@ Tesselator::Tesselator(int size) {
     useCompactFormat360 = false;             // 4J added
     mipmapEnable = true;                     // 4J added
     useProjectedTexturePixelShader = false;  // 4J added
+    useTileUVEnabled = false;
 
     this->size = size;
 
@@ -110,7 +111,9 @@ void Tesselator::end() {
                 _array->data(),
                 useCompactFormat360
                     ? C4JRender::VERTEX_TYPE_COMPRESSED
-                    : C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
+                    : (useTileUVEnabled
+                           ? C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TILEUV
+                           : C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1),
                 useProjectedTexturePixelShader
                     ? C4JRender::PIXEL_SHADER_TYPE_PROJECTION
                     : C4JRender::PIXEL_SHADER_TYPE_STANDARD);
@@ -138,7 +141,9 @@ void Tesselator::end() {
                     RenderManager.DrawVertices(
                         (C4JRender::ePrimitiveType)mode, vertexCount,
                         _array->data(),
-                        C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
+                        useTileUVEnabled
+                            ? C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TILEUV
+                            : C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
                         C4JRender::PIXEL_SHADER_TYPE_STANDARD);
                 }
             }
@@ -176,6 +181,8 @@ void Tesselator::useProjectedTexture(bool enable) {
 void Tesselator::useCompactVertices(bool enable) {
     useCompactFormat360 = enable;
 }
+
+void Tesselator::useTileUV(bool enable) { useTileUVEnabled = enable; }
 
 bool Tesselator::getCompactVertices() { return useCompactFormat360; }
 

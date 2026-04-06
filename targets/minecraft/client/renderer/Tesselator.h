@@ -33,6 +33,7 @@ private:
     int p;
     bool useCompactFormat360;             // 4J - added
     bool useProjectedTexturePixelShader;  // 4J - added
+    bool useTileUVEnabled;
 public:
     int count;
 
@@ -125,6 +126,7 @@ public:
     void useCompactVertices(bool enable);   // 4J added
     bool getCompactVertices();              // AP added
     void useProjectedTexture(bool enable);  // 4J added
+    void useTileUV(bool enable);
     void tex(float u, float v);
     void tex2(int tex2);  // 4J - change brought forward from 1.8.2
     void color(float r, float g, float b);

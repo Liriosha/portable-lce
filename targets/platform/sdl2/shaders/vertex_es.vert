@@ -1,43 +1,46 @@
-R"GLSL(
+R "GLSL(
 #version 300 es
 precision highp float;
 precision highp int;
 
-layout(location=0) in vec3  aPos;
-layout(location=1) in vec2  aUV0;
-layout(location=2) in vec4  aColor;
-layout(location=3) in vec3  aNormal;
-layout(location=4) in ivec2 aLMraw;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aUV0;
+layout(location = 2) in vec4 aColor;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in ivec2 aLMraw;
 
-uniform mat4  uMVP;
-uniform mat4  uMV;
-uniform mat3  uNormalMatrix;
+uniform mat4 uMVP;
+uniform mat4 uMV;
+uniform mat3 uNormalMatrix;
 uniform float uNormalSign;
-uniform mat4  uTexMat0;
-uniform vec4  uBaseColor;
-uniform int   uLighting;
-uniform vec3  uLight0Dir;
-uniform vec3  uLight1Dir;
-uniform vec3  uLightDiffuse;
-uniform vec3  uLightAmbient;
-uniform vec3  uChunkOffset;
-uniform int   uFogMode;
+uniform mat4 uTexMat0;
+uniform vec4 uBaseColor;
+uniform int uLighting;
+uniform vec3 uLight0Dir;
+uniform vec3 uLight1Dir;
+uniform vec3 uLightDiffuse;
+uniform vec3 uLightAmbient;
+uniform vec3 uChunkOffset;
+uniform int uFogMode;
 uniform float uFogStart;
 uniform float uFogEnd;
 uniform float uFogDensity;
-uniform vec4  uLMTransform;
-uniform vec2  uGlobalLM;
+uniform vec4 uLMTransform;
+uniform vec2 uGlobalLM;
 
-out vec2  vUV0;
-out vec2  vUV1;
-out vec4  vColor;
+out vec2 vUV0;
+out vec2 vUV1;
+out vec4 vColor;
+out vec3 vWorldPos;
 out float vFogFactor;
 
 void main() {
-    vec4 aPos4   = vec4(aPos + uChunkOffset, 1.0);
-    vec4 eyePos  = uMV  * aPos4;
-    gl_Position  = uMVP * aPos4;
-    vUV0 = (uTexMat0 * vec4(aUV0, 0.0, 1.0)).xy; 
+    vec3 worldPos = aPos + uChunkOffset;
+    vec4 aPos4 = vec4(worldPos, 1.0);
+    vec4 eyePos = uMV * aPos4;
+    gl_Position = uMVP * aPos4;
+    vUV0 = (uTexMat0 * vec4(aUV0, 0.0, 1.0)).xy;
+    vWorldPos = worldPos;
 
     vec2 lm = (aLMraw.x <= -500) ? uGlobalLM : vec2(aLMraw);
     vUV1 = (lm / 256.0) * uLMTransform.xy + uLMTransform.zw;
@@ -55,9 +58,13 @@ void main() {
     }
 
     float eDist = length(eyePos.xyz);
-    if      (uFogMode == 1) vFogFactor = clamp((uFogEnd - eDist) / max(uFogEnd - uFogStart, 1e-4), 0.0, 1.0);
+    if (uFogMode == 1) vFogFactor = clamp((uFogEnd - eDist) / max(uFogEnd - uFogStart, 1e-4), 0.0, 1.0);
     else if (uFogMode == 2) vFogFactor = clamp(exp(-uFogDensity * eDist), 0.0, 1.0);
-    else if (uFogMode == 3) { float d = uFogDensity * eDist; vFogFactor = clamp(exp(-d*d), 0.0, 1.0); }
-    else                    vFogFactor = 1.0;
+    else if (uFogMode == 3) {
+        float d = uFogDensity * eDist;
+        vFogFactor = clamp(exp(-d * d), 0.0, 1.0);
+    }
+    else vFogFactor = 1.0;
 }
-)GLSL";
+) GLSL ";
+

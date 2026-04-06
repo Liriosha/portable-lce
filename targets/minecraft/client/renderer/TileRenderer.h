@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <unordered_map>
 
@@ -39,6 +40,7 @@ private:
     Icon* fixedTexture;
     bool xFlipTexture;
     bool noCulling;
+    const uint8_t* waterTopSkipMask;
 
 public:
     static bool fancy;
@@ -81,6 +83,10 @@ public:
     void setFixedTexture(Icon* fixedTexture);
     void clearFixedTexture();
     bool hasFixedTexture();
+    void setApplyAmbienceOcclusion(bool enabled);
+    void setWaterTopSkipMask(const uint8_t* mask);
+    void setGreedyAO(float baseR, float baseG, float baseB, float ao1,
+                     float ao2, float ao3, float ao4, int tex2);
     void setShape(float x0, float y0, float z0, float x1, float y1, float z1);
     void setShape(Tile* tt);
     void setFixedShape(float x0, float y0, float z0, float x1, float y1,
@@ -188,6 +194,7 @@ public:
 
     void tesselateRowTexture(Tile* tt, int data, float x, float y, float z);
     bool tesselateWaterInWorld(Tile* tt, int x, int y, int z);
+    float getWaterHeightAt(int x, int y, int z, Material* m);
 
 private:
     float getWaterHeight(int x, int y, int z, Material* m);
