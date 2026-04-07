@@ -7,15 +7,13 @@
 #include <string>
 #include <vector>
 
-#include "platform/profile/profile.h"
-#include "platform/renderer/renderer.h"
-#include "minecraft/GameEnums.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/player/LocalPlayer.h"
@@ -27,6 +25,8 @@
 #include "minecraft/world/item/crafting/Recipes.h"
 #include "minecraft/world/item/crafting/ShapedRecipy.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
 
 Recipy::_eGroupType IUIScene_CraftingMenu::m_GroupTypeMapping4GridA
@@ -875,7 +875,8 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
                     } else {
                         app.DebugPrintf("Need more H slots - ");
 #if !defined(_CONTENT_PACKAGE)
-                        OutputDebugStringW(
+                        fwprintf(
+                            stderr,
                             app.GetString(pTempItemInst->getDescriptionId()));
 #endif
                         app.DebugPrintf("\n");
@@ -1313,8 +1314,8 @@ void IUIScene_CraftingMenu::UpdateDescriptionText(bool bCanBeMade) {
 
             // 12 for splitscreen, 14 for normal
             EHTMLFontSize size = eHTMLSize_Normal;
-            if (m_bSplitscreen ||
-                (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
+            if (m_bSplitscreen || (!PlatformRenderer.IsHiDef() &&
+                                   !PlatformRenderer.IsWidescreen())) {
                 size = eHTMLSize_Splitscreen;
             }
             wchar_t startTags[64];

@@ -4,16 +4,14 @@
 #pragma once
 
 #include <fcntl.h>
-#include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
 
 #include <cassert>
-#include <cerrno>
-#include <cstdarg>
 #include <cstdio>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
 #include <cwchar>
@@ -22,41 +20,20 @@
 #define _vsnprintf_s vsnprintf;
 
 typedef unsigned int DWORD;
-typedef unsigned char BYTE;
-typedef BYTE* PBYTE;
-typedef int HRESULT;
-typedef unsigned int UINT;
-typedef void* HANDLE;
-typedef int INT;
-typedef unsigned int* LPDWORD;
-typedef char CHAR;
-typedef uintptr_t ULONG_PTR;
-typedef long LONG;
-typedef unsigned long long PlayerUID;
-typedef DWORD WORD;
-typedef DWORD* PDWORD;
 
 typedef struct {
-    DWORD LowPart;
-    LONG HighPart;
-    long long QuadPart;
+    int32_t LowPart;
+    int32_t HighPart;
+    int64_t QuadPart;
 } LARGE_INTEGER;
 
 typedef struct {
-    DWORD LowPart;
-    LONG HighPart;
-    long long QuadPart;
+    uint32_t LowPart;
+    uint32_t HighPart;
+    uint64_t QuadPart;
 } ULARGE_INTEGER;
 
-typedef long long LONGLONG;
-typedef wchar_t *LPWSTR, *PWSTR;
-typedef unsigned char boolean;  // java brainrot
 #define __debugbreak()
-#define CONST const
-typedef unsigned long ULONG;
-// typedef unsigned char byte;
-typedef short SHORT;
-typedef float FLOAT;
 
 #define ERROR_SUCCESS 0L
 #define ERROR_IO_PENDING 997L  // dderror
@@ -73,66 +50,17 @@ typedef struct _FILETIME {
     DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
-typedef struct _MEMORYSTATUS {
-    DWORD dwLength;
-    DWORD dwMemoryLoad;
-    size_t dwTotalPhys;
-    size_t dwAvailPhys;
-    size_t dwTotalPageFile;
-    size_t dwAvailPageFile;
-    size_t dwTotalVirtual;
-    size_t dwAvailVirtual;
-} MEMORYSTATUS, *LPMEMORYSTATUS;
-
-typedef enum _GET_FILEEX_INFO_LEVELS {
-    GetFileExInfoStandard,
-    GetFileExMaxInfoLevel
-} GET_FILEEX_INFO_LEVELS;
-
-typedef void* XMEMCOMPRESSION_CONTEXT;
-typedef void* XMEMDECOMPRESSION_CONTEXT;
-
 // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-systemtime
 typedef struct _SYSTEMTIME {
-    WORD wYear;
-    WORD wMonth;
-    WORD wDayOfWeek;
-    WORD wDay;
-    WORD wHour;
-    WORD wMinute;
-    WORD wSecond;
-    WORD wMilliseconds;
+    int16_t wYear;
+    int16_t wMonth;
+    int16_t wDayOfWeek;
+    int16_t wDay;
+    int16_t wHour;
+    int16_t wMinute;
+    int16_t wSecond;
+    int16_t wMilliseconds;
 } SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
-
-#define TLS_OUT_OF_INDEXES ((DWORD)0xFFFFFFFF)
-// https://learn.microsoft.com/en-us/cpp/c-runtime-library/truncate?view=msvc-170
-#define _TRUNCATE ((size_t)-1)
-
-#define DECLARE_HANDLE(name) typedef HANDLE name
-DECLARE_HANDLE(HINSTANCE);
-
-typedef HINSTANCE HMODULE;
-
-#define _HRESULT_TYPEDEF_(_sc) _sc
-
-#define FAILED(Status) ((HRESULT)(Status) < 0)
-#define MAKE_HRESULT(sev, fac, code)                                       \
-    ((HRESULT)(((unsigned int)(sev) << 31) | ((unsigned int)(fac) << 16) | \
-               ((unsigned int)(code))))
-#define MAKE_SCODE(sev, fac, code)                                       \
-    ((SCODE)(((unsigned int)(sev) << 31) | ((unsigned int)(fac) << 16) | \
-             ((unsigned int)(code))))
-#define E_FAIL _HRESULT_TYPEDEF_(0x80004005L)
-#define E_ABORT _HRESULT_TYPEDEF_(0x80004004L)
-#define E_NOINTERFACE _HRESULT_TYPEDEF_(0x80004002L)
-
-// https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globalmemorystatus
-static inline void GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer) {
-    // TODO: Parse /proc/meminfo and set lpBuffer based on that. Probably will
-    // also need another different codepath for macOS too.
-}
-
-static inline DWORD GetLastError(void) { return errno; }
 
 #ifdef __LP64__
 static inline int64_t InterlockedCompareExchangeRelease64(
@@ -195,7 +123,7 @@ static inline void _FillSystemTime(const struct tm* tm, long tv_nsec,
     lpSystemTime->wHour = tm->tm_hour;
     lpSystemTime->wMinute = tm->tm_min;
     lpSystemTime->wSecond = tm->tm_sec;
-    lpSystemTime->wMilliseconds = (WORD)(tv_nsec / 1000000);  // ns to ms
+    lpSystemTime->wMilliseconds = (int16_t)(tv_nsec / 1000000);  // ns to ms
 }
 
 // https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlocaltime
@@ -221,23 +149,7 @@ static inline bool FileTimeToSystemTime(const FILETIME* lpFileTime,
     return true;
 }
 
-// https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-outputdebugstringa
-static inline void OutputDebugStringA(const char* lpOutputString) {
-    if (!lpOutputString) return;
-    fputs(lpOutputString, stderr);
-}
-
-// https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-outputdebugstringw
-static inline void OutputDebugStringW(const wchar_t* lpOutputString) {
-    if (!lpOutputString) return;
-    fprintf(stderr, "%ls", lpOutputString);
-}
-
-static inline void OutputDebugString(const char* lpOutputString) {
-    return OutputDebugStringA(lpOutputString);
-}
-
-static inline HMODULE GetModuleHandle(const char* lpModuleName) { return 0; }
+static inline void* GetModuleHandle(const char* lpModuleName) { return 0; }
 
 static inline void* VirtualAlloc(void* lpAddress, size_t dwSize,
                                  DWORD flAllocationType, DWORD flProtect) {

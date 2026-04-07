@@ -156,7 +156,7 @@ void Game::DebugPrintf(const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-    OutputDebugStringA(buf);
+    fputs(buf, stderr);
 #endif
 }
 
@@ -168,7 +168,7 @@ void Game::DebugPrintf(int user, const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-    OutputDebugStringA(buf);
+    fputs(buf, stderr);
     if (user == USER_UI) {
         ui.logDebugString(buf);
     }

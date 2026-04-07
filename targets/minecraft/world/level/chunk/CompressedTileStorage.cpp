@@ -952,10 +952,11 @@ void CompressedTileStorage::compress(int upgradeBlock /*=-1*/) {
         unsigned char* newIndicesAndData = (unsigned char*)malloc(
             memToAlloc);  //(unsigned char *)malloc( memToAlloc );
         if (newIndicesAndData == nullptr) {
-            uint32_t lastError = GetLastError();
-            MEMORYSTATUS memStatus;
-            GlobalMemoryStatus(&memStatus);
-            __debugbreak();
+            assert(0 && "Failed to allocate memory for CompressedTileStorage.");
+            // uint32_t lastError = GetLastError();
+            // MEMORYSTATUS memStatus;
+            // GlobalMemoryStatus(&memStatus);
+            // __debugbreak();
         }
         unsigned char* pucData = newIndicesAndData + 1024;
         unsigned short usDataOffset = 0;

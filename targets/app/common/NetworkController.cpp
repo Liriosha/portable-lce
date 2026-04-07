@@ -1,5 +1,9 @@
 #include "app/common/NetworkController.h"
 
+#include <chrono>
+#include <cstring>
+#include <thread>
+
 #include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
@@ -13,18 +17,10 @@
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/server/MinecraftServer.h"
-#include "minecraft/stats/StatsCounter.h"
-#include "minecraft/world/entity/player/Player.h"
-#include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "platform/input/input.h"
 #include "platform/profile/profile.h"
 #include "platform/storage/storage.h"
-#include "app/common/Audio/SoundEngine.h"
-
-#include <cstring>
-#include <chrono>
-#include <thread>
 
 unsigned int NetworkController::m_uiLastSignInData = 0;
 
@@ -39,9 +35,8 @@ NetworkController::NetworkController() {
     memset(m_playerGamePrivileges, 0, sizeof(m_playerGamePrivileges));
 
     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-        if (FAILED(XUserGetSigninInfo(i,
-                                      XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY,
-                                      &m_currentSigninInfo[i]))) {
+        if (XUserGetSigninInfo(i, XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY,
+                               &m_currentSigninInfo[i]) < 0) {
             m_currentSigninInfo[i].xuid = INVALID_XUID;
             m_currentSigninInfo[i].dwGuestNumber = 0;
         }
@@ -308,12 +303,11 @@ void NetworkController::signInChangeCallback(void* pParam,
 
                         if (bPlayerChanged &&
                             (!bPlayerSignedIn ||
-                             (bPlayerSignedIn &&
-                              !PlatformProfile.AreXUIDSEqual(
-                                  pApp->m_networkController
-                                      .m_currentSigninInfo[i]
-                                      .xuid,
-                                  info.xuid)))) {
+                             (bPlayerSignedIn && !PlatformProfile.AreXUIDSEqual(
+                                                     pApp->m_networkController
+                                                         .m_currentSigninInfo[i]
+                                                         .xuid,
+                                                     info.xuid)))) {
                             pApp->DebugPrintf(
                                 "Player at index %d Left - invalidating their "
                                 "banned list\n",
@@ -355,9 +349,9 @@ void NetworkController::signInChangeCallback(void* pParam,
     }
 
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-        if (FAILED(XUserGetSigninInfo(
+        if (XUserGetSigninInfo(
                 i, XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY,
-                &pApp->m_networkController.m_currentSigninInfo[i]))) {
+                &pApp->m_networkController.m_currentSigninInfo[i]) < 0) {
             pApp->m_networkController.m_currentSigninInfo[i].xuid =
                 INVALID_XUID;
             pApp->m_networkController.m_currentSigninInfo[i].dwGuestNumber = 0;
