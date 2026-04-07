@@ -19,8 +19,6 @@
 #define __cdecl
 #define _vsnprintf_s vsnprintf;
 
-typedef unsigned int DWORD;
-
 typedef struct {
     int32_t LowPart;
     int32_t HighPart;
@@ -46,8 +44,8 @@ typedef struct {
 
 // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-filetime
 typedef struct _FILETIME {
-    DWORD dwLowDateTime;
-    DWORD dwHighDateTime;
+    int32_t dwLowDateTime;
+    int32_t dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
 // https://learn.microsoft.com/en-us/windows/win32/api/minwinbase/ns-minwinbase-systemtime
@@ -86,8 +84,8 @@ static inline FILETIME _TimeToFileTime(time_t t) {
     const uint64_t EPOCH_DIFF = 11644473600ULL;
     uint64_t val = ((uint64_t)t + EPOCH_DIFF) * 10000000ULL;
     FILETIME ft;
-    ft.dwLowDateTime = (DWORD)(val & 0xFFFFFFFF);
-    ft.dwHighDateTime = (DWORD)(val >> 32);
+    ft.dwLowDateTime = (int32_t)(val & 0xFFFFFFFF);
+    ft.dwHighDateTime = (int32_t)(val >> 32);
     return ft;
 }
 
@@ -152,7 +150,7 @@ static inline bool FileTimeToSystemTime(const FILETIME* lpFileTime,
 static inline void* GetModuleHandle(const char* lpModuleName) { return 0; }
 
 static inline void* VirtualAlloc(void* lpAddress, size_t dwSize,
-                                 DWORD flAllocationType, DWORD flProtect) {
+                                 int32_t flAllocationType, int32_t flProtect) {
     // MEM_COMMIT | MEM_RESERVE → mmap anonymous
     int prot = 0;
     if (flProtect == 0x04 /*PAGE_READWRITE*/)
@@ -173,7 +171,7 @@ static inline void* VirtualAlloc(void* lpAddress, size_t dwSize,
 }
 
 static inline bool VirtualFree(void* lpAddress, size_t dwSize,
-                               DWORD dwFreeType) {
+                               int32_t dwFreeType) {
     if (lpAddress == nullptr) return false;
     // MEM_RELEASE (0x8000) frees the whole region
     if (dwFreeType == 0x8000 /*MEM_RELEASE*/) {
