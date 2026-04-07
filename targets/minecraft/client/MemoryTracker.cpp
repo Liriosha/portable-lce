@@ -2,7 +2,7 @@
 
 #include <utility>
 #include <vector>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "java/ByteBuffer.h"

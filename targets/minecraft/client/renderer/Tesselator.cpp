@@ -1,7 +1,7 @@
 #include "minecraft/util/Log.h"
 #include "Tesselator.h"
 
-#include <GL/gl.h>
+
 
 #include <vector>
 

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numbers>
 #include <vector>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"

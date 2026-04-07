@@ -4,7 +4,7 @@
 
 #include <utility>
 #include <vector>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "minecraft/client/BufferedImage.h"

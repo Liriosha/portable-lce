@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GL/gl.h>
+#include "platform/renderer/renderer.h"
 
 #include <format>
 #include <string>

@@ -1,6 +1,6 @@
 #include "Minimap.h"
 
-#include <GL/gl.h>
+
 #include <math.h>
 #include <string.h>
 #include <wchar.h>

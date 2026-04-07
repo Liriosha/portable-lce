@@ -1,6 +1,6 @@
 #include "AchievementPopup.h"
 
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "java/System.h"

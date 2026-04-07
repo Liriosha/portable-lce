@@ -1,6 +1,6 @@
 #include "Frustum.h"
 
-#include <GL/gl.h>
+
 #include <string.h>
 
 #include <cmath>

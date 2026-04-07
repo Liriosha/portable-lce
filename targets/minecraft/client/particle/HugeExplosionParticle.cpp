@@ -1,6 +1,6 @@
 #include "HugeExplosionParticle.h"
 
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"

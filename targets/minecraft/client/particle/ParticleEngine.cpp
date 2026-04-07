@@ -1,6 +1,6 @@
 #include "ParticleEngine.h"
 
-#include <GL/gl.h>
+
 #include <math.h>
 
 #include <algorithm>

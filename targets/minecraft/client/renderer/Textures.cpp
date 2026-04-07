@@ -7,7 +7,7 @@
 #include <cstring>
 #include <string>
 #include <utility>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "HttpTexture.h"

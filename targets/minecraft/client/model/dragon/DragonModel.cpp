@@ -6,7 +6,7 @@
 #include <numbers>
 #include <string>
 #include <vector>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "minecraft/client/model/geom/Model.h"

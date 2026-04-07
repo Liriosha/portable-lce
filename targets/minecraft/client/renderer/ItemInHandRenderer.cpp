@@ -2,7 +2,7 @@
 #include "minecraft/util/Log.h"
 #include "ItemInHandRenderer.h"
 
-#include <GL/gl.h>
+
 
 #include <cmath>
 #include <numbers>

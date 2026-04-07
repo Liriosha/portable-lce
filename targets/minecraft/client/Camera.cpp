@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-#include <GL/gl.h>
+
 #include <glm/glm.hpp>
 #include <math.h>
 #include <string.h>

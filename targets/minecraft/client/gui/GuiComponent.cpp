@@ -1,6 +1,6 @@
 #include "GuiComponent.h"
 
-#include <GL/gl.h>
+
 #include <math.h>
 
 #include "platform/renderer/renderer.h"

@@ -1,6 +1,6 @@
 #include "Chunk.h"
 
-#include <GL/gl.h>
+
 #include <string.h>
 
 #include <mutex>

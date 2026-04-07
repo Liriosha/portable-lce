@@ -11,7 +11,7 @@
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/projectile/Arrow.h"
-#include <GL/gl.h>
+
 
 ResourceLocation ArrowRenderer::ARROW_LOCATION =
     ResourceLocation(TN_ITEM_ARROWS);

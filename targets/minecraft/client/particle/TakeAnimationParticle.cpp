@@ -1,6 +1,6 @@
 #include "TakeAnimationParticle.h"
 
-#include <GL/gl.h>
+
 
 #include <cmath>
 

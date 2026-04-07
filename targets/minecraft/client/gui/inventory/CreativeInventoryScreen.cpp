@@ -1,7 +1,7 @@
 #include "minecraft/IGameServices.h"
 #include "CreativeInventoryScreen.h"
 
-#include <GL/gl.h>
+
 
 #include <algorithm>
 #include <string>

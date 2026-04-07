@@ -1,6 +1,6 @@
 #include "TileRenderer.h"
 
-#include <GL/gl.h>
+
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>

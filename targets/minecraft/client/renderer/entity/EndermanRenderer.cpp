@@ -1,7 +1,7 @@
 #include "EndermanRenderer.h"
 
 #include <memory>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 

@@ -2,7 +2,7 @@
 #include "minecraft/util/Log.h"
 #include "LevelRenderer.h"
 
-#include <GL/gl.h>
+
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>

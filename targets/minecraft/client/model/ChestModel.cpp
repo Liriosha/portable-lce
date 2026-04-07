@@ -1,6 +1,6 @@
 #include "ChestModel.h"
 
-#include <GL/gl.h>
+
 
 #include "minecraft/client/model/geom/ModelPart.h"
 

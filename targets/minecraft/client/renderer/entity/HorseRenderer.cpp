@@ -1,7 +1,7 @@
 #include "HorseRenderer.h"
 
 #include <utility>
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"

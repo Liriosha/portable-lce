@@ -1,6 +1,6 @@
 #include "Lighting.h"
 
-#include <GL/gl.h>
+
 
 #include "platform/renderer/renderer.h"
 #include "java/FloatBuffer.h"

@@ -1,6 +1,6 @@
 #include "BeaconScreen.h"
 
-#include <GL/gl.h>
+
 
 #include <memory>
 #include <string>

@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+
 
 // GDraw GL backend for Linux
 #include "platform/renderer/renderer.h"

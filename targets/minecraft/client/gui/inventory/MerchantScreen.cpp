@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <GL/gl.h>
+
 
 #include "AbstractContainerScreen.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"

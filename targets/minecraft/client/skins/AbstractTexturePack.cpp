@@ -1,7 +1,7 @@
 #include "minecraft/util/Log.h"
 #include "AbstractTexturePack.h"
 
-#include <GL/gl.h>
+
 #include <wchar.h>
 
 #include <vector>

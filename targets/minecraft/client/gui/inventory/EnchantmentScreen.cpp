@@ -6,7 +6,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <GL/gl.h>
+
 
 #include "AbstractContainerScreen.h"
 #include "minecraft/client/Lighting.h"
