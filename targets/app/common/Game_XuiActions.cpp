@@ -48,6 +48,8 @@
 #include "minecraft/world/entity/item/MinecartHopper.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/item/crafting/Recipy.h"
+#include "util/StringHelpers.h"
+#include "minecraft/client/User.h"
 
 void Game::HandleXuiActions(void) {
     eXuiAction eAction;
