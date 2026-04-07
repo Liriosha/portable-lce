@@ -1,11 +1,13 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "VillageFeature.h"
 
 #include <list>
 #include <utility>
 #include <vector>
 
-#include "app/common/App_enums.h"
-#include "app/common/src/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
 #include "VillagePieces.h"
 #include "java/Random.h"
@@ -84,7 +86,7 @@ bool VillageFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
     z = zz;
 
     bool forcePlacement = false;
-    LevelGenerationOptions* levelGenOptions = app.getLevelGenerationOptions();
+    LevelGenerationOptions* levelGenOptions = gameServices().getLevelGenerationOptions();
     if (levelGenOptions != nullptr) {
         forcePlacement =
             levelGenOptions->isFeatureChunk(x, z, eFeature_Village);
@@ -94,7 +96,7 @@ bool VillageFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
         bool biomeOk = level->getBiomeSource()->containsOnly(
             x * 16 + 8, z * 16 + 8, 0, allowedBiomes);
         if (biomeOk) {
-            // app.DebugPrintf("Biome ok for Village at %d, %d\n",(x * 16 +
+            // Log::info("Biome ok for Village at %d, %d\n",(x * 16 +
             // 8),(z * 16 + 8));
             return true;
         }
@@ -105,7 +107,7 @@ bool VillageFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
 
 StructureStart* VillageFeature::createStructureStart(int x, int z) {
     // 4J added
-    app.AddTerrainFeaturePosition(eTerrainFeature_Village, x, z);
+    gameServices().addTerrainFeaturePosition(eTerrainFeature_Village, x, z);
 
     return new VillageStart(level, random, x, z, villageSizeModifier,
                             m_iXZSize);

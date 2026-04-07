@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "Level.h"
 
 #include <stdlib.h>
@@ -15,13 +17,13 @@
 #include "Explosion.h"
 #include "IPlatformInput.h"
 #include "LevelListener.h"
-#include "app/common/App_enums.h"
-#include "app/common/src/Colours/ColourTable.h"
-#include "app/common/src/Console_Debug_enum.h"
-#include "app/common/src/Network/GameNetworkManager.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/Colours/ColourTable.h"
+#include "app/common/Console_Debug_enum.h"
+#include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/FrameProfiler.h"
+#include "util/FrameProfiler.h"
 #include "java/Random.h"
 #include "minecraft/Direction.h"
 #include "minecraft/Facing.h"
@@ -1492,7 +1494,7 @@ void Level::playEntitySound(std::shared_ptr<Entity> entity, int iSound,
     for (auto it = listeners.begin(); it != itEnd; it++) {
         // 4J-PB - if the entity is a local player, don't play the sound
         if (entity->GetType() == eTYPE_SERVERPLAYER) {
-            // app.DebugPrintf("ENTITY is serverplayer\n");
+            // Log::info("ENTITY is serverplayer\n");
 
             (*it)->playSound(iSound, entity->x,
                              entity->y - entity->heightOffset, entity->z,
@@ -2113,7 +2115,7 @@ void Level::tickEntities() {
 
             if (!e->removed) {
 #if !defined(_FINAL_BUILD)
-                if (!(app.DebugSettingsOn() && app.GetMobsDontTickEnabled() &&
+                if (!(gameServices().debugSettingsOn() && gameServices().debugMobsDontTick() &&
                       e->instanceof(eTYPE_MOB) && !e->instanceof(eTYPE_PLAYER)))
 #endif
                 {
@@ -2812,8 +2814,8 @@ void Level::tickWeather() {
 
 #if !defined(_FINAL_BUILD)
     // debug setting added to disable weather
-    if (app.DebugSettingsOn()) {
-        if (app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_DisableWeather)) {
             levelData->setThundering(false);
             levelData->setThunderTime(random->nextInt(TICKS_PER_DAY * 7) +
@@ -3870,7 +3872,7 @@ void Level::setGameTime(int64_t time) {
         } else if (timeDiff > 100) {
             // Time differences of more than ~5 seconds are generally not real
             // time passing so ignore (moving dimensions does this)
-            app.DebugPrintf(
+            Log::info(
                 "Level::setTime: Massive time difference, ignoring for time "
                 "passed stat (%lli)\n",
                 timeDiff);

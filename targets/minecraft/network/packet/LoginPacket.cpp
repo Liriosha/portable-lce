@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "LoginPacket.h"
 
 #include "app/linux/LinuxGame.h"
@@ -131,7 +132,7 @@ void LoginPacket::read(DataInputStream* dis)  // throws IOException
     m_xzSize = dis->readShort();
     m_hellScale = dis->read();
 #endif
-    app.DebugPrintf("LoginPacket::read - Difficulty = %d\n", difficulty);
+    Log::info("LoginPacket::read - Difficulty = %d\n", difficulty);
 }
 
 void LoginPacket::write(DataOutputStream* dos)  // throws IOException

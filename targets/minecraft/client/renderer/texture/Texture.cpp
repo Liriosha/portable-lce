@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Texture.h"
 
 #include <string.h>
@@ -7,7 +8,7 @@
 
 #include "platform/sdl2/Render.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "TextureManager.h"
 #include "java/Buffer.h"
 #include "java/ByteBuffer.h"
@@ -344,7 +345,7 @@ void Texture::transferFromImage(BufferedImage* image) {
         // +
         // imgHeight + ") larger than the Texture dimensions (" + width +
         //	", " + height + "). Ignoring.");
-        app.DebugPrintf(
+        Log::info(
             "transferFromImage called with a BufferedImage with dimensions "
             "(%d, %d) larger than the Texture dimensions (%d, %d). Ignoring.\n",
             imgWidth, imgHeight, width, height);

@@ -7,8 +7,8 @@
 #include "platform/sdl2/Render.h"
 #include "EntityRenderDispatcher.h"
 #include "LivingEntityRenderer.h"
-#include "app/common/App_enums.h"
-#include "app/common/src/Colours/ColourTable.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/Colours/ColourTable.h"
 
 #include "java/Class.h"
 #include "minecraft/client/Minecraft.h"

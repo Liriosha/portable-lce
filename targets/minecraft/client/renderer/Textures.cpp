@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "Textures.h"
 
 #include <assert.h>
@@ -10,10 +11,10 @@
 #include "platform/sdl2/Render.h"
 #include "HttpTexture.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/BufferedImage.h"
-#include "app/include/MemTexture.h"
-#include "app/include/MemTextureProcessor.h"
-#include "app/include/MobSkinMemTextureProcessor.h"
+#include "minecraft/client/BufferedImage.h"
+#include "minecraft/client/renderer/MemTexture.h"
+#include "minecraft/client/renderer/MemTextureProcessor.h"
+#include "minecraft/client/renderer/MobSkinMemTextureProcessor.h"
 #include "util/StringHelpers.h"
 
 #include "java/Buffer.h"
@@ -1003,7 +1004,7 @@ int Textures::loadMemTexture(const std::wstring& url,
     if (it != memTextures.end()) {
         texture = (*it).second;
     }
-    if (texture == nullptr && app.IsFileInMemoryTextures(url)) {
+    if (texture == nullptr && gameServices().isFileInMemoryTextures(url)) {
         // If we haven't loaded it yet, but we have the data for it then add it
         texture = addMemTexture(url, new MobSkinMemTextureProcessor());
     }
@@ -1040,7 +1041,7 @@ int Textures::loadMemTexture(const std::wstring& url, int backup) {
     if (it != memTextures.end()) {
         texture = (*it).second;
     }
-    if (texture == nullptr && app.IsFileInMemoryTextures(url)) {
+    if (texture == nullptr && gameServices().isFileInMemoryTextures(url)) {
         // If we haven't loaded it yet, but we have the data for it then add it
         texture = addMemTexture(url, new MobSkinMemTextureProcessor());
     }
@@ -1081,7 +1082,7 @@ MemTexture* Textures::addMemTexture(const std::wstring& name,
         // can we find it in the app mem files?
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        app.GetMemFileDetails(name, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(name, &pbData, &dwBytes);
 
         if (dwBytes != 0) {
             texture = new MemTexture(name, pbData, dwBytes, processor);

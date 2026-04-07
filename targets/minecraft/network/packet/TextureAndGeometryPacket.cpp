@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "app/common/Minecraft_Macros.h"
-#include "app/common/src/DLC/DLCSkinFile.h"
+#include "app/common/DLC/DLCSkinFile.h"
 #include "PacketListener.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"

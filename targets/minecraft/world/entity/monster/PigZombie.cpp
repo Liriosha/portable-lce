@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "PigZombie.h"
 
 #include <string>
@@ -93,7 +94,7 @@ void PigZombie::readAdditionalSaveData(CompoundTag* tag) {
 std::shared_ptr<Entity> PigZombie::findAttackTarget() {
 #ifndef _FINAL_BUILD
 #ifdef _DEBUG_MENUS_ENABLED
-    if (app.GetMobsDontAttackEnabled()) {
+    if (gameServices().debugMobsDontAttack()) {
         return std::shared_ptr<Player>();
     }
 #endif

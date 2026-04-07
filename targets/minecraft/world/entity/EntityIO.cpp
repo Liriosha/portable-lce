@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "EntityIO.h"
 
 #include <utility>
@@ -330,7 +331,7 @@ std::shared_ptr<Entity> EntityIO::loadStatic(CompoundTag* tag, Level* level) {
         entity->load(tag);
     } else {
 #ifdef _DEBUG
-        app.DebugPrintf("Skipping Entity with id %ls\n",
+        Log::info("Skipping Entity with id %ls\n",
                         tag->getString(L"id").c_str());
 #endif
     }

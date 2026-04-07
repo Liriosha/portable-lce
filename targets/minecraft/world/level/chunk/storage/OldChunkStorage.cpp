@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "OldChunkStorage.h"
 
 #include <assert.h>
@@ -11,7 +13,7 @@
 #include <utility>
 
 #include "IPlatformInput.h"
-#include "app/common/src/Console_Debug_enum.h"
+#include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "util/Definitions.h"
 #include "java/File.h"
@@ -134,7 +136,7 @@ LevelChunk* OldChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing level data, skipping\n", x,
                     z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             return nullptr;
         }
         if (!tag->getCompound(L"Level")->contains(L"Blocks")) {
@@ -142,7 +144,7 @@ LevelChunk* OldChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing block data, skipping\n", x,
                     z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             return nullptr;
         }
         LevelChunk* levelChunk =
@@ -153,7 +155,7 @@ LevelChunk* OldChunkStorage::load(Level* level, int x, int z) {
                     "Chunk fileat %d, %d is in the wrong location; relocating. "
                     "Expected %d, %d, got %d, %d\n",
                     x, z, x, z, levelChunk->x, levelChunk->z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             tag->putInt(L"xPos", x);
             tag->putInt(L"zPos", z);
             levelChunk =
@@ -445,8 +447,8 @@ LevelChunk* OldChunkStorage::load(Level* level, DataInputStream* dis) {
     }
 
 #if !defined(_CONTENT_PACKAGE)
-    if (app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // Read the biome data from the stream, but don't use it
         std::vector<uint8_t> dummyBiomes(levelChunk->biomes.size());
@@ -555,8 +557,8 @@ LevelChunk* OldChunkStorage::load(Level* level, CompoundTag* tag) {
     // 4J removed - we shouldn't need this any more
 
 #if !defined(_CONTENT_PACKAGE)
-    if (app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // Do nothing
     } else

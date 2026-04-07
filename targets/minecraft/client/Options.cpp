@@ -1,9 +1,10 @@
+#include "minecraft/util/Log.h"
 #include "Options.h"
 
 #include "KeyMapping.h"
-#include "app/common/src/Audio/SoundEngine.h"
+#include "app/common/Audio/SoundEngine.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/stubs.h"
+#include "platform/stubs.h"
 #include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/InputOutputStream/BufferedReader.h"
@@ -256,7 +257,7 @@ void Options::toggle(const Options::Option* option, int dir) {
     // if (option ==  Option::DIFFICULTY) difficulty = (difficulty + dir) & 3;
     if (option == Option::DIFFICULTY) difficulty = (dir) & 3;
 
-    app.DebugPrintf("Option::DIFFICULTY = %d", difficulty);
+    Log::info("Option::DIFFICULTY = %d", difficulty);
 
     if (option == Option::GRAPHICS) {
         fancyGraphics = !fancyGraphics;

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "minecraft/IGameServices.h"
 #include "util/StringHelpers.h"
 
 HtmlString::HtmlString(std::wstring text, eMinecraftColour hexColor,
@@ -30,7 +30,7 @@ std::wstring HtmlString::ToString() {
         this->color == eMinecraftColour_NOT_SET ? eHTMLColor_7 : this->color;
 
     ss << L"<font color=\"#" << std::setfill(L'0') << std::setw(6) << std::hex
-       << app.GetHTMLColor(color) << L"\">" << text << "</font>";
+       << gameServices().getHTMLColour(color) << L"\">" << text << "</font>";
 
     if (italics) {
         ss << "</i>";

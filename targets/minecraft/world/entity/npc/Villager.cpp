@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "Villager.h"
 
 #include <algorithm>
@@ -796,5 +797,5 @@ std::wstring Villager::getDisplayName() {
             name = IDS_VILLAGER_BUTCHER;
             break;
     };
-    return app.GetString(name);
+    return gameServices().getString(name);
 }

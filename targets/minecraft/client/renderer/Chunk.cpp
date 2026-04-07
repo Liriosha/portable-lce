@@ -12,7 +12,7 @@
 #include "platform/sdl2/Render.h"
 #include "LevelRenderer.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/FrameProfiler.h"
+#include "util/FrameProfiler.h"
 #include "TileRenderer.h"
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/culling/Culler.h"

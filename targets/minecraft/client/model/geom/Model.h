@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "app/include/SkinBox.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "java/Random.h"
 
 class Mob;

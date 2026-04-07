@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "BeaconPowerButton.h"
 
 #include <string>
@@ -34,7 +35,7 @@ void BeaconPowerButton::renderTooltip(int xm, int ym) {
     MobEffect* effect = MobEffect::effects[effectId];
     if (!effect) return;
 
-    std::wstring name = app.GetString(effect->getDescriptionId());
+    std::wstring name = gameServices().getString(effect->getDescriptionId());
     if (tier >= 3 && effect->id != MobEffect::regeneration->id) {
         name += L" II";
     }

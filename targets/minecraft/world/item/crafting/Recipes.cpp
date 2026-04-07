@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "minecraft/world/item/crafting/Recipes.h"
 
 #include <stdarg.h>
@@ -987,7 +988,7 @@ ShapedRecipy* Recipes::addShapedRecipy(ItemInstance* result, ...) {
 
     for (int i = 0; wchTypes[i] != L'\0'; ++i) {
         if (wchTypes[i + 1] == L'\0' && wchTypes[i] != L'g') {
-            app.DebugPrintf("Missing group type\n");
+            Log::info("Missing group type\n");
         }
 
         switch (wchTypes[i]) {

@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "ItemEntity.h"
 
 #include <stdint.h>
@@ -280,7 +281,7 @@ std::shared_ptr<ItemInstance> ItemEntity::getItem() {
 
     if (result == nullptr) {
         if (level != nullptr) {
-            app.DebugPrintf("Item entity %d has no item?!\n", entityId);
+            Log::info("Item entity %d has no item?!\n", entityId);
             // level.getLogger().severe("Item entity " + entityId + " has no
             // item?!");
         }

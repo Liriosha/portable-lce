@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "RespawnPacket.h"
 
 #include <string>
@@ -37,7 +38,7 @@ RespawnPacket::RespawnPacket(char dimension, int64_t mapSeed, int mapHeight,
     this->m_newEntityId = newEntityId;
     m_xzSize = xzSize;
     m_hellScale = hellScale;
-    app.DebugPrintf("RespawnPacket - Difficulty = %d\n", difficulty);
+    Log::info("RespawnPacket - Difficulty = %d\n", difficulty);
 }
 
 void RespawnPacket::handle(PacketListener* listener) {
@@ -62,7 +63,7 @@ void RespawnPacket::read(DataInputStream* dis)  // throws IOException
     m_xzSize = dis->readShort();
     m_hellScale = dis->read();
 #endif
-    app.DebugPrintf("RespawnPacket::read - Difficulty = %d\n", difficulty);
+    Log::info("RespawnPacket::read - Difficulty = %d\n", difficulty);
 }
 
 void RespawnPacket::write(DataOutputStream* dos)  // throws IOException

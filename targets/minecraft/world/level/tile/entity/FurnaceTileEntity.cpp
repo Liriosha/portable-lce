@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "FurnaceTileEntity.h"
 
 #include <stdint.h>
@@ -97,7 +98,7 @@ void FurnaceTileEntity::setItem(unsigned int slot,
 }
 
 std::wstring FurnaceTileEntity::getName() {
-    return hasCustomName() ? name : app.GetString(IDS_TILE_FURNACE);
+    return hasCustomName() ? name : gameServices().getString(IDS_TILE_FURNACE);
 }
 
 std::wstring FurnaceTileEntity::getCustomName() {

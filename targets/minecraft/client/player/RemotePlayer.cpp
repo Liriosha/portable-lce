@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "RemotePlayer.h"
 
 #include <cmath>
@@ -21,7 +22,7 @@ RemotePlayer::RemotePlayer(Level* level, const std::wstring& name)
     lx = ly = lz = lyr = lxr = 0.0;
     fallTime = 0.0f;
 
-    app.DebugPrintf("Created RemotePlayer with name %ls\n", name.c_str());
+    Log::info("Created RemotePlayer with name %ls\n", name.c_str());
 
     heightOffset = 0;
     footSize = 0;

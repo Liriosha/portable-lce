@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "SetPlayerTeamPacket.h"
 
 #include <unordered_set>
@@ -40,13 +41,13 @@ SetPlayerTeamPacket::SetPlayerTeamPacket(PlayerTeam* team,
                                          std::vector<std::wstring>* playerNames,
                                          int method) {
     if (method != METHOD_JOIN && method != METHOD_LEAVE) {
-        app.DebugPrintf("Method must be join or leave for player constructor");
+        Log::info("Method must be join or leave for player constructor");
 #ifndef _CONTENT_PACKAGE
         __debugbreak();
 #endif
     }
     if (playerNames == nullptr || playerNames->empty()) {
-        app.DebugPrintf("Players cannot be null/empty");
+        Log::info("Players cannot be null/empty");
 #ifndef _CONTENT_PACKAGE
         __debugbreak();
 #endif

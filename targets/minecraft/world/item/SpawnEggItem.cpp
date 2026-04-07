@@ -1,10 +1,11 @@
+#include "minecraft/IGameServices.h"
 #include "SpawnEggItem.h"
 
 #include <unordered_map>
 #include <utility>
 
 #include "Facing.h"
-#include "app/common/src/Colours/ColourTable.h"
+#include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
 #include "util/StringHelpers.h"
 #include "java/Class.h"
@@ -40,7 +41,7 @@ std::wstring SpawnEggItem::getHoverName(
     int nameId = EntityIO::getNameId(itemInstance->getAuxValue());
     if (nameId >= 0) {
         elementName =
-            replaceAll(elementName, L"{*CREATURE*}", app.GetString(nameId));
+            replaceAll(elementName, L"{*CREATURE*}", gameServices().getString(nameId));
         // elementName += " " + I18n.get("entity." + encodeId + ".name");
     } else {
         elementName = replaceAll(elementName, L"{*CREATURE*}", L"");
@@ -153,7 +154,7 @@ std::shared_ptr<Entity> SpawnEggItem::canSpawn(int iAuxVal, Level* level,
                     }
                 }
 #ifndef _CONTENT_PACKAGE
-                else if (app.DebugArtToolsOn()) {
+                else if (gameServices().debugArtToolsOn()) {
                     canSpawn = true;
                 }
 #endif
@@ -179,7 +180,7 @@ bool SpawnEggItem::useOn(std::shared_ptr<ItemInstance> itemInstance,
     int tile = level->getTile(x, y, z);
 
 #ifndef _CONTENT_PACKAGE
-    if (app.DebugArtToolsOn() && tile == Tile::mobSpawner_Id) {
+    if (gameServices().debugArtToolsOn() && tile == Tile::mobSpawner_Id) {
         // 4J Stu - Force adding this as a tile update
         level->removeTile(x, y, z);
         level->setTileAndData(x, y, z, Tile::mobSpawner_Id, 0,

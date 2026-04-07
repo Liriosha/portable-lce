@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "StrongholdFeature.h"
 
 #include <assert.h>
@@ -8,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include "app/common/App_enums.h"
-#include "app/common/src/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "StrongholdPieces.h"
@@ -161,12 +163,12 @@ bool StrongholdFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
                     }
 #endif
 
-                    app.DebugPrintf(
+                    Log::info(
                         "Placed stronghold in valid biome at (%d, %d), (%d, "
                         "%d)\n",
                         selectedX, selectedZ, position->x, position->z);
                     // 4J added
-                    app.AddTerrainFeaturePosition(eTerrainFeature_Stronghold,
+                    gameServices().addTerrainFeaturePosition(eTerrainFeature_Stronghold,
                                                   selectedX, selectedZ);
 
                     // 4J Added
@@ -196,7 +198,7 @@ bool StrongholdFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
             // one we tried, so store it in the save so Eye of Ender works Fix
             // for #81933 - GAMEPLAY: The Eye of Ender occasionally does not
             // appear when used to try and locate the End Portal.
-            app.AddTerrainFeaturePosition(eTerrainFeature_Stronghold,
+            gameServices().addTerrainFeaturePosition(eTerrainFeature_Stronghold,
                                           strongholdPos[0]->x,
                                           strongholdPos[0]->z);
         }
@@ -207,7 +209,7 @@ bool StrongholdFeature::isFeatureChunk(int x, int z, bool bIsSuperflat) {
     for (int i = 0; i < strongholdPos_length; i++) {
         bool forcePlacement = false;
         LevelGenerationOptions* levelGenOptions =
-            app.getLevelGenerationOptions();
+            gameServices().getLevelGenerationOptions();
         if (levelGenOptions != nullptr) {
             forcePlacement =
                 levelGenOptions->isFeatureChunk(x, z, eFeature_Stronghold);

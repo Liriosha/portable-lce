@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "SyncedEntityData.h"
 
 #include <assert.h>
@@ -332,7 +333,7 @@ SynchedEntityData::unpack(DataInputStream* input)  // throws IOException
                     new DataItem(itemType, itemId, Packet::readItem(input)));
             } break;
             default:
-                app.DebugPrintf(
+                Log::info(
                     " ------ garbage data, or early end of stream due to an "
                     "incomplete packet\n");
                 delete result;

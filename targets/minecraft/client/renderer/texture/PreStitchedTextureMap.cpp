@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "PreStitchedTextureMap.h"
 
 #include <format>
@@ -5,7 +6,7 @@
 
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "SimpleIcon.h"
 #include "StitchedTexture.h"
 #include "Texture.h"
@@ -173,7 +174,7 @@ void PreStitchedTextureMap::makeTextureAnimated(TexturePack* texturePack,
 #if !defined(_CONTENT_PACKAGE)
         if (first->getWidth() != tex->getWidth() ||
             first->getHeight() != tex->getHeight()) {
-            app.DebugPrintf("%ls - first w - %d, h - %d, tex w - %d, h - %d\n",
+            Log::info("%ls - first w - %d, h - %d, tex w - %d, h - %d\n",
                             textureFileName.c_str(), first->getWidth(),
                             tex->getWidth(), first->getHeight(),
                             tex->getHeight());
@@ -194,7 +195,7 @@ void PreStitchedTextureMap::makeTextureAnimated(TexturePack* texturePack,
 
 StitchedTexture* PreStitchedTextureMap::getTexture(const std::wstring& name) {
 #if !defined(_CONTENT_PACKAGE)
-    app.DebugPrintf("Not implemented!\n");
+    Log::info("Not implemented!\n");
     __debugbreak();
 #endif
     return nullptr;
@@ -215,7 +216,7 @@ Texture* PreStitchedTextureMap::getStitchedTexture() { return stitchResult; }
 Icon* PreStitchedTextureMap::registerIcon(const std::wstring& name) {
     Icon* result = nullptr;
     if (name.empty()) {
-        app.DebugPrintf("Don't register nullptr\n");
+        Log::info("Don't register nullptr\n");
 #if !defined(_CONTENT_PACKAGE)
         __debugbreak();
 #endif
@@ -228,7 +229,7 @@ Icon* PreStitchedTextureMap::registerIcon(const std::wstring& name) {
 
     if (result == nullptr) {
 #if !defined(_CONTENT_PACKAGE)
-        app.DebugPrintf("Could not find uv data for icon %ls\n", name.c_str());
+        Log::info("Could not find uv data for icon %ls\n", name.c_str());
         __debugbreak();
 #endif
         result = missingPosition;

@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "ChestTileEntity.h"
 
 #include <stdint.h>
@@ -109,7 +110,7 @@ void ChestTileEntity::setItem(unsigned int slot,
 }
 
 std::wstring ChestTileEntity::getName() {
-    return hasCustomName() ? name : app.GetString(IDS_TILE_CHEST);
+    return hasCustomName() ? name : gameServices().getString(IDS_TILE_CHEST);
 }
 
 std::wstring ChestTileEntity::getCustomName() {

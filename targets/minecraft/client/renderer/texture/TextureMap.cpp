@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "TextureMap.h"
 
 #include <wchar.h>
@@ -7,7 +8,7 @@
 
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
-#include "app/include/BufferedImage.h"
+#include "minecraft/client/BufferedImage.h"
 #include "StitchSlot.h"
 #include "StitchedTexture.h"
 #include "Stitcher.h"
@@ -234,7 +235,7 @@ Texture* TextureMap::getStitchedTexture() { return stitchResult; }
 // 4J Stu - register is a reserved keyword in C++
 Icon* TextureMap::registerIcon(const std::wstring& name) {
     if (name.empty()) {
-        app.DebugPrintf("Don't register nullptr\n");
+        Log::info("Don't register nullptr\n");
 #ifndef _CONTENT_PACKAGE
         __debugbreak();
 #endif

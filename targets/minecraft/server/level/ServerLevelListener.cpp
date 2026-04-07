@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "ServerLevelListener.h"
 
 #include <memory>
@@ -57,7 +58,7 @@ void ServerLevelListener::playSound(int iSound, double x, double y, double z,
                                     float volume, float pitch,
                                     float fClipSoundDist) {
     if (iSound < 0) {
-        app.DebugPrintf(
+        Log::info(
             "ServerLevelListener received request for sound less than 0, so "
             "ignoring\n");
     } else {
@@ -78,7 +79,7 @@ void ServerLevelListener::playSoundExceptPlayer(std::shared_ptr<Player> player,
                                                 float pitch,
                                                 float fSoundClipDist) {
     if (iSound < 0) {
-        app.DebugPrintf(
+        Log::info(
             "ServerLevelListener received request for sound less than 0, so "
             "ignoring\n");
     } else {

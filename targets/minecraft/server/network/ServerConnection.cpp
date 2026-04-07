@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "ServerConnection.h"
 
 #include <algorithm>
@@ -162,7 +164,7 @@ void ServerConnection::handleServerSettingsChanged(
     if (packet->action == ServerSettingsChangedPacket::HOST_DIFFICULTY) {
         for (unsigned int i = 0; i < pMinecraft->levels.size(); ++i) {
             if (pMinecraft->levels[i] != nullptr) {
-                app.DebugPrintf(
+                Log::info(
                     "ClientConnection::handleServerSettingsChanged - "
                     "Difficulty = %d",
                     packet->data);
@@ -174,7 +176,7 @@ void ServerConnection::handleServerSettingsChanged(
     // if(packet->action==ServerSettingsChangedPacket::HOST_IN_GAME_SETTINGS)//
     // options
     // 	{
-    // 		app.SetGameHostOption(eGameHostOption_All,packet->m_serverSettings)
+    // 		gameServices().setGameHostOption(eGameHostOption_All,packet->m_serverSettings)
     // 	}
     // 	else
     // 	{

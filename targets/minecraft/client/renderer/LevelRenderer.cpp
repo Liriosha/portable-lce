@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "LevelRenderer.h"
 
 #include <GL/gl.h>
@@ -18,14 +20,14 @@
 #include "platform/sdl2/Render.h"
 #include "Chunk.h"
 #include "GameRenderer.h"
-#include "app/common/App_enums.h"
-#include "app/common/src/Audio/SoundEngine.h"
-#include "app/common/src/Colours/ColourTable.h"
-#include "app/common/src/Console_Debug_enum.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundEngine.h"
+#include "app/common/Colours/ColourTable.h"
+#include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/FrameProfiler.h"
-#include "app/include/MobSkinMemTextureProcessor.h"
-#include "app/include/stubs.h"
+#include "util/FrameProfiler.h"
+#include "minecraft/client/renderer/MobSkinMemTextureProcessor.h"
+#include "platform/stubs.h"
 #include "Tesselator.h"
 #include "util/StringHelpers.h"
 #include "java/Class.h"
@@ -445,8 +447,8 @@ void LevelRenderer::setLevel(int playerIndex, MultiPlayerLevel* level) {
 }
 
 void LevelRenderer::AddDLCSkinsToMemTextures() {
-    for (int i = 0; i < app.vSkinNames.size(); i++) {
-        textures->addMemTexture(app.vSkinNames[i],
+    for (int i = 0; i < gameServices().getSkinNames().size(); i++) {
+        textures->addMemTexture(gameServices().getSkinNames()[i],
                                 new MobSkinMemTextureProcessor());
     }
 }
@@ -1127,7 +1129,7 @@ void LevelRenderer::renderHaloRing(float alpha) {
     // Rough lumninance calculation
     float Y = (sr + sr + sb + sg + sg + sg) / 6;
     float br = 0.6f + (Y * 0.4f);
-    // app.DebugPrintf("Luminance = %f, brightness = %f\n", Y, br);
+    // Log::info("Luminance = %f, brightness = %f\n", Y, br);
     glColor3f(br, br, br);
 
     // Fog at the base near the world
@@ -1162,7 +1164,7 @@ void LevelRenderer::renderClouds(float alpha) {
     int playerIndex = mc->player->GetXboxPad();
 
     // if the primary player has clouds off, so do all players on this machine
-    if (app.GetGameSettings(InputManager.GetPrimaryPad(),
+    if (gameServices().getGameSettings(InputManager.GetPrimaryPad(),
                             eGameSetting_Clouds) == 0) {
         return;
     }
@@ -1175,8 +1177,8 @@ void LevelRenderer::renderClouds(float alpha) {
         return;
     }
 
-    if (app.DebugSettingsOn()) {
-        if (app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
             (1L << eDebugSetting_FreezeTime)) {
             iTicks = m_freezeticks;
         }
@@ -1253,8 +1255,8 @@ void LevelRenderer::renderClouds(float alpha) {
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 
-    if (app.DebugSettingsOn()) {
-        if (!(app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (!(gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
               (1L << eDebugSetting_FreezeTime))) {
             m_freezeticks = iTicks;
         }
@@ -1439,8 +1441,8 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
 
     int iTicks = ticks;
 
-    if (app.DebugSettingsOn()) {
-        if (app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
             (1L << eDebugSetting_FreezeTime)) {
             iTicks = m_freezeticks;
         }
@@ -1686,8 +1688,8 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 
-    if (app.DebugSettingsOn()) {
-        if (!(app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn()) {
+        if (!(gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
               (1L << eDebugSetting_FreezeTime))) {
             m_freezeticks = iTicks;
         }
@@ -1748,7 +1750,7 @@ bool LevelRenderer::updateDirtyChunks() {
         static int throttle = 0;
         if( ( throttle % 100 ) == 0 )
         {
-        app.DebugPrintf("CBuffSize: %d\n",memAlloc/(1024*1024));
+        Log::info("CBuffSize: %d\n",memAlloc/(1024*1024));
         }
         throttle++;
         */
@@ -1818,7 +1820,7 @@ bool LevelRenderer::updateDirtyChunks() {
                 int py = (int)player->y;
                 int pz = (int)player->z;
 
-                //			app.DebugPrintf("!! %d %d %d, %d %d %d
+                //			Log::info("!! %d %d %d, %d %d %d
                 //{%d,%d}
                 //",px,py,pz,stackChunkDirty,nonStackChunkDirty,onlyRebuild,
                 // xChunks, zChunks);
@@ -1935,7 +1937,7 @@ bool LevelRenderer::updateDirtyChunks() {
                         }
                     }
                 }
-                //			app.DebugPrintf("[%d,%d,%d]\n",nearestClipChunks.empty(),considered,wouldBeNearButEmpty);
+                //			Log::info("[%d,%d,%d]\n",nearestClipChunks.empty(),considered,wouldBeNearButEmpty);
             }
         }
     }
@@ -1999,7 +2001,7 @@ bool LevelRenderer::updateDirtyChunks() {
                 // 0; 		static int64_t countTime = 0;
                 //		int64_t startTime = System::currentTimeMillis();
 
-                // app.DebugPrintf("Rebuilding permaChunk %d\n", index);
+                // Log::info("Rebuilding permaChunk %d\n", index);
 
                 {
                     FRAME_PROFILE_SCOPE(ChunkRebuildBody);
@@ -2218,7 +2220,7 @@ void LevelRenderer::renderHitOutline(std::shared_ptr<Player> player,
         const float ss = 0.002f;
 
         // 4J-PB - If Display HUD is false, don't render the hit outline
-        if (app.GetGameSettings(iPad, eGameSetting_DisplayHUD) == 0) return;
+        if (gameServices().getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) return;
         RenderManager.StateSetLightingEnable(false);
         glDisable(GL_TEXTURE_2D);
 
@@ -4047,7 +4049,7 @@ int LevelRenderer::rebuildChunkThreadProc(void* lpParam) {
     while (true) {
         s_activationEventA[index]->waitForSignal(C4JThread::kInfiniteTimeout);
 
-        // app.DebugPrintf("Rebuilding permaChunk %d\n", index + 1);
+        // Log::info("Rebuilding permaChunk %d\n", index + 1);
         {
             FRAME_PROFILE_SCOPE(ChunkRebuildBody);
             permaChunk[index + 1].rebuild();

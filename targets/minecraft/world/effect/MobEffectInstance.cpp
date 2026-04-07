@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 
 #include "minecraft/world/effect/MobEffectInstance.h"
 
@@ -49,7 +50,7 @@ MobEffectInstance::MobEffectInstance(MobEffectInstance* copy) {
 
 void MobEffectInstance::update(MobEffectInstance* takeOver) {
     if (id != takeOver->id) {
-        app.DebugPrintf(
+        Log::info(
             "This method should only be called for matching effects!");
     }
     if (takeOver->amplifier > amplifier) {

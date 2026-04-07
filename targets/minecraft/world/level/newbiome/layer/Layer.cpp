@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/level/newbiome/layer/Layer.h"
 
 #include <stdint.h>
@@ -7,7 +8,7 @@
 
 #include "BiomeOverrideLayer.h"
 #include "IPlatformInput.h"
-#include "app/common/src/Console_Debug_enum.h"
+#include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "minecraft/world/level/LevelType.h"
 #include "minecraft/world/level/newbiome/layer/AddIslandLayer.h"
@@ -110,8 +111,8 @@ std::vector<std::shared_ptr<Layer>> Layer::getDefaultLayers(
 
 #if !defined(_CONTENT_PACKAGE)
 #if defined(_BIOME_OVERRIDE)
-    if (app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         biomeLayer = std::make_shared<BiomeOverrideLayer>(1);
     }

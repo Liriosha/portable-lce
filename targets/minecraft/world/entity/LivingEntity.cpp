@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "LivingEntity.h"
 
 #include <stdint.h>
@@ -336,7 +337,7 @@ int LivingEntity::decreaseAirSupply(int currentSupply) {
         }
     }
     if (instanceof(eTYPE_PLAYER)) {
-        app.DebugPrintf("++++++++++ %s: Player decreasing air supply to %d\n",
+        Log::info("++++++++++ %s: Player decreasing air supply to %d\n",
                         level->isClientSide ? "CLIENT" : "SERVER",
                         currentSupply - 1);
     }

@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Tile.h"
 
 #include <string.h>
@@ -2672,7 +2673,7 @@ Tile::SoundType::SoundType(eMATERIALSOUND_TYPE eMaterialSound, float volume,
                 this->iBreakSound = eSoundType_DIG_WOOD;
                 break;
             default:
-                app.DebugPrintf("NO BREAK SOUND!\n");
+                Log::info("NO BREAK SOUND!\n");
                 this->iBreakSound = -1;
                 break;
         }
@@ -2714,7 +2715,7 @@ Tile::SoundType::SoundType(eMATERIALSOUND_TYPE eMaterialSound, float volume,
             this->iStepSound = eSoundType_STEP_LADDER;
             break;
         default:
-            app.DebugPrintf("NO STEP SOUND!\n");
+            Log::info("NO STEP SOUND!\n");
 
             this->iStepSound = -1;
             break;

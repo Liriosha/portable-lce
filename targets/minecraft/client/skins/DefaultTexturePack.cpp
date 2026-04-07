@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 
 #include "DefaultTexturePack.h"
 
@@ -17,9 +18,9 @@ DefaultTexturePack::DefaultTexturePack()
 }
 
 void DefaultTexturePack::loadIcon() {
-    if (app.hasArchiveFile(L"Graphics\\TexturePackIcon.png")) {
+    if (gameServices().hasArchiveFile(L"Graphics\\TexturePackIcon.png")) {
         std::vector<uint8_t> ba =
-            app.getArchiveFile(L"Graphics\\TexturePackIcon.png");
+            gameServices().getArchiveFile(L"Graphics\\TexturePackIcon.png");
         m_iconData = ba.data();
         m_iconSize = static_cast<std::uint32_t>(ba.size());
     }

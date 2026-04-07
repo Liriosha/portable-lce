@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "SelectWorldScreen.h"
 
 #include <stdint.h>
@@ -34,7 +35,7 @@ SelectWorldScreen::SelectWorldScreen(Screen* lastScreen) {
 }
 
 void SelectWorldScreen::init() {
-    app.DebugPrintf("SelectWorldScreen::init() START\n");
+    Log::info("SelectWorldScreen::init() START\n");
     Language* language = Language::getInstance();
     title = language->getElement(L"selectWorld.title");
 
@@ -95,7 +96,7 @@ void SelectWorldScreen::postInit() {
 }
 
 void SelectWorldScreen::buttonClicked(Button* button) {
-    app.DebugPrintf("SelectWorldScreen::buttonClicked START\n");
+    Log::info("SelectWorldScreen::buttonClicked START\n");
     if (!button->active) return;
     if (button->id == BUTTON_DELETE_ID) {
         std::wstring worldName = getWorldName(selectedWorld);
@@ -124,7 +125,7 @@ void SelectWorldScreen::buttonClicked(Button* button) {
         minecraft->setScreen(
             new RenameWorldScreen(this, getWorldId(selectedWorld)));
     } else if (button->id == BUTTON_CANCEL_ID) {
-        app.DebugPrintf(
+        Log::info(
             "SelectWorldScreen::buttonClicked 'Cancel' "
             "minecraft->setScreen(lastScreen)\n");
         minecraft->setScreen(lastScreen);
@@ -200,7 +201,7 @@ void SelectWorldScreen::render(int xm, int ym, float a) {
                     count = 0;
                 }
             } else {
-                app.DebugPrintf(
+                Log::info(
                     "SelectWorldScreen::render minecraft->setScreen(new "
                     "CreateWorldScreen(this))\n");
                 minecraft->setScreen(new CreateWorldScreen(this));

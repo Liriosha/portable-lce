@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "StructureFeatureIO.h"
 
 #include <string>
@@ -95,7 +96,7 @@ StructureStart* StructureFeatureIO::loadStaticStart(CompoundTag* tag,
     if (start != nullptr) {
         start->load(level, tag);
     } else {
-        app.DebugPrintf("Skipping Structure with id %ls",
+        Log::info("Skipping Structure with id %ls",
                         tag->getString(L"id").c_str());
     }
     return start;
@@ -113,7 +114,7 @@ StructurePiece* StructureFeatureIO::loadStaticPiece(CompoundTag* tag,
     if (piece != nullptr) {
         piece->load(level, tag);
     } else {
-        app.DebugPrintf("Skipping Piece with id %ls",
+        Log::info("Skipping Piece with id %ls",
                         tag->getString(L"id").c_str());
     }
     return piece;

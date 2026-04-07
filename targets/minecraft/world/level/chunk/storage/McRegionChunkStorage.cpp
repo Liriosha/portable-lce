@@ -1,6 +1,5 @@
-#ifdef TRACY_ENABLE
-#include <tracy/Tracy.hpp>
-#endif
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "McRegionChunkStorage.h"
 
 #include <stdio.h>
@@ -12,7 +11,7 @@
 #include <utility>
 
 #include "IPlatformInput.h"
-#include "app/common/src/Console_Debug_enum.h"
+#include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "platform/C4JThread.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
@@ -154,7 +153,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing level data, skipping\n", x,
                     z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             delete chunkData;
             return nullptr;
         }
@@ -163,7 +162,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing block data, skipping\n", x,
                     z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             delete chunkData;
             return nullptr;
         }
@@ -175,7 +174,7 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
                     "Chunk file at %d, %d is in the wrong location; "
                     "relocating. Expected %d, %d, got %d, %d\n",
                     x, z, x, z, levelChunk->x, levelChunk->z);
-            app.DebugPrintf(buf);
+            Log::info(buf);
             delete levelChunk;
             delete chunkData;
             return nullptr;
@@ -192,8 +191,8 @@ LevelChunk* McRegionChunkStorage::load(Level* level, int x, int z) {
         delete chunkData;
     }
 #if !defined(_CONTENT_PACKAGE)
-    if (levelChunk && app.DebugSettingsOn() &&
-        app.GetGameSettingsDebugMask(PlatformInput.GetPrimaryPad()) &
+    if (levelChunk && gameServices().debugSettingsOn() &&
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_EnableBiomeOverride)) {
         // 4J Stu - This will force an update of the chunk's biome array
         levelChunk->reloadBiomes();
@@ -355,7 +354,7 @@ void McRegionChunkStorage::staticCtor() {
         s_saveThreads[i] =
             new C4JThread(runSaveThreadProc, nullptr, threadName);
 
-        // app.DebugPrintf("Created new thread: %s\n",threadName);
+        // Log::info("Created new thread: %s\n",threadName);
 
         // ResumeThread( saveThreads[j] );
         s_saveThreads[i]->run();

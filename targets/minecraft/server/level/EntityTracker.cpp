@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "app/common/src/Network/NetworkPlayerInterface.h"
+#include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "ServerLevel.h"
 #include "ServerPlayer.h"

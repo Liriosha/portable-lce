@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "HellRandomLevelSource.h"
 
 #include <stdlib.h>
@@ -528,7 +529,7 @@ void HellRandomLevelSource::postProcess(ChunkSource* parent, int xt, int zt) {
 
     HeavyTile::instaFall = false;
 
-    app.processSchematics(parent->getChunk(xt, zt));
+    gameServices().processSchematics(parent->getChunk(xt, zt));
 }
 
 bool HellRandomLevelSource::save(bool force,

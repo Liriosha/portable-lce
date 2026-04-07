@@ -5,8 +5,8 @@
 #include <unordered_map>
 
 #include "Entity.h"
-#include "app/common/App_enums.h"
-#include "app/common/src/Colours/ColourTable.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/Colours/ColourTable.h"
 #include "java/Class.h"
 #include "java/JavaIntHash.h"
 

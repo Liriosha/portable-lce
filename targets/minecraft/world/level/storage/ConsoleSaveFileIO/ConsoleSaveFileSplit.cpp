@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileSplit.h"
 
 #include <assert.h>
@@ -14,9 +16,9 @@
 #include <utility>
 
 #include "platform/PlatformTypes.h"
-#include "app/common/App_enums.h"
-#include "app/common/src/BuildVer/BuildVer.h"
-#include "app/common/src/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "minecraft/GameEnums.h"
+#include "app/common/BuildVer/BuildVer.h"
+#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "util/Timer.h"
@@ -197,7 +199,7 @@ void ConsoleSaveFileSplit::RegionFileReference::Compress() {
     assert((dataOut - dataCompressed) == outputSize);
     dataCompressedSize = outputSize;
     //	std::int64_t endTime = System::currentTimeMillis();
-    //	app.DebugPrintf("Compressing region file 0x%.8x from %d to %d bytes -
+    //	Log::info("Compressing region file 0x%.8x from %d to %d bytes -
     //%dms\n", fileEntry->data.regionIndex, fileEntry->data.length,
     // dataCompressedSize, endTime - startTime);
 }
@@ -277,7 +279,7 @@ void ConsoleSaveFileSplit::RegionFileReference::Decompress() {
         assert(0);
     }
     //	std::int64_t endTime = System::currentTimeMillis();
-    //	app.DebugPrintf("Decompressing region file from 0x%.8x %d to %d bytes -
+    //	Log::info("Decompressing region file from 0x%.8x %d to %d bytes -
     //%dms\n", fileEntry->data.regionIndex, dataCompressedSize,
     // fileEntry->data.length, endTime - startTime);//
 }
@@ -337,7 +339,7 @@ unsigned int ConsoleSaveFileSplit::RegionFileReference::GetCompressedSize() {
 
 // Release dataCompressed
 void ConsoleSaveFileSplit::RegionFileReference::ReleaseCompressed() {
-    //	app.DebugPrintf("Releasing compressed data for region file from
+    //	Log::info("Releasing compressed data for region file from
     // 0x%.8x\n", fileEntry->data.regionIndex );
     free(dataCompressed);
     dataCompressed = nullptr;
@@ -367,7 +369,7 @@ ConsoleSaveFileSplit::ConsoleSaveFileSplit(
 
     // Load a save from the game rules
     bool bLevelGenBaseSave = false;
-    LevelGenerationOptions* levelGen = app.getLevelGenerationOptions();
+    LevelGenerationOptions* levelGen = gameServices().getLevelGenerationOptions();
     if (pvSaveData == nullptr && levelGen != nullptr &&
         levelGen->requiresBaseSave()) {
         pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -491,7 +493,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
         } else {
             unsigned int storageLength;
             PlatformStorage.GetSaveData(pvSaveMem, &storageLength);
-            app.DebugPrintf("Filesize - %d, Adjusted size - %d\n", fileSize,
+            Log::info("Filesize - %d, Adjusted size - %d\n", fileSize,
                             storageLength);
             fileSize = storageLength;
         }
@@ -504,7 +506,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
             if (decompSize == 0) {
                 // 4J Stu - Saves created between 2/12/2011 and 7/12/2011 will
                 // have this problem
-                app.DebugPrintf("Invalid save data format\n");
+                Log::info("Invalid save data format\n");
                 memset(pvSaveMem, 0, fileSize);
                 // Clear the first 8 bytes that reference the header
                 header.WriteHeader(pvSaveMem);
@@ -538,7 +540,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
                 } else {
                     // Corrupt save, although most of the terrain should
                     // actually be ok
-                    app.DebugPrintf("Failed to decompress save data!\n");
+                    Log::info("Failed to decompress save data!\n");
 #if !defined(_CONTENT_PACKAGE)
                     __debugbreak();
 #endif
@@ -721,7 +723,7 @@ bool ConsoleSaveFileSplit::writeFile(FileEntry* file, const void* lpBuffer,
         memcpy(fileRef->data + file->currentFilePointer, lpBuffer,
                nNumberOfBytesToWrite);
 
-        //		app.DebugPrintf(">>>>>>>>>>>>>> writing a region file's
+        //		Log::info(">>>>>>>>>>>>>> writing a region file's
         // data 0x%.8x, 0x%x offset %d of %d bytes (writing %d
         // bytes)\n",file->data.regionIndex,fileRef->data,file->currentFilePointer,
         // file->getFileSize(), nNumberOfBytesToWrite);
@@ -788,7 +790,7 @@ bool ConsoleSaveFileSplit::zeroFile(FileEntry* file,
         memset(fileRef->data + file->currentFilePointer, 0,
                nNumberOfBytesToWrite);
 
-        //		app.DebugPrintf(">>>>>>>>>>>>>> writing a region file's
+        //		Log::info(">>>>>>>>>>>>>> writing a region file's
         // data 0x%.8x, 0x%x offset %d of %d bytes (writing %d
         // bytes)\n",file->data.regionIndex,fileRef->data,file->currentFilePointer,
         // file->getFileSize(), nNumberOfBytesToWrite);
@@ -966,7 +968,7 @@ void ConsoleSaveFileSplit::tick() {
         writeHistory.push_back(writeEvent);
 
         regionRef->Compress();
-        //		app.DebugPrintf("Tick: Writing region 0x%.8x, compressed
+        //		Log::info("Tick: Writing region 0x%.8x, compressed
         // as %d bytes\n",regionRef->fileEntry->getRegionFileIndex(),
         // regionRef->dataCompressedSize);
         PlatformStorage.UpdateSubfile(regionRef->index,
@@ -1275,7 +1277,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
     // The storage manage might potentially be busy doing a sub-file write
     // initiated from the tick. Wait until this is totally processed.
     while (PlatformStorage.GetSaveState() != IPlatformStorage::ESaveGame_Idle) {
-        app.DebugPrintf("Flush wait\n");
+        Log::info("Flush wait\n");
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 
@@ -1314,7 +1316,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
         Compression::getCompression()->Compress(nullptr, &compLength, pvSaveMem,
                                                 fileSize);
 
-        app.DebugPrintf("Check buffer size: Elapsed time %f\n",
+        Log::info("Check buffer size: Elapsed time %f\n",
                         static_cast<float>(timer.elapsed_seconds()));
 
         // We add 4 bytes to the start so that we can signal compressed data
@@ -1331,7 +1333,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
         Compression::getCompression()->Compress(compData + 8, &compLength,
                                                 pvSaveMem, fileSize);
 
-        app.DebugPrintf("Compress: Elapsed time %f\n",
+        Log::info("Compress: Elapsed time %f\n",
                         static_cast<float>(timer.elapsed_seconds()));
 
         memset(compData, 0, 8);
@@ -1339,7 +1341,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
         memcpy(compData, &saveVer, sizeof(int));
         memcpy(compData + 4, &fileSize, sizeof(int));
 
-        app.DebugPrintf("Save data compressed from %d to %d\n", fileSize,
+        Log::info("Save data compressed from %d to %d\n", fileSize,
                         compLength);
 
         if (updateThumbnail) {
@@ -1363,16 +1365,16 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
                 hasSeed = true;
             }
 
-            int iTextMetadataBytes = app.CreateImageTextData(
+            int iTextMetadataBytes = gameServices().createImageTextData(
                 bTextMetadata, seed, hasSeed,
-                app.GetGameHostOption(eGameHostOption_All),
+                gameServices().getGameHostOption(eGameHostOption_All),
                 Minecraft::GetInstance()->getCurrentTexturePackId());
 
             // set the icon and save image
             PlatformStorage.SetSaveImages(pbThumbnailData, dwThumbnailDataSize,
                                           pbDataSaveImage, dwDataSizeSaveImage,
                                           bTextMetadata, iTextMetadataBytes);
-            app.DebugPrintf("Save thumbnail size %d\n", dwThumbnailDataSize);
+            Log::info("Save thumbnail size %d\n", dwThumbnailDataSize);
         }
 
         int32_t saveOrCheckpointId = 0;
@@ -1384,8 +1386,8 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
             return SaveSaveDataCallback(this, bRes);
         });
 #if !defined(_CONTENT_PACKAGE)
-        if (app.DebugSettingsOn()) {
-            if (app.GetWriteSavesToFolderEnabled()) {
+        if (gameServices().debugSettingsOn()) {
+            if (gameServices().getWriteSavesToFolderEnabled()) {
                 DebugFlushToFile(compData, compLength + 8);
             }
         }
@@ -1593,10 +1595,10 @@ void ConsoleSaveFileSplit::ConvertToLocalPlatform() {
         std::wstring suffix(L".mcr");
         if (fName.compare(fName.length() - suffix.length(), suffix.length(),
                           suffix) == 0) {
-            app.DebugPrintf("Processing a region file: %ls\n", fName.c_str());
+            Log::info("Processing a region file: %ls\n", fName.c_str());
             ConvertRegionFile(File(fe->data.filename));
         } else {
-            app.DebugPrintf("%ls is not a region file, ignoring\n",
+            Log::info("%ls is not a region file, ignoring\n",
                             fName.c_str());
         }
     }

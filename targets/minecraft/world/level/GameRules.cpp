@@ -1,8 +1,9 @@
+#include "minecraft/IGameServices.h"
 #include "GameRules.h"
 
 #include <assert.h>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 
 // 4J: GameRules isn't in use anymore, just routes any requests to app game host
@@ -40,21 +41,21 @@ GameRules::~GameRules() {
 bool GameRules::getBoolean(const int rule) {
     switch (rule) {
         case GameRules::RULE_DOFIRETICK:
-            return app.GetGameHostOption(eGameHostOption_FireSpreads);
+            return gameServices().getGameHostOption(eGameHostOption_FireSpreads);
         case GameRules::RULE_MOBGRIEFING:
-            return app.GetGameHostOption(eGameHostOption_MobGriefing);
+            return gameServices().getGameHostOption(eGameHostOption_MobGriefing);
         case GameRules::RULE_KEEPINVENTORY:
-            return app.GetGameHostOption(eGameHostOption_KeepInventory);
+            return gameServices().getGameHostOption(eGameHostOption_KeepInventory);
         case GameRules::RULE_DOMOBSPAWNING:
-            return app.GetGameHostOption(eGameHostOption_DoMobSpawning);
+            return gameServices().getGameHostOption(eGameHostOption_DoMobSpawning);
         case GameRules::RULE_DOMOBLOOT:
-            return app.GetGameHostOption(eGameHostOption_DoMobLoot);
+            return gameServices().getGameHostOption(eGameHostOption_DoMobLoot);
         case GameRules::RULE_DOTILEDROPS:
-            return app.GetGameHostOption(eGameHostOption_DoTileDrops);
+            return gameServices().getGameHostOption(eGameHostOption_DoTileDrops);
         case GameRules::RULE_NATURAL_REGENERATION:
-            return app.GetGameHostOption(eGameHostOption_NaturalRegeneration);
+            return gameServices().getGameHostOption(eGameHostOption_NaturalRegeneration);
         case GameRules::RULE_DAYLIGHT:
-            return app.GetGameHostOption(eGameHostOption_DoDaylightCycle);
+            return gameServices().getGameHostOption(eGameHostOption_DoDaylightCycle);
         default:
             assert(0);
             return false;

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "java/Class.h"
 #include "minecraft/util/WeighedRandom.h"
 #include "minecraft/world/entity/Mob.h"

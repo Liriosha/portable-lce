@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "CreativeInventoryScreen.h"
 
 #include <GL/gl.h>
@@ -9,9 +10,9 @@
 #include "platform/sdl2/Input.h"
 #include "platform/sdl2/Render.h"
 #include "AbstractContainerScreen.h"
-#include "app/common/src/UI/All Platforms/IUIScene_CreativeMenu.h"
+#include "app/common/UI/All Platforms/IUIScene_CreativeMenu.h"
 #include "app/linux/LinuxGame.h"
-#include "app/include/stubs.h"
+#include "platform/stubs.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/gui/Screen.h"
@@ -411,7 +412,7 @@ void CreativeInventoryScreen::renderLabels() {
         IUIScene_CreativeMenu::TabSpec* spec =
             IUIScene_CreativeMenu::specs[selectedTabIndex];
         if (spec) {
-            std::wstring tabName = app.GetString(spec->m_descriptionId);
+            std::wstring tabName = gameServices().getString(spec->m_descriptionId);
             font->draw(tabName, 8, 6, 0x404040);
         }
     }
@@ -589,7 +590,7 @@ bool CreativeInventoryScreen::renderIconTooltip(int tab, int mouseX,
         glDisable(GL_LIGHTING);
         glDisable(GL_DEPTH_TEST);
         renderTooltip(
-            app.GetString(IUIScene_CreativeMenu::specs[tab]->m_descriptionId),
+            gameServices().getString(IUIScene_CreativeMenu::specs[tab]->m_descriptionId),
             mouseX, mouseY);
         glEnable(GL_LIGHTING);
         glEnable(GL_DEPTH_TEST);

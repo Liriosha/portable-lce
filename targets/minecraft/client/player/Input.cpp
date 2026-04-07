@@ -1,3 +1,4 @@
+#include "minecraft/IGameServices.h"
 #include "Input.h"
 
 #include <cmath>
@@ -5,7 +6,7 @@
 #include "platform/InputActions.h"
 #include "platform/sdl2/Input.h"
 #include "LocalPlayer.h"
-#include "app/common/App_enums.h"
+#include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
@@ -50,7 +51,7 @@ void Input::tick(LocalPlayer* player) {
         ya = 0.0f;
 
 #ifndef _CONTENT_PACKAGE
-    if (app.GetFreezePlayers()) {
+    if (gameServices().debugFreezePlayers()) {
         xa = ya = 0.0f;
         player->abilities.flying = true;
     }
@@ -87,7 +88,7 @@ void Input::tick(LocalPlayer* player) {
         pMinecraft->localgameModes[iPad]->isInputAllowed(
             MINECRAFT_ACTION_LOOK_RIGHT))
         tx = InputManager.GetJoypadStick_RX(iPad) *
-             (((float)app.GetGameSettings(iPad,
+             (((float)gameServices().getGameSettings(iPad,
                                           eGameSetting_Sensitivity_InGame)) /
               100.0f);  // apply sensitivity to look
     if (pMinecraft->localgameModes[iPad]->isInputAllowed(
@@ -95,16 +96,16 @@ void Input::tick(LocalPlayer* player) {
         pMinecraft->localgameModes[iPad]->isInputAllowed(
             MINECRAFT_ACTION_LOOK_DOWN))
         ty = InputManager.GetJoypadStick_RY(iPad) *
-             (((float)app.GetGameSettings(iPad,
+             (((float)gameServices().getGameSettings(iPad,
                                           eGameSetting_Sensitivity_InGame)) /
               100.0f);  // apply sensitivity to look
 
 #ifndef _CONTENT_PACKAGE
-    if (app.GetFreezePlayers()) tx = ty = 0.0f;
+    if (gameServices().debugFreezePlayers()) tx = ty = 0.0f;
 #endif
 
     // 4J: WESTY : Invert look Y if required.
-    if (app.GetGameSettings(iPad, eGameSetting_ControlInvertLook)) {
+    if (gameServices().getGameSettings(iPad, eGameSetting_ControlInvertLook)) {
         ty = -ty;
     }
 
@@ -127,7 +128,7 @@ void Input::tick(LocalPlayer* player) {
         pMinecraft->localgameModes[iPad]->isInputAllowed(MINECRAFT_ACTION_JUMP);
 
 #ifndef _CONTENT_PACKAGE
-    if (app.GetFreezePlayers()) jumping = false;
+    if (gameServices().debugFreezePlayers()) jumping = false;
 #endif
 
     // OutputDebugString("INPUT: End input tick\n");

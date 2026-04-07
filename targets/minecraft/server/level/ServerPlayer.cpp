@@ -1,3 +1,5 @@
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "ServerPlayer.h"
 
 #include <assert.h>
@@ -10,10 +12,10 @@
 
 #include "platform/sdl2/Input.h"
 #include "EntityTracker.h"
-#include "app/common/src/Console_Debug_enum.h"
-#include "app/common/src/GameRules/LevelRules/Rules/GameRulesInstance.h"
-#include "app/common/src/Network/GameNetworkManager.h"
-#include "app/common/src/Network/NetworkPlayerInterface.h"
+#include "app/common/Console_Debug_enum.h"
+#include "app/common/GameRules/LevelRules/Rules/GameRulesInstance.h"
+#include "app/common/Network/GameNetworkManager.h"
+#include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/linux/LinuxGame.h"
 #include "ServerLevel.h"
 #include "ServerPlayerGameMode.h"
@@ -431,11 +433,11 @@ void ServerPlayer::doChunkSendingTick(bool dontDelayChunks) {
                     MinecraftServer::chunkPacketManagement_CanSendTo(
                         connection->getNetworkPlayer());
 
-                //				app.DebugPrintf(">>> %d\n",
+                //				Log::info(">>> %d\n",
                 // canSendToPlayer); 				if(
                 // connection->getNetworkPlayer() )
                 //				{
-                //					app.DebugPrintf("%d:
+                //					Log::info("%d:
                 // canSendToPlayer %d, countDelayedPackets %d
                 // GetSendQueueSizeBytes %d done: %d\n",
                 //						connection->getNetworkPlayer()->GetSmallId(),
@@ -465,12 +467,12 @@ void ServerPlayer::doChunkSendingTick(bool dontDelayChunks) {
                     // System::currentTimeMillis();
                     //					int64_t lastTime =
                     // mapLastTime[connection->getNetworkPlayer()->GetUID().toString()];
-                    //					app.DebugPrintf(" - OK
+                    //					Log::info(" - OK
                     // to send (%d ms since last)\n", thisTime - lastTime);
                     //					mapLastTime[connection->getNetworkPlayer()->GetUID().toString()]
                     //= thisTime;
                 } else {
-                    //					app.DebugPrintf(" - <NOT
+                    //					Log::info(" - <NOT
                     // OK>\n");
                 }
             }
@@ -505,7 +507,7 @@ void ServerPlayer::doChunkSendingTick(bool dontDelayChunks) {
                     //     finite set of chunks as the player moves
                     if (!g_NetworkManager.SystemFlagGet(
                             connection->getNetworkPlayer(), flagIndex)) {
-                        //						app.DebugPrintf("Creating
+                        //						Log::info("Creating
                         // BRUP for %d %d\n",nearest.x, nearest.z);
                         int64_t before = System::currentTimeMillis();
                         std::shared_ptr<BlockRegionUpdatePacket> packet =
@@ -514,7 +516,7 @@ void ServerPlayer::doChunkSendingTick(bool dontDelayChunks) {
                                     nearest.x * 16, 0, nearest.z * 16, 16,
                                     Level::maxBuildHeight, 16, level));
                         int64_t after = System::currentTimeMillis();
-                        //						app.DebugPrintf(">>><<<
+                        //						Log::info(">>><<<
                         //%d ms\n",after-before);
 
                         if (dontDelayChunks) packet->shouldDelay = false;
@@ -583,7 +585,7 @@ void ServerPlayer::doChunkSendingTick(bool dontDelayChunks) {
 void ServerPlayer::doTickB() {
 #if !defined(_CONTENT_PACKAGE)
     // check if there's a debug dimension change requested
-    // if(app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToNether))
+    // if(gameServices().debugGetMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToNether))
     //{
     //	if(level->dimension->id == 0 )
     //	{
@@ -591,11 +593,11 @@ void ServerPlayer::doTickB() {
     //		portalTime=1;
     //	}
     //	unsigned int
-    // uiVal=app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad());
-    //	app.SetGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToNether));
+    // uiVal=gameServices().debugGetMask(InputManager.GetPrimaryPad());
+    //	gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToNether));
     //}
     // 	else if
-    // (app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToEnd))
+    // (gameServices().debugGetMask(InputManager.GetPrimaryPad())&(1L<<eDebugSetting_GoToEnd))
     // 	{
     // 		if(level->dimension->id == 0 )
     // 		{
@@ -603,19 +605,19 @@ void ServerPlayer::doTickB() {
     // std::dynamic_pointer_cast<ServerPlayer>( shared_from_this() ), 1 );
     // 		}
     // 		unsigned int
-    // uiVal=app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad());
-    // 		app.SetGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToEnd));
+    // uiVal=gameServices().debugGetMask(InputManager.GetPrimaryPad());
+    // 		gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),uiVal&~(1L<<eDebugSetting_GoToEnd));
     // 	}
     // else
-    if (app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad()) &
+    if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
         (1L << eDebugSetting_GoToOverworld)) {
         if (level->dimension->id != 0) {
             isInsidePortal = true;
             portalTime = 1;
         }
         unsigned int uiVal =
-            app.GetGameSettingsDebugMask(InputManager.GetPrimaryPad());
-        app.SetGameSettingsDebugMask(
+            gameServices().debugGetMask(InputManager.GetPrimaryPad());
+        gameServices().setGameSettingsDebugMask(
             InputManager.GetPrimaryPad(),
             uiVal & ~(1L << eDebugSetting_GoToOverworld));
     }
@@ -765,7 +767,7 @@ void ServerPlayer::changeDimension(int i) {
     if (!connection->hasClientTickedOnce()) return;
 
     if (dimension == 1 && i == 1) {
-        app.DebugPrintf("Start win game\n");
+        Log::info("Start win game\n");
         awardStat(GenericStats::winGame(), GenericStats::param_winGame());
 
         // All players on the same system as this player should also be removed
@@ -779,7 +781,7 @@ void ServerPlayer::changeDimension(int i) {
                 true;  // We only flag this for the player in the portal
             connection->send(std::make_shared<GameEventPacket>(
                 GameEventPacket::WIN_GAME, thisPlayer->GetUserIndex()));
-            app.DebugPrintf("Sending packet to %d\n",
+            Log::info("Sending packet to %d\n",
                             thisPlayer->GetUserIndex());
         }
         if (thisPlayer != nullptr) {
@@ -800,12 +802,12 @@ void ServerPlayer::changeDimension(int i) {
                         std::shared_ptr<GameEventPacket>(
                             new GameEventPacket(GameEventPacket::WIN_GAME,
                                                 thisPlayer->GetUserIndex())));
-                    app.DebugPrintf("Sending packet to %d\n",
+                    Log::info("Sending packet to %d\n",
                                     thisPlayer->GetUserIndex());
                 }
             }
         }
-        app.DebugPrintf("End win game\n");
+        Log::info("End win game\n");
     } else {
         if (dimension == 0 && i == 1) {
             awardStat(GenericStats::theEnd(), GenericStats::param_theEnd());
@@ -920,7 +922,7 @@ bool ServerPlayer::startCrafting(int x, int y, int z) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open crafting container when one was "
             "already open\n");
     }
@@ -946,7 +948,7 @@ bool ServerPlayer::openFireworks(int x, int y, int z) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open crafting container when one was "
             "already open\n");
     }
@@ -965,7 +967,7 @@ bool ServerPlayer::startEnchanting(int x, int y, int z,
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open enchanting container when one was "
             "already open\n");
     }
@@ -985,7 +987,7 @@ bool ServerPlayer::startRepairing(int x, int y, int z) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open enchanting container when one was "
             "already open\n");
     }
@@ -1010,7 +1012,7 @@ bool ServerPlayer::openContainer(std::shared_ptr<Container> container) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open container when one was already open\n");
     }
 
@@ -1028,7 +1030,7 @@ bool ServerPlayer::openHopper(std::shared_ptr<HopperTileEntity> container) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open hopper container when one was already "
             "open\n");
     }
@@ -1047,7 +1049,7 @@ bool ServerPlayer::openHopper(std::shared_ptr<MinecartHopper> container) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open minecart hopper container when one was "
             "already open\n");
     }
@@ -1066,7 +1068,7 @@ bool ServerPlayer::openFurnace(std::shared_ptr<FurnaceTileEntity> furnace) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open furnace when one was already open\n");
     }
 
@@ -1087,7 +1089,7 @@ bool ServerPlayer::openTrap(std::shared_ptr<DispenserTileEntity> trap) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open dispenser when one was already open\n");
     }
 
@@ -1106,7 +1108,7 @@ bool ServerPlayer::openBrewingStand(
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open brewing stand when one was already "
             "open\n");
     }
@@ -1125,7 +1127,7 @@ bool ServerPlayer::openBeacon(std::shared_ptr<BeaconTileEntity> beacon) {
         containerMenu->containerId = containerCounter;
         containerMenu->addSlotListener(this);
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open beacon when one was already open\n");
     }
 
@@ -1162,7 +1164,7 @@ bool ServerPlayer::openTrading(std::shared_ptr<Merchant> traderTarget,
                                         rawOutput.toByteArray())));
         }
     } else {
-        app.DebugPrintf(
+        Log::info(
             "ServerPlayer tried to open trading menu when one was already "
             "open\n");
     }
@@ -1540,7 +1542,7 @@ void ServerPlayer::displayClientMessage(int messageId) {
             break;
 
         default:
-            app.DebugPrintf(
+            Log::info(
                 "Tried to send a chat packet to the player with an unhandled "
                 "messageId\n");
             assert(false);
@@ -1549,7 +1551,7 @@ void ServerPlayer::displayClientMessage(int messageId) {
 
     // Language *language = Language::getInstance();
     // wstring languageString =
-    // app.GetString(messageId);//language->getElement(messageId);
+    // gameServices().getString(messageId);//language->getElement(messageId);
     // connection->send( shared_ptr<ChatPacket>( new ChatPacket(L"",
     // messageType) ) );
 }

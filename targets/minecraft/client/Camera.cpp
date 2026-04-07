@@ -8,7 +8,7 @@
 #include <numbers>
 
 #include "MemoryTracker.h"
-#include "app/include/stubs.h"
+#include "platform/stubs.h"
 #include "java/FloatBuffer.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/player/Player.h"

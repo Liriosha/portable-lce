@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "TileEntity.h"
 
 #include <utility>
@@ -136,7 +137,7 @@ std::shared_ptr<TileEntity> TileEntity::loadStatic(CompoundTag* tag) {
         entity->load(tag);
     } else {
 #ifdef _DEBUG
-        app.DebugPrintf("Skipping TileEntity with id %ls.\n",
+        Log::info("Skipping TileEntity with id %ls.\n",
                         tag->getString(L"id").c_str());
 #endif
     }

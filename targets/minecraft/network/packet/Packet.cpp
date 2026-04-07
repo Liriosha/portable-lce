@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "Packet.h"
 
 #include <assert.h>
@@ -465,7 +466,7 @@ void Packet::writeBytes(DataOutputStream* dataoutputstream,
 std::vector<uint8_t> Packet::readBytes(DataInputStream* datainputstream) {
     int size = datainputstream->readShort();
     if (size < 0) {
-        app.DebugPrintf("Key was smaller than nothing!  Weird key!");
+        Log::info("Key was smaller than nothing!  Weird key!");
 #if !defined(_CONTENT_PACKAGE)
         __debugbreak();
 #endif
@@ -515,7 +516,7 @@ std::shared_ptr<Packet> Packet::readPacket(
          serverReceivedPackets.find(id) == serverReceivedPackets.end()) ||
         (!isServer &&
          clientReceivedPackets.find(id) == clientReceivedPackets.end())) {
-        // app.DebugPrintf("Bad packet id %d\n", id);
+        // Log::info("Bad packet id %d\n", id);
         __debugbreak();
         assert(false);
         //            throw new IOException(wstring(L"Bad packet id ") +
@@ -527,7 +528,7 @@ std::shared_ptr<Packet> Packet::readPacket(
         assert(false);  // throw new IOException(wstring(L"Bad packet id ") +
                         // toWString<int>(id));
 
-    // app.DebugPrintf("%s reading packet %d\n", isServer ? "Server" : "Client",
+    // Log::info("%s reading packet %d\n", isServer ? "Server" : "Client",
     // packet->getId());
     packet->read(dis);
     //    }
@@ -563,7 +564,7 @@ void Packet::writePacket(
     DataOutputStream*
         dos)  // throws IOException TODO 4J JEV, should this declare a throws?
 {
-    // app.DebugPrintf("Writing packet %d\n", packet->getId());
+    // Log::info("Writing packet %d\n", packet->getId());
     dos->write(packet->getId());
     packet->write(dos);
 }

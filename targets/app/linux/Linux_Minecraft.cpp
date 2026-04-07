@@ -1,3 +1,5 @@
+#include "app/common/AppGameServices.h"
+#include "app/common/GameMenuService.h"
 // Minecraft.cpp : Defines the entry point for the application.
 //
 
@@ -48,7 +50,7 @@ static void sigsegv_handler(int sig) {
 
 #include "minecraft/stats/StatsCounter.h"
 #include "minecraft/world/level/Level.h"
-// #include "app/common/src/Leaderboards/LeaderboardManager.h"
+// #include "app/common/Leaderboards/LeaderboardManager.h"
 // #include "../Common/XUI/XUI_Scene_Container.h"
 // #include "NetworkManager.h"
 #include "platform/PlatformTypes.h"
@@ -58,8 +60,8 @@ static void sigsegv_handler(int sig) {
 #include "platform/sdl2/Render.h"
 #include "platform/sdl2/Storage.h"
 #include "app/common/App_Defines.h"
-#include "app/common/src/Audio/SoundEngine.h"
-#include "app/common/src/Network/GameNetworkManager.h"
+#include "app/common/Audio/SoundEngine.h"
+#include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
@@ -461,7 +463,9 @@ int main(int argc, const char* argv[]) {
 
     app.loadMediaArchive();
     app.loadStringTable();
-    // fuck you
+    static GameMenuService menuService(app);
+    static AppGameServices services(app, menuService);
+    initGameServices(&services);
     ui.init(1920, 1080);
     // storage manager is needed for the trial key check
     StorageManager.Init(

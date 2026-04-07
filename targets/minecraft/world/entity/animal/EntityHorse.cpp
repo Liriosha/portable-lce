@@ -1,3 +1,4 @@
+#include "minecraft/util/Log.h"
 #include "EntityHorse.h"
 
 #include <math.h>
@@ -840,7 +841,7 @@ bool EntityHorse::mobInteract(std::shared_ptr<Player> player) {
         }
         doPlayerRide(player);
 
-        app.DebugPrintf(
+        Log::info(
             "<EntityHorse::mobInteract> Horse speed: %f\n",
             (float)(getAttribute(SharedMonsterAttributes::MOVEMENT_SPEED)
                         ->getValue()));
@@ -1530,7 +1531,7 @@ double EntityHorse::generateRandomSpeed() {
     double speed = (0.45f + random->nextDouble() * .3 +
                     random->nextDouble() * .3 + random->nextDouble() * .3) *
                    0.25f;
-    app.DebugPrintf("<EntityHorse::generateRandomSpeed> Speed: %f\n", speed);
+    Log::info("<EntityHorse::generateRandomSpeed> Speed: %f\n", speed);
     return speed;
 }
 

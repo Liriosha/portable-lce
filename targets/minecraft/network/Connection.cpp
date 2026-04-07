@@ -7,9 +7,9 @@
 #include <vector>
 
 #include "platform/ShutdownManager.h"
-#include "app/common/src/Network/GameNetworkManager.h"
-#include "app/common/src/Network/NetworkPlayerInterface.h"
-#include "app/common/src/Network/Socket.h"
+#include "app/common/Network/GameNetworkManager.h"
+#include "app/common/Network/NetworkPlayerInterface.h"
+#include "app/common/Network/Socket.h"
 #include "util/StringHelpers.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/InputOutputStream/BufferedOutputStream.h"

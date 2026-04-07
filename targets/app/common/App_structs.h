@@ -4,12 +4,13 @@
 
 #include "platform/sdl2/Storage.h"
 #include "app/common/App_Defines.h"
-#include "app/common/App_enums.h"
-#include "app/common/src/Tutorial/TutorialEnum.h"
-#include "app/common/src/UI/All Platforms/UIEnums.h"
-#include "app/include/NetTypes.h"
-#include "app/include/SkinBox.h"
-#include "app/include/XboxStubs.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameTypes.h"
+#include "app/common/Tutorial/TutorialEnum.h"
+#include "app/common/UI/All Platforms/UIEnums.h"
+#include "platform/NetTypes.h"
+#include "minecraft/client/model/SkinBox.h"
+#include "platform/XboxStubs.h"
 
 typedef struct {
     wchar_t* wchFilename;
@@ -145,12 +146,6 @@ typedef struct {
 } TIPSTRUCT;
 
 typedef struct {
-    eXUID eXuid;
-    wchar_t wchCape[MAX_CAPENAME_SIZE];
-    wchar_t wchSkin[MAX_CAPENAME_SIZE];
-} MOJANG_DATA;
-
-typedef struct {
     eDLCContentType eDLCType;
 
     uint64_t ullOfferID_Full;
@@ -161,11 +156,6 @@ typedef struct {
     int iConfig;
     unsigned int uiSortIndex;
 } DLC_INFO;
-
-typedef struct {
-    int x, z;
-    _eTerrainFeatureType eTerrainFeature;
-} FEATURE_DATA;
 
 // banned list
 typedef struct {
