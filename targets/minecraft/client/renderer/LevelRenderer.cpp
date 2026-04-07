@@ -127,8 +127,10 @@ ResourceLocation LevelRenderer::END_SKY_LOCATION =
 
 const unsigned int HALO_RING_RADIUS = 100;
 
+#ifdef OCCLUSION_MODE_BFS
 uint64_t* LevelRenderer::globalChunkConnectivity =
     nullptr;  // bad placement do bettr juicey
+#endif
 
 #if defined(_LARGE_WORLDS)
 Chunk LevelRenderer::permaChunk[MAX_CONCURRENT_CHUNK_REBUILDS];
@@ -225,9 +227,11 @@ LevelRenderer::LevelRenderer(Minecraft* mc, Textures* textures) {
     globalChunkFlags = new unsigned char[getGlobalChunkCount()];
     memset(globalChunkFlags, 0, getGlobalChunkCount());
 
+#ifdef OCCLUSION_MODE_BFS
     globalChunkConnectivity = new uint64_t[getGlobalChunkCount()];
     memset(globalChunkConnectivity, 0xFF,
            getGlobalChunkCount() * sizeof(uint64_t));  // 0xFF >> Fully open
+#endif
 
     starList = MemoryTracker::genLists(4);
 
@@ -3732,6 +3736,7 @@ void LevelRenderer::setGlobalChunkFlag(int x, int y, int z, Level* level,
     }
 }
 
+#ifdef OCCLUSION_MODE_BFS
 void LevelRenderer::setGlobalChunkConnectivity(int index, uint64_t conn) {
     if (index >= 0 && index < getGlobalChunkCount()) {
         globalChunkConnectivity[index] = conn;
@@ -3744,6 +3749,7 @@ uint64_t LevelRenderer::getGlobalChunkConnectivity(int index) {
     }
     return ~(uint64_t)0;  // out of bounds
 }
+#endif
 
 void LevelRenderer::clearGlobalChunkFlag(int x, int y, int z, Level* level,
                                          unsigned char flag,

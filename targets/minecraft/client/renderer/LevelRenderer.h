@@ -220,10 +220,14 @@ private:
         emptyChunks;
     static const int RENDERLISTS_LENGTH = 4;  // 4J - added
     OffsettedRenderList renderLists[RENDERLISTS_LENGTH];
+
+#ifdef OCCLUSION_MODE_BFS
     void setGlobalChunkConnectivity(int index, uint64_t conn);
     uint64_t getGlobalChunkConnectivity(int index);
     std::vector<ClipChunk*> m_bfsGrid;
     std::vector<uint8_t> m_bfsVisitedFaces[4];
+#endif
+
     std::unordered_map<int, BlockDestructionProgress*> destroyingBlocks;
     Icon** breakingTextures;
 
@@ -319,7 +323,9 @@ public:
     void clearGlobalChunkFlag(int x, int y, int z, Level* level,
                               unsigned char flag, unsigned char shift = 0);
 
+#ifdef OCCLUSION_MODE_BFS
     static uint64_t* globalChunkConnectivity;
+#endif
 
     // Get/set whole byte of flags
     unsigned char getGlobalChunkFlags(int x, int y, int z, Level* level);

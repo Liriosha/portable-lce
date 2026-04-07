@@ -142,7 +142,9 @@ void Chunk::setPos(int x, int y, int z) {
 
     clipChunk->globalIdx =
         LevelRenderer::getGlobalIndexForChunk(x, y, z, level);
+#ifdef OCCLUSION_MODE_BFS
     levelRenderer->setGlobalChunkConnectivity(clipChunk->globalIdx, ~0ULL);
+#endif
 
     // 4J - we're not using offsetted renderlists anymore, so just set the full
     // position of this chunk into x/y/zRenderOffs where it will be used
@@ -415,11 +417,13 @@ void Chunk::rebuild() {
             RenderManager.CBuffClear(lists + currentLayer);
         }
 
+#ifdef OCCLUSION_MODE_BFS
         int globalIdx = levelRenderer->getGlobalIndexForChunk(this->x, this->y,
                                                               this->z, level);
         levelRenderer->setGlobalChunkConnectivity(globalIdx, ~0ULL);
         levelRenderer->setGlobalChunkFlag(this->x, this->y, this->z, level,
                                           LevelRenderer::CHUNK_FLAG_COMPILED);
+#endif
 
         delete region;
         delete tileRenderer;
@@ -538,10 +542,12 @@ void Chunk::rebuild() {
     bb = {bounds.boundingBox[0], bounds.boundingBox[1], bounds.boundingBox[2],
           bounds.boundingBox[3], bounds.boundingBox[4], bounds.boundingBox[5]};
 
+#ifdef OCCLUSION_MODE_BFS
     uint64_t conn = computeConnectivity(tileIds);  // pass tileIds
     int globalIdx =
         levelRenderer->getGlobalIndexForChunk(this->x, this->y, this->z, level);
     levelRenderer->setGlobalChunkConnectivity(globalIdx, conn);
+#endif
 
     delete tileRenderer;
     delete region;
@@ -586,6 +592,7 @@ float Chunk::squishedDistanceToSqr(std::shared_ptr<Entity> player) {
     return xd * xd + yd * yd + zd * zd;
 }
 
+#ifdef OCCLUSION_MODE_BFS
 uint64_t Chunk::computeConnectivity(const uint8_t* tileIds) {
     const int W = 16;
     const int H = 16;
@@ -722,6 +729,8 @@ uint64_t Chunk::computeConnectivity(const uint8_t* tileIds) {
 
     return result;
 }
+#endif
+
 void Chunk::reset() {
     if (assigned) {
         int oldKey = -1;
