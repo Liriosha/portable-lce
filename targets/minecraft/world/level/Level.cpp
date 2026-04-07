@@ -73,7 +73,6 @@
 #include "minecraft/world/phys/HitResult.h"
 #include "minecraft/world/phys/Vec3.h"
 #include "minecraft/world/scores/Scoreboard.h"
-#include "platform/PlatformServices.h"
 
 class CompoundTag;
 class ItemInstance;

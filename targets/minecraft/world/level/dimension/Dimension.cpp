@@ -27,7 +27,6 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/Vec3.h"
-#include "platform/PlatformServices.h"
 
 class Pos;
 

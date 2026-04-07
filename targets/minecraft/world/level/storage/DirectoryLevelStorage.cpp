@@ -43,7 +43,6 @@
 #include "nbt/ListTag.h"
 #include "nbt/NbtIo.h"
 #include "platform/storage/storage.h"
-#include "platform/PlatformServices.h"
 
 const std::wstring DirectoryLevelStorage::sc_szPlayerDir(L"players/");
 

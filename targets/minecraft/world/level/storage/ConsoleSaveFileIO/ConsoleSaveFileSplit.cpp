@@ -38,7 +38,6 @@
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
 #include "minecraft/world/level/storage/LevelData.h"
 #include "platform/storage/storage.h"
-#include "platform/PlatformServices.h"
 
 class ProgressListener;
 

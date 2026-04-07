@@ -50,7 +50,6 @@
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
 #include "nbt/CompoundTag.h"
-#include "platform/PlatformServices.h"
 
 const double Ocelot::SNEAK_SPEED_MOD = 0.6;
 const double Ocelot::WALK_SPEED_MOD = 0.8;

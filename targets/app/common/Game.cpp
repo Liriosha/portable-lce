@@ -24,7 +24,6 @@
 #include "platform/NetTypes.h"
 #include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
-#include "platform/PlatformServices.h"
 #include "java/Class.h"
 #include "java/File.h"
 #include "java/Random.h"

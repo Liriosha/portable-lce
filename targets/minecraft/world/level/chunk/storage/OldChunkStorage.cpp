@@ -33,7 +33,6 @@
 #include "nbt/CompoundTag.h"
 #include "nbt/ListTag.h"
 #include "nbt/NbtIo.h"
-#include "platform/PlatformServices.h"
 
 thread_local OldChunkStorage::ThreadStorage* OldChunkStorage::m_tlsStorage =
     nullptr;

@@ -51,11 +51,10 @@ if get_option('ui_backend') == 'shiggy'
   client_dependencies += shiggy_dep
 endif
 
-platform_services_src = files('../platform/PlatformServices.cpp')
 
 client = executable(
   'Minecraft.Client',
-  platform_sources + platform_services_src + localisation[1],
+  platform_sources + localisation[1],
   include_directories: include_directories('..'),
   dependencies: client_dependencies,
   cpp_args: global_cpp_args

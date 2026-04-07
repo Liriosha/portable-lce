@@ -32,7 +32,6 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "nbt/CompoundTag.h"
 #include "nbt/NbtIo.h"
-#include "platform/PlatformServices.h"
 
 class DataInput;
 
