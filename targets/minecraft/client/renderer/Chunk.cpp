@@ -797,7 +797,7 @@ bool Chunk::isEmpty() {
 void Chunk::setDirty() {
     // 4J - not used, but if this starts being used again then we'll need to
     // investigate how best to handle it.
-    __debugbreak();
+    assert(0);
     levelRenderer->setGlobalChunkFlag(x, y, z, level,
                                       LevelRenderer::CHUNK_FLAG_DIRTY);
 }

@@ -956,7 +956,7 @@ void CompressedTileStorage::compress(int upgradeBlock /*=-1*/) {
             // uint32_t lastError = GetLastError();
             // MEMORYSTATUS memStatus;
             // GlobalMemoryStatus(&memStatus);
-            // __debugbreak();
+            // assert(0);
         }
         unsigned char* pucData = newIndicesAndData + 1024;
         unsigned short usDataOffset = 0;

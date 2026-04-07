@@ -237,7 +237,7 @@ Icon* TextureMap::registerIcon(const std::wstring& name) {
     if (name.empty()) {
         Log::info("Don't register nullptr\n");
 #ifndef _CONTENT_PACKAGE
-        __debugbreak();
+        assert(0);
 #endif
         // new RuntimeException("Don't register null!").printStackTrace();
     }

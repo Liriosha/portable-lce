@@ -6,6 +6,7 @@
 #include "app/common/UI/Scenes/UIScene_FullscreenProgress.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
+#include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/ProgressRenderer.h"
 #include "minecraft/client/renderer/GameRenderer.h"

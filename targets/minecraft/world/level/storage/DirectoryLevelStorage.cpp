@@ -70,7 +70,7 @@ int _MapDataMappings::getDimension(int id) {
         default:
 #if !defined(_CONTENT_PACKAGE)
             printf("Read invalid dimension from MapDataMapping\n");
-            __debugbreak();
+            assert(0);
 #endif
             break;
     }
@@ -98,7 +98,7 @@ void _MapDataMappings::setMapping(int id, PlayerUID xuid, int dimension) {
 #if !defined(_CONTENT_PACKAGE)
             printf(
                 "Trinyg to set a MapDataMapping for an invalid dimension.\n");
-            __debugbreak();
+            assert(0);
 #endif
             break;
     }

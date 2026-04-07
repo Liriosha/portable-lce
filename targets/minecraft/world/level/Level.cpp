@@ -2188,7 +2188,7 @@ void Level::tickEntities() {
                 if (tileEntitiesToUnload.find(*it) !=
                     tileEntitiesToUnload.end()) {
                     if (isClientSide) {
-                        __debugbreak();
+                        assert(0);
                     }
                     it = tileEntityList.erase(it);
                 } else {

@@ -468,7 +468,7 @@ std::vector<uint8_t> Packet::readBytes(DataInputStream* datainputstream) {
     if (size < 0) {
         Log::info("Key was smaller than nothing!  Weird key!");
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
         return std::vector<uint8_t>();
         // throw new IOException("Key was smaller than nothing!  Weird key!");
@@ -517,7 +517,7 @@ std::shared_ptr<Packet> Packet::readPacket(
         (!isServer &&
          clientReceivedPackets.find(id) == clientReceivedPackets.end())) {
         // Log::info("Bad packet id %d\n", id);
-        __debugbreak();
+        assert(0);
         assert(false);
         //            throw new IOException(wstring(L"Bad packet id ") +
         //            toWString<int>(id));

@@ -102,7 +102,7 @@ std::vector<uint8_t> ArchiveFile::getFile(const std::wstring& filename) {
         app.DebugPrintf("Failed to find file '%ls' in archive\n",
                         filename.c_str());
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
         app.FatalLoadError();
     } else {

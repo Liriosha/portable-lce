@@ -119,7 +119,7 @@ Game::Game() {
             "%d\n",
             sizeof(GAME_SETTINGS), GAME_SETTINGS_PROFILE_DATA_BYTES);
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
     }
 

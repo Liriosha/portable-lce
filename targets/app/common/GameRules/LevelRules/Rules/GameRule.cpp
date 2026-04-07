@@ -34,7 +34,7 @@ GameRule::ValueType GameRule::getParameter(const std::wstring& parameterName) {
 #ifndef _CONTENT_PACKAGE
         wprintf(L"WARNING: Parameter %ls was not set before being fetched\n",
                 parameterName.c_str());
-        __debugbreak();
+        assert(0);
 #endif
     }
     return m_parameters[parameterName];

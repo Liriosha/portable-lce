@@ -286,7 +286,7 @@ void UIScene_MainMenu::handlePress(F64 controlId, F64 childId) {
         } break;
 
         default:
-            __debugbreak();
+            assert(0);
     }
 
     bool confirmUser = false;

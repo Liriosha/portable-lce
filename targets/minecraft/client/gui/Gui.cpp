@@ -17,6 +17,7 @@
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "java/System.h"
+#include "java/Color.h"
 #include "minecraft/client/ClientConstants.h"
 #include "minecraft/client/GuiMessage.h"
 #include "minecraft/client/Lighting.h"
@@ -1084,7 +1085,7 @@ max) + "% (" + (total / 1024 / 1024) + "MB)"; drawString(font, msg, screenWidth
 
             int col = 0xffffff;
             if (animateOverlayMessageColor) {
-                col = Color::HSBtoRGB(t / 50.0f, 0.7f, 0.6f) & 0xffffff;
+                col = Color::getHSBColor(t / 50.0f, 0.7f, 0.6f).getRGB() & 0xffffff;
             }
             // 4J-PB - this is the string displayed when cds are placed in a
             // jukebox

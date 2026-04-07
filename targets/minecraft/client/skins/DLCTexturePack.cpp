@@ -150,7 +150,7 @@ void DLCTexturePack::loadDescription() {
 std::wstring DLCTexturePack::getResource(const std::wstring& name) {
     // 4J Stu - We should never call this function
 #if !defined(__CONTENT_PACKAGE)
-    __debugbreak();
+    assert(0);
 #endif
     return L"";
 }
@@ -160,7 +160,7 @@ InputStream* DLCTexturePack::getResourceImplementation(
 {
     // 4J Stu - We should never call this function
 #if !defined(_CONTENT_PACKAGE)
-    __debugbreak();
+    assert(0);
     if (hasFile(name)) return nullptr;
 #endif
     return nullptr;  // resource;

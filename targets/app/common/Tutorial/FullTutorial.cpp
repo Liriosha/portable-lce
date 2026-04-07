@@ -31,6 +31,7 @@
 #include "minecraft/world/level/LevelSettings.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/input/InputConstants.h"
 #include "strings.h"
 
 class TutorialConstraint;

@@ -9,15 +9,8 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <cassert>
-#include <cstdio>
 #include <cstdint>
-#include <cstdlib>
 #include <ctime>
-#include <cwchar>
-
-#define __cdecl
-#define _vsnprintf_s vsnprintf;
 
 typedef struct {
     int32_t LowPart;
@@ -30,8 +23,6 @@ typedef struct {
     uint32_t HighPart;
     uint64_t QuadPart;
 } ULARGE_INTEGER;
-
-#define __debugbreak()
 
 #define ERROR_SUCCESS 0L
 #define ERROR_IO_PENDING 997L  // dderror
@@ -146,8 +137,6 @@ static inline bool FileTimeToSystemTime(const FILETIME* lpFileTime,
     _FillSystemTime(&tm, remainder_ns, lpSystemTime);
     return true;
 }
-
-static inline void* GetModuleHandle(const char* lpModuleName) { return 0; }
 
 static inline void* VirtualAlloc(void* lpAddress, size_t dwSize,
                                  int32_t flAllocationType, int32_t flProtect) {

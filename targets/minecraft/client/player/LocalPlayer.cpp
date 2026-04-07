@@ -523,7 +523,7 @@ void LocalPlayer::changeDimension(int i) {
             Log::info(
                 "LocalPlayer::changeDimension from 1 to 1 but WinScreen has "
                 "not been implemented.\n");
-            __debugbreak();
+            assert(0);
 #endif
         } else {
             awardStat(GenericStats::theEnd(), GenericStats::param_theEnd());

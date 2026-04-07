@@ -178,7 +178,7 @@ void PreStitchedTextureMap::makeTextureAnimated(TexturePack* texturePack,
                             textureFileName.c_str(), first->getWidth(),
                             tex->getWidth(), first->getHeight(),
                             tex->getHeight());
-            __debugbreak();
+            assert(0);
         }
 #endif
 
@@ -196,7 +196,7 @@ void PreStitchedTextureMap::makeTextureAnimated(TexturePack* texturePack,
 StitchedTexture* PreStitchedTextureMap::getTexture(const std::wstring& name) {
 #if !defined(_CONTENT_PACKAGE)
     Log::info("Not implemented!\n");
-    __debugbreak();
+    assert(0);
 #endif
     return nullptr;
 }
@@ -218,7 +218,7 @@ Icon* PreStitchedTextureMap::registerIcon(const std::wstring& name) {
     if (name.empty()) {
         Log::info("Don't register nullptr\n");
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
         result = missingPosition;
         // new RuntimeException("Don't register null!").printStackTrace();
@@ -230,7 +230,7 @@ Icon* PreStitchedTextureMap::registerIcon(const std::wstring& name) {
     if (result == nullptr) {
 #if !defined(_CONTENT_PACKAGE)
         Log::info("Could not find uv data for icon %ls\n", name.c_str());
-        __debugbreak();
+        assert(0);
 #endif
         result = missingPosition;
     }

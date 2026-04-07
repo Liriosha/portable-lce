@@ -126,7 +126,7 @@ int Entity::getSmallId() {
     }
 
     Log::info("Out of small entity Ids... possible leak?\n");
-    __debugbreak();
+    assert(0);
     return -1;
 }
 

@@ -51,7 +51,7 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
             path, m_heightmapOverride.data(), m_heightmapOverride.size());
         if (result.status == IPlatformFilesystem::ReadStatus::TooLarge) {
             Log::info("Heightmap binary is too large!!\n");
-            __debugbreak();
+            assert(0);
         } else if (result.status != IPlatformFilesystem::ReadStatus::Ok) {
             gameServices().fatalLoadError();
             assert(false);
@@ -71,7 +71,7 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
                    m_waterheightOverride.size());
         } else if (result.status == IPlatformFilesystem::ReadStatus::TooLarge) {
             Log::info("waterheight binary is too large!!\n");
-            __debugbreak();
+            assert(0);
         } else if (result.status != IPlatformFilesystem::ReadStatus::Ok) {
             gameServices().fatalLoadError();
         }

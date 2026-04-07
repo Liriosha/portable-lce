@@ -214,7 +214,8 @@ void AbstractTexturePack::unloadUI() {
 }
 
 std::wstring AbstractTexturePack::getXuiRootPath() {
-    const uintptr_t c_ModuleHandle = (uintptr_t)GetModuleHandle(nullptr);
+    // const uintptr_t c_ModuleHandle = (uintptr_t)GetModuleHandle(nullptr);
+    const uintptr_t c_ModuleHandle = 0; // 4jcraft changed
 
     // Load new skin
     constexpr int LOCATOR_SIZE =

@@ -259,7 +259,7 @@ unsigned int DLCManager::getPackIndex(DLCPack* pack, bool& found,
     if (pack == nullptr) {
         app.DebugPrintf(
             "DLCManager: Attempting to find the index for a nullptr pack\n");
-        //__debugbreak();
+        //assert(0);
         return foundIndex;
     }
     if (type != e_DLCType_All) {

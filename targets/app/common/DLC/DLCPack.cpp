@@ -84,7 +84,7 @@ void DLCPack::addChildPack(DLCPack* childPack) {
     const std::uint32_t packId = childPack->GetPackId();
 #if !defined(_CONTENT_PACKAGE)
     if (packId < 0 || packId > 15) {
-        __debugbreak();
+        assert(0);
     }
 #endif
     childPack->SetPackId((packId << 24) | m_packId);
@@ -302,7 +302,7 @@ unsigned int DLCPack::getFileIndexAt(DLCManager::EDLCType type,
     if (type == DLCManager::e_DLCType_All) {
         app.DebugPrintf("Unimplemented\n");
 #if !defined(__CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
         return 0;
     }
@@ -327,7 +327,7 @@ bool DLCPack::hasPurchasedFile(DLCManager::EDLCType type,
     if (type == DLCManager::e_DLCType_All) {
         app.DebugPrintf("Unimplemented\n");
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
         return false;
     }

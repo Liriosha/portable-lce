@@ -320,7 +320,7 @@ void RegionFile::write(int x, int z, std::uint8_t* data,
 
 #ifndef _CONTENT_PACKAGE
         if (sectorNumber < 0) {
-            __debugbreak();
+            assert(0);
         }
 #endif
 

@@ -11,6 +11,7 @@
 #include "java/File.h"
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
+#include "platform/stubs.h"
 
 class Timer;
 class MultiPlayerLevel;

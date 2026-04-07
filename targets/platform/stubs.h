@@ -300,8 +300,3 @@ public:
     void halt() {}
     void forceReload() {}
 };
-
-class Color {
-public:
-    static int HSBtoRGB(float, float, float) { return 0; }
-};

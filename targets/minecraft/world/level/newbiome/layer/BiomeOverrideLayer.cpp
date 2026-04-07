@@ -24,7 +24,7 @@ BiomeOverrideLayer::BiomeOverrideLayer(int seedMixup) : Layer(seedMixup) {
                    m_biomeOverride.size());
         } else if (result.status == IPlatformFilesystem::ReadStatus::TooLarge) {
             Log::info("Biomemap binary is too large!!\n");
-            __debugbreak();
+            assert(0);
         } else if (result.status != IPlatformFilesystem::ReadStatus::Ok) {
             gameServices().fatalLoadError();
         }

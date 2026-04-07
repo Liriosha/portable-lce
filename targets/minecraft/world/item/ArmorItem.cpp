@@ -206,7 +206,7 @@ void ArmorItem::setColor(std::shared_ptr<ItemInstance> item, int color) {
     if (armorType != ArmorMaterial::CLOTH) {
 #ifndef _CONTENT_PACKAGE
         printf("Can't dye non-leather!");
-        __debugbreak();
+        assert(0);
 #endif
         // throw new UnsupportedOperationException("Can't dye non-leather!");
     }

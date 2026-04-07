@@ -91,7 +91,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
     // pages committed should always be zero at this point.
     if (pagesCommitted != 0) {
 #ifndef _CONTENT_PACKAGE
-        __debugbreak();
+        assert(0);
 #endif
     }
 
@@ -103,7 +103,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
     if (pvRet == nullptr) {
 #ifndef _CONTENT_PACKAGE
         // Out of physical memory
-        __debugbreak();
+        assert(0);
 #endif
     }
     pagesCommitted = pagesRequired;
@@ -162,7 +162,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
                                      COMMIT_ALLOCATION, PAGE_READWRITE);
                     if (pvRet == nullptr) {
                         // Out of physical memory
-                        __debugbreak();
+                        assert(0);
                     }
                     pagesCommitted = pagesRequired;
                 }
@@ -438,7 +438,7 @@ void ConsoleSaveFileOriginal::MoveDataBeyond(
                                    COMMIT_ALLOCATION, PAGE_READWRITE);
         if (pvRet == nullptr) {
             // Out of physical memory
-            __debugbreak();
+            assert(0);
         }
         pagesCommitted = pagesRequired;
     }

@@ -84,7 +84,7 @@ void Stitcher::stitch() {
         if (!addToStorage(textureHolder)) {
             Log::info("Stitcher exception!\n");
 #ifndef _CONTENT_PACKAGE
-            __debugbreak();
+            assert(0);
 #endif
             // throw new StitcherException(textureHolder);
         }

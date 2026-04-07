@@ -473,7 +473,7 @@ bool GameRuleManager::readRuleFile(
                    compressedBuffer.data(), compressedSize); break; default:
                                         app.DebugPrintf("Invalid compression
                    type %d found\n", compressionType);
-                                        __debugbreak();
+                                        assert(0);
 
                    [] decompressedBuffer.data(); dis.close(); bais.reset();
 

@@ -43,13 +43,13 @@ SetPlayerTeamPacket::SetPlayerTeamPacket(PlayerTeam* team,
     if (method != METHOD_JOIN && method != METHOD_LEAVE) {
         Log::info("Method must be join or leave for player constructor");
 #ifndef _CONTENT_PACKAGE
-        __debugbreak();
+        assert(0);
 #endif
     }
     if (playerNames == nullptr || playerNames->empty()) {
         Log::info("Players cannot be null/empty");
 #ifndef _CONTENT_PACKAGE
-        __debugbreak();
+        assert(0);
 #endif
     }
 
