@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+
 #ifdef __linux__
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -39,8 +40,6 @@ void glEndQueryARB(int);
 void glGetQueryObjectuARB(int, int, IntBuffer*);
 void glReadPixels(int, int, int, int, int, int, ByteBuffer*);
 
-void LinuxGLLogLightmapState(const char* stage, int textureId, bool scaleLight);
-void LinuxLogStubLightmapProbe();
 #else
 
 const int GL_BYTE = 0;
@@ -289,7 +288,7 @@ public:
 class Display {
 public:
     static bool isActive() { return true; }
-    static void update();
+    static void update() {}
     static void swapBuffers();
     static void destroy() {}
 };

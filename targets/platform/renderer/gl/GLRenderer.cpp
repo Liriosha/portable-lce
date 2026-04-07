@@ -1626,11 +1626,3 @@ void glGetQueryObjectuARB_4J(int id, int pname, IntBuffer* params) {
 void glGetFloat(int pname, FloatBuffer* params) {
     glGetFloat_4J(pname, params);
 }
-void LinuxGLLogLightmapState(const char* stage, int textureId,
-                             bool scaleLight) {
-    static int logCount = 0;
-    if (logCount >= 16) return;
-    ++logCount;
-    fprintf(stderr, "[linux-lightmap] %s tex=%d scale=%d\n", stage, textureId,
-            scaleLight ? 1 : 0);
-}

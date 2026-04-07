@@ -802,7 +802,6 @@ void GameRenderer::turnOffLightLayer(double alpha) {  // 4J - TODO
     FRAME_PROFILE_SCOPE(Lightmap);
 #if defined(__linux__)
     if (SharedConstants::TEXTURE_LIGHTING) {
-        LinuxLogStubLightmapProbe();
         PlatformRenderer.TextureBindVertex(-1);
     }
 #else
@@ -830,7 +829,6 @@ void GameRenderer::turnOnLightLayer(
 #if defined(__linux__)
     if (!SharedConstants::TEXTURE_LIGHTING) return;
 
-    LinuxLogStubLightmapProbe();
     const int textureId = getLightTexture(mc->player->GetXboxPad(), mc->level);
 
     static int logCount = 0;
@@ -841,7 +839,6 @@ void GameRenderer::turnOnLightLayer(
     }
 
     PlatformRenderer.TextureBindVertex(textureId, scaleLight);
-    LinuxGLLogLightmapState("turnOnLightLayer", textureId, scaleLight);
 #else
     // 4jcraft: update light texture
     // todo: check implementation of getLightTexture.
