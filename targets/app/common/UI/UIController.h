@@ -11,11 +11,12 @@
 #include "util/Timer.h"
 
 #ifdef __linux__
+
 #include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
-#include "app/linux/Stubs/d3d11_stubs.h"
+
 #elif defined(_WINDOWS64)
 #include "app/windows/Iggy/include/iggy.h"
 #endif
@@ -40,6 +41,15 @@ class UIComponent_DebugUIMarketingGuide;
 class C4JThread;
 class Tutorial;
 class UIScene;
+
+// 4jcraft, used to be D3D11_RECT.
+// This was the only class that used it, so it's here now. 
+struct RECT {
+    long left;
+    long top;
+    long right;
+    long bottom;
+};
 
 // Base class for all shared functions between UIControllers
 class UIController : public IUIController {
@@ -187,7 +197,7 @@ private:
     int m_accumulatedTicks;
     uint64_t m_lastUiSfx;  // Tracks time (ms) of last UI sound effect
 
-    D3D11_RECT m_customRenderingClearRect;
+    RECT m_customRenderingClearRect;
 
     std::unordered_map<size_t, UIScene*>
         m_registeredCallbackScenes;  // A collection of scenes and unique id's
