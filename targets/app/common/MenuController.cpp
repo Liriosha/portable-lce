@@ -9,6 +9,7 @@
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/ProgressRenderer.h"
 #include "minecraft/client/renderer/GameRenderer.h"
+#include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/world/Container.h"
 #include "minecraft/world/entity/item/MinecartHopper.h"
