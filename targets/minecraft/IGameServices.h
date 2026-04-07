@@ -204,7 +204,7 @@ public:
     [[nodiscard]] virtual DLCSkinFile* getDLCSkinFile(
         const std::wstring& name) = 0;
     [[nodiscard]] virtual bool dlcNeedsCorruptCheck() = 0;
-    [[nodiscard]] virtual unsigned int dlcCheckForCorrupt(bool showMessage = true) = 0;
+    virtual unsigned int dlcCheckForCorrupt(bool showMessage = true) = 0;
     [[nodiscard]] virtual bool dlcReadDataFile(unsigned int& filesProcessed,
                                  const std::wstring& path, DLCPack* pack,
                                  bool fromArchive = false) = 0;
