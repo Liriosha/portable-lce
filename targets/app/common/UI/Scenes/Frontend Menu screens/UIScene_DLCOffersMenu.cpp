@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_DLCList.h"
 #include "app/common/UI/Controls/UIControl_HTMLLabel.h"
@@ -34,7 +34,7 @@ UIScene_DLCOffersMenu::UIScene_DLCOffersMenu(int iPad, void* initData,
     // Alert the app the we want to be informed of ethernet connections
     app.SetLiveLinkRequired(true);
 
-    m_bIsSD = !RenderManager.IsHiDef() && !RenderManager.IsWidescreen();
+    m_bIsSD = !PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen();
 
     m_labelOffers.init(app.GetString(IDS_DOWNLOADABLE_CONTENT_OFFERS));
     m_buttonListOffers.init(eControl_OffersList);

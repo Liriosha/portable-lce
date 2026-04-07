@@ -17,7 +17,7 @@
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "platform/input/input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/XboxStubs.h"
 #include "strings.h"
 #include "util/StringHelpers.h"
@@ -107,7 +107,7 @@ int LocalizationManager::TipsSortFunction(const void* a, const void* b) {
 void LocalizationManager::initialiseTips() {
     memset(m_TipIDA, 0, sizeof(m_TipIDA));
 
-    if (!RenderManager.IsHiDef()) {
+    if (!PlatformRenderer.IsHiDef()) {
         m_GameTipA[0].uiStringID = IDS_TIPS_GAMETIP_0;
     }
 

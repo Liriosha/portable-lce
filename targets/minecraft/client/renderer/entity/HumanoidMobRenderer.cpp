@@ -2,8 +2,9 @@
 
 #include <utility>
 #include <vector>
+#include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 #include "util/StringHelpers.h"
 #include "minecraft/Facing.h"

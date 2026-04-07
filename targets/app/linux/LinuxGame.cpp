@@ -5,7 +5,7 @@
 #include <string>
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Game.h"
@@ -28,7 +28,7 @@ void LinuxGame::SetRichPresenceContext(int iPad, int contextId) {}
 void LinuxGame::StoreLaunchData() {}
 void LinuxGame::ExitGame() {
     app.DebugPrintf("Linux_App LinuxGame::ExitGame AFTER START\n");
-    RenderManager.Close();
+    PlatformRenderer.Close();
 }
 void LinuxGame::FatalLoadError() {
     app.DebugPrintf(

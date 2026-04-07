@@ -1,12 +1,15 @@
-#include "Render.h"
+#include "GLRenderer.h"
 
-#include "../PlatformTypes.h"
+#include "PlatformTypes.h"
 #include "SDL.h"
 #include "SDL_error.h"
 #include "SDL_events.h"
 #include "SDL_stdinc.h"
 #include "SDL_video.h"
-#include "gl3_loader.h"
+
+#include "java/ByteBuffer.h"
+#include "java/FloatBuffer.h"
+#include "java/IntBuffer.h"
 
 // undefine macros from header to avoid argument mismatch
 #undef glGenTextures
@@ -51,7 +54,8 @@
 #include <utility>
 #include <vector>
 
-C4JRender RenderManager;
+GLRenderer gl_renderer_instance;
+IPlatformRenderer& PlatformRenderer = gl_renderer_instance;
 
 // MARK: Shaders
 
@@ -59,20 +63,20 @@ C4JRender RenderManager;
 
 #ifdef GLES
 static const char* VERT_SRC =
-#include "sdl2/shaders/vertex_es.vert"
+#include "./shaders/vertex_es.vert"
 
     ;
 static const char* FRAG_SRC =
-#include "sdl2/shaders/fragment_es.frag"
+#include "./shaders/fragment_es.frag"
 
     ;
 #else
 static const char* VERT_SRC =
-#include "sdl2/shaders/vertex.vert"
+#include "./shaders/vertex.vert"
 
     ;
 static const char* FRAG_SRC =
-#include "sdl2/shaders/fragment.frag"
+#include "./shaders/fragment.frag"
     ;
 #endif
 
@@ -593,7 +597,7 @@ static thread_local std::vector<ChunkDrawCall> s_recDraws;
 // Primitive helpers
 static bool isQuadPrim(int pt) {
     return (pt == 0x0007 /*GL_QUADS*/ ||
-            pt == (int)C4JRender::PRIMITIVE_TYPE_QUAD_LIST);
+            pt == (int)GLRenderer::PRIMITIVE_TYPE_QUAD_LIST);
 }
 
 static GLenum mapPrim(int pt) {
@@ -621,7 +625,7 @@ static GLenum mapPrim(int pt) {
 // MARK: Renderer impl
 
 // Initialises the renderer
-void C4JRender::Initialise() {
+void GLRenderer::Initialise() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "[4J_Render] SDL_Init: %s\n", SDL_GetError());
         return;
@@ -712,7 +716,7 @@ void C4JRender::Initialise() {
 #endif
 }
 
-void C4JRender::InitialiseContext() {
+void GLRenderer::InitialiseContext() {
     if (!s_window) return;
     pthread_once(&s_glCtxKeyOnce, makeGLCtxKey);
     if (s_mainThreadSet && pthread_equal(pthread_self(), s_mainThread)) {
@@ -742,7 +746,7 @@ void C4JRender::InitialiseContext() {
     pthread_setspecific(s_glCtxKey, (void*)shared);
 }
 
-void C4JRender::StartFrame() {
+void GLRenderer::StartFrame() {
     Set_matrixDirty();
     int w, h;
     SDL_GetWindowSize(s_window, &w, &h);
@@ -751,7 +755,7 @@ void C4JRender::StartFrame() {
     glViewport(0, 0, s_windowWidth, s_windowHeight);
 }
 
-void C4JRender::Present() {
+void GLRenderer::Present() {
     if (!s_window) return;
     SDL_Event ev;
     while (SDL_PollEvent(&ev)) {
@@ -768,23 +772,23 @@ void C4JRender::Present() {
     SDL_GL_SwapWindow(s_window);
 }
 
-void C4JRender::SetWindowSize(int w, int h) {
+void GLRenderer::SetWindowSize(int w, int h) {
     s_reqWidth = w;
     s_reqHeight = h;
 }
 
-void C4JRender::SetFullscreen(bool fs) { s_fullscreen = fs; }
+void GLRenderer::SetFullscreen(bool fs) { s_fullscreen = fs; }
 
-bool C4JRender::ShouldClose() { return !s_window || s_shouldClose; }
+bool GLRenderer::ShouldClose() { return !s_window || s_shouldClose; }
 
-void C4JRender::GetFramebufferSize(int& w, int& h) {
+void GLRenderer::GetFramebufferSize(int& w, int& h) {
     w = s_windowWidth;
     h = s_windowHeight;
 }
 
-void C4JRender::Close() { s_window = nullptr; }
+void GLRenderer::Close() { s_window = nullptr; }
 
-void C4JRender::Shutdown() {
+void GLRenderer::Shutdown() {
     pthread_mutex_lock(&s_glCallMtx);
     for (auto& kv : s_chunkPool) kv.second.destroy();
     s_chunkPool.clear();
@@ -807,7 +811,7 @@ void C4JRender::Shutdown() {
     SDL_Quit();
 }
 
-void C4JRender::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
+void GLRenderer::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
                              eVertexType vType, ePixelShaderType) {
     if (count <= 0 || !dataIn) return;
 
@@ -915,14 +919,14 @@ void C4JRender::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
     pthread_mutex_unlock(&s_glCallMtx);
 }
 
-void C4JRender::ReadPixels(int x, int y, int w, int h, void* buf) {
+void GLRenderer::ReadPixels(int x, int y, int w, int h, void* buf) {
     if (!buf) return;
     pthread_mutex_lock(&s_glCallMtx);
     glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
     pthread_mutex_unlock(&s_glCallMtx);
 }
 
-int C4JRender::CBuffCreate(int count) {
+int GLRenderer::CBuffCreate(int count) {
     pthread_mutex_lock(&s_glCallMtx);
     int b = s_nextListBase;
     s_nextListBase += count;
@@ -930,7 +934,7 @@ int C4JRender::CBuffCreate(int count) {
     return b;
 }
 
-void C4JRender::CBuffDelete(int first, int count) {
+void GLRenderer::CBuffDelete(int first, int count) {
     pthread_mutex_lock(&s_glCallMtx);
     for (int i = first; i < first + count; i++) {
         auto it = s_chunkPool.find(i);
@@ -942,7 +946,7 @@ void C4JRender::CBuffDelete(int first, int count) {
     pthread_mutex_unlock(&s_glCallMtx);
 }
 
-void C4JRender::CBuffDeleteAll() {
+void GLRenderer::CBuffDeleteAll() {
     pthread_mutex_lock(&s_glCallMtx);
     for (auto& kv : s_chunkPool) {
         kv.second.destroy();
@@ -952,13 +956,13 @@ void C4JRender::CBuffDeleteAll() {
     pthread_mutex_unlock(&s_glCallMtx);
 }
 
-void C4JRender::CBuffStart(int index, bool) {
+void GLRenderer::CBuffStart(int index, bool) {
     s_recListId = index;
     s_recVerts.clear();
     s_recDraws.clear();
 }
 
-void C4JRender::CBuffEnd() {
+void GLRenderer::CBuffEnd() {
     if (s_recListId < 0) return;
     pthread_mutex_lock(&s_glCallMtx);
     ChunkBuffer& cb = s_chunkPool[s_recListId];
@@ -977,7 +981,7 @@ void C4JRender::CBuffEnd() {
     s_recListId = -1;
 }
 
-void C4JRender::CBuffClear(int index) {
+void GLRenderer::CBuffClear(int index) {
     pthread_mutex_lock(&s_glCallMtx);
     auto it = s_chunkPool.find(index);
     if (it != s_chunkPool.end()) {
@@ -987,7 +991,7 @@ void C4JRender::CBuffClear(int index) {
     pthread_mutex_unlock(&s_glCallMtx);
 }
 
-bool C4JRender::CBuffCall(int index, bool) {
+bool GLRenderer::CBuffCall(int index, bool) {
     pthread_mutex_lock(&s_glCallMtx);
     auto it = s_chunkPool.find(index);
     if (it == s_chunkPool.end() || !it->second.valid) {
@@ -1026,7 +1030,7 @@ bool C4JRender::CBuffCall(int index, bool) {
     return true;
 }
 
-void C4JRender::MatrixMode(int t) {
+void GLRenderer::MatrixMode(int t) {
     if (t == GL_PROJECTION)
         s_matMode = 1;
     else if (t == GL_TEXTURE)
@@ -1035,53 +1039,53 @@ void C4JRender::MatrixMode(int t) {
         s_matMode = 0;
 }
 
-void C4JRender::MatrixSetIdentity() {
+void GLRenderer::MatrixSetIdentity() {
     activeStack().load(glm::mat4(1.f));
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-void C4JRender::MatrixPush() {
+void GLRenderer::MatrixPush() {
     activeStack().push();
     // push doesn't change cur() so no dirty needed but mark anyway to be safe
     // ;w;
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-void C4JRender::MatrixPop() {
+void GLRenderer::MatrixPop() {
     activeStack().pop();
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-void C4JRender::MatrixTranslate(float x, float y, float z) {
+void GLRenderer::MatrixTranslate(float x, float y, float z) {
     activeStack().mul(glm::translate(glm::mat4(1.f), {x, y, z}));
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-void C4JRender::MatrixRotate(float a, float x, float y, float z) {
+void GLRenderer::MatrixRotate(float a, float x, float y, float z) {
     activeStack().mul(glm::rotate(glm::mat4(1.f), a, {x, y, z}));
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-void C4JRender::MatrixScale(float x, float y, float z) {
+void GLRenderer::MatrixScale(float x, float y, float z) {
     activeStack().mul(glm::scale(glm::mat4(1.f), {x, y, z}));
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-void C4JRender::MatrixPerspective(float fovy, float asp, float zn, float zf) {
+void GLRenderer::MatrixPerspective(float fovy, float asp, float zn, float zf) {
     s_proj.cur() = glm::perspective(glm::radians(fovy), asp, zn, zf);
     markMatrixDirty();
 }
-void C4JRender::MatrixOrthogonal(float l, float r, float b, float t, float zn,
+void GLRenderer::MatrixOrthogonal(float l, float r, float b, float t, float zn,
                                  float zf) {
     s_proj.cur() = glm::ortho(l, r, b, t, zn, zf);
     markMatrixDirty();
 }
-void C4JRender::MatrixMult(float* m) {
+void GLRenderer::MatrixMult(float* m) {
     activeStack().mul(glm::make_mat4(m));
     markMatrixDirty();
     if (s_matMode == 0) markNormalDirty();
 }
-const float* C4JRender::MatrixGet(int t) {
+const float* GLRenderer::MatrixGet(int t) {
     static float buf[16];
     glm::mat4* m = (t == GL_MODELVIEW_MATRIX)    ? &s_mv.cur()
                    : (t == GL_PROJECTION_MATRIX) ? &s_proj.cur()
@@ -1090,7 +1094,7 @@ const float* C4JRender::MatrixGet(int t) {
     return buf;
 }
 
-void C4JRender::Set_matrixDirty() {
+void GLRenderer::Set_matrixDirty() {
     // iggy wipes opengl state
     s_boundProgram = 0;
     s_rs_dirty_mask = 0xFFFFFFFF;
@@ -1104,20 +1108,20 @@ void C4JRender::Set_matrixDirty() {
     }
 }
 
-void C4JRender::Clear(int f) { glClear(f); }
-void C4JRender::SetClearColour(const float c[4]) {
+void GLRenderer::Clear(int f) { glClear(f); }
+void GLRenderer::SetClearColour(const float c[4]) {
     glClearColor(c[0], c[1], c[2], c[3]);
 }
-bool C4JRender::IsWidescreen() { return true; }
-bool C4JRender::IsHiDef() { return true; }
-void C4JRender::StateSetColour(float r, float g, float b, float a) {
+bool GLRenderer::IsWidescreen() { return true; }
+bool GLRenderer::IsHiDef() { return true; }
+void GLRenderer::StateSetColour(float r, float g, float b, float a) {
     glm::vec4 v = {r, g, b, a};
     if (s_rs.baseColor != v) {
         s_rs.baseColor = v;
         markDirty(DIRTY_BASECOLOR);
     }
 }
-void C4JRender::SetChunkOffset(float x, float y, float z) {
+void GLRenderer::SetChunkOffset(float x, float y, float z) {
     if (s_shader.uChunkOffset < 0) return;
     glm::vec3 v = {x, y, z};
     if (!s_chunkOffsetValid || s_chunkOffset != v) {
@@ -1128,111 +1132,111 @@ void C4JRender::SetChunkOffset(float x, float y, float z) {
         glUniform3f(s_shader.uChunkOffset, x, y, z);
     }
 }
-void C4JRender::StateSetDepthMask(bool e) {
+void GLRenderer::StateSetDepthMask(bool e) {
     glShadowSetDepthMask(e ? GL_TRUE : GL_FALSE);
 }
-void C4JRender::StateSetBlendEnable(bool e) { glShadowSetBlend(e); }
-void C4JRender::StateSetBlendFunc(int s, int d) {
+void GLRenderer::StateSetBlendEnable(bool e) { glShadowSetBlend(e); }
+void GLRenderer::StateSetBlendFunc(int s, int d) {
     glShadowSetBlendFunc(s, d);
 }
-void C4JRender::StateSetDepthFunc(int f) { ::glDepthFunc(f); }
-void C4JRender::StateSetFaceCull(bool e) { glShadowSetCull(e); }
-void C4JRender::StateSetFaceCullCW(bool e) {
+void GLRenderer::StateSetDepthFunc(int f) { ::glDepthFunc(f); }
+void GLRenderer::StateSetFaceCull(bool e) { glShadowSetCull(e); }
+void GLRenderer::StateSetFaceCullCW(bool e) {
     glShadowSetFrontFace(e ? GL_CW : GL_CCW);
 }
-void C4JRender::StateSetLineWidth(float w) {
+void GLRenderer::StateSetLineWidth(float w) {
 #ifndef GLES
     glShadowSetLineWidth(w);
 #else
     (void)w;
 #endif
 }
-void C4JRender::StateSetWriteEnable(bool r, bool g, bool b, bool a) {
+void GLRenderer::StateSetWriteEnable(bool r, bool g, bool b, bool a) {
     glShadowSetColorMask(r, g, b, a);
 }
-void C4JRender::StateSetDepthTestEnable(bool e) { glShadowSetDepthTest(e); }
-void C4JRender::StateSetAlphaTestEnable(bool e) {
+void GLRenderer::StateSetDepthTestEnable(bool e) { glShadowSetDepthTest(e); }
+void GLRenderer::StateSetAlphaTestEnable(bool e) {
     float v = e ? 0.1f : 0.f;
     if (s_rs.alphaRef != v) {
         s_rs.alphaRef = v;
         markDirty(DIRTY_ALPHA);
     }
 }
-void C4JRender::StateSetAlphaFunc(int, float p) {
+void GLRenderer::StateSetAlphaFunc(int, float p) {
     if (s_rs.alphaRef != p) {
         s_rs.alphaRef = p;
         markDirty(DIRTY_ALPHA);
     }
 }
-void C4JRender::StateSetDepthSlopeAndBias(float s, float b) {
+void GLRenderer::StateSetDepthSlopeAndBias(float s, float b) {
     glShadowSetPolygonOffset(s, b);
 }
-void C4JRender::StateSetBlendFactor(unsigned int col) {
+void GLRenderer::StateSetBlendFactor(unsigned int col) {
     float a = ((col >> 24) & 0xFF) / 255.f;
     float r = ((col >> 16) & 0xFF) / 255.f;
     float g = ((col >> 8) & 0xFF) / 255.f;
     float b = (col & 0xFF) / 255.f;
     glBlendColor(r, g, b, a);
 }
-void C4JRender::StateSetFogEnable(bool e) {
+void GLRenderer::StateSetFogEnable(bool e) {
     if (s_rs.fogEnable != e) {
         s_rs.fogEnable = e;
         markDirty(DIRTY_FOG);
     }
 }
-void C4JRender::StateSetFogMode(int mode) {
+void GLRenderer::StateSetFogMode(int mode) {
     int v = (mode == GL_LINEAR) ? 1 : (mode == GL_EXP) ? 2 : (mode == 0x0801) ? 3 : 0;
     if (s_rs.fogMode != v) {
         s_rs.fogMode = v;
         markDirty(DIRTY_FOG);
     }
 }
-void C4JRender::StateSetFogNearDistance(float d) {
+void GLRenderer::StateSetFogNearDistance(float d) {
     if (s_rs.fogStart != d) {
         s_rs.fogStart = d;
         markDirty(DIRTY_FOG);
     }
 }
-void C4JRender::StateSetFogFarDistance(float d) {
+void GLRenderer::StateSetFogFarDistance(float d) {
     if (s_rs.fogEnd != d) {
         s_rs.fogEnd = d;
         markDirty(DIRTY_FOG);
     }
 }
-void C4JRender::StateSetFogDensity(float d) {
+void GLRenderer::StateSetFogDensity(float d) {
     if (s_rs.fogDensity != d) {
         s_rs.fogDensity = d;
         markDirty(DIRTY_FOG);
     }
 }
-void C4JRender::StateSetFogColour(float r, float g, float b) {
+void GLRenderer::StateSetFogColour(float r, float g, float b) {
     glm::vec4 v = {r, g, b, 1};
     if (s_rs.fogColor != v) {
         s_rs.fogColor = v;
         markDirty(DIRTY_FOG);
     }
 }
-void C4JRender::StateSetLightingEnable(bool e) {
+void GLRenderer::StateSetLightingEnable(bool e) {
     if (s_rs.lighting != e) {
         s_rs.lighting = e;
         markDirty(DIRTY_LIGHTING);
     }
 }
-void C4JRender::StateSetLightColour(int, float r, float g, float b) {
+void GLRenderer::StateSetLightColour(int, float r, float g, float b) {
     glm::vec3 v = {r, g, b};
     if (s_rs.ldiff != v) {
         s_rs.ldiff = v;
         markDirty(DIRTY_LIGHTING);
     }
 }
-void C4JRender::StateSetLightAmbientColour(float r, float g, float b) {
+void GLRenderer::StateSetLightAmbientColour(float r, float g, float b) {
     glm::vec3 v = {r, g, b};
     if (s_rs.lamb != v) {
         s_rs.lamb = v;
         markDirty(DIRTY_LIGHTING);
     }
 }
-void C4JRender::StateSetLightDirection(int light, float x, float y, float z) {
+void GLRenderer::StateSetLightDirection(int light, float x, float y, float z) {
     glm::vec3 d = glm::normalize(glm::mat3(s_mv.cur()) * glm::vec3(x, y, z));
     if (light == 0) {
         if (s_rs.l0 != d) {
@@ -1246,44 +1250,44 @@ void C4JRender::StateSetLightDirection(int light, float x, float y, float z) {
         }
     }
 }
-void C4JRender::StateSetViewport(eViewportType) {
+void GLRenderer::StateSetViewport(eViewportType) {
     glViewport(0, 0, s_windowWidth, s_windowHeight);
 }
-void C4JRender::StateSetVertexTextureUV(float u, float v) {
+void GLRenderer::StateSetVertexTextureUV(float u, float v) {
     glm::vec2 val = {u, v};
     if (s_rs.globalLM != val) {
         s_rs.globalLM = val;
         markDirty(DIRTY_GLOBAL_LM);
     }
 }
-void C4JRender::StateSetStencil(int fn, uint8_t ref, uint8_t fmask,
+void GLRenderer::StateSetStencil(int fn, uint8_t ref, uint8_t fmask,
                                 uint8_t wmask) {
     glShadowSetStencil(fn, ref, fmask, wmask);
 }
-void C4JRender::StateSetTextureEnable(bool e) {
+void GLRenderer::StateSetTextureEnable(bool e) {
     if (s_rs.activeTexture == 0 && s_rs.useTexture != e) {
         s_rs.useTexture = e;
         markDirty(DIRTY_TEXTURE);
     }
 }
-void C4JRender::StateSetActiveTexture(int tex) {
+void GLRenderer::StateSetActiveTexture(int tex) {
     s_rs.activeTexture = (tex == 0x84C1 /*GL_TEXTURE1*/) ? 1 : 0;
 }
 
-int C4JRender::TextureCreate() {
+int GLRenderer::TextureCreate() {
     GLuint id;
     glGenTextures(1, &id);
     return (int)id;
 }
-void C4JRender::TextureFree(int i) {
+void GLRenderer::TextureFree(int i) {
     GLuint id = (GLuint)i;
     glDeleteTextures(1, &id);
 }
-void C4JRender::TextureBind(int idx) {
+void GLRenderer::TextureBind(int idx) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, idx < 0 ? 0 : (GLuint)idx);
 }
-void C4JRender::TextureBindVertex(int idx, bool scaleLight) {
+void GLRenderer::TextureBindVertex(int idx, bool scaleLight) {
     if (idx < 0) {
         if (s_rs.useLightmap) {
             s_rs.useLightmap = false;
@@ -1311,7 +1315,7 @@ void C4JRender::TextureBindVertex(int idx, bool scaleLight) {
         markDirty(DIRTY_LMT);
     }
 }
-void C4JRender::TextureSetTextureLevels(int l) {
+void GLRenderer::TextureSetTextureLevels(int l) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, l > 0 ? l - 1 : 0);
     if (l > 1)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -1319,8 +1323,8 @@ void C4JRender::TextureSetTextureLevels(int l) {
     else
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
-int C4JRender::TextureGetTextureLevels() { return 1; }
-void C4JRender::TextureData(int w, int h, void* d, int lvl, eTextureFormat) {
+int GLRenderer::TextureGetTextureLevels() { return 1; }
+void GLRenderer::TextureData(int w, int h, void* d, int lvl, eTextureFormat) {
     glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, w, h, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, d);
     if (lvl == 0) {
@@ -1331,12 +1335,12 @@ void C4JRender::TextureData(int w, int h, void* d, int lvl, eTextureFormat) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
 }
-void C4JRender::TextureDataUpdate(int xo, int yo, int w, int h, void* d,
+void GLRenderer::TextureDataUpdate(int xo, int yo, int w, int h, void* d,
                                   int lvl) {
     glTexSubImage2D(GL_TEXTURE_2D, lvl, xo, yo, w, h, GL_RGBA, GL_UNSIGNED_BYTE,
                     d);
 }
-void C4JRender::TextureSetParam(int p, int v) {
+void GLRenderer::TextureSetParam(int p, int v) {
     glTexParameteri(GL_TEXTURE_2D, p, v);
 }
 
@@ -1355,7 +1359,7 @@ static int stbLoad(unsigned char* data, int w, int h, D3DXIMAGE_INFO* info,
     *out = px;
     return 0;  // Success
 }
-int C4JRender::LoadTextureData(const char* fn, D3DXIMAGE_INFO* i, int** o) {
+int GLRenderer::LoadTextureData(const char* fn, D3DXIMAGE_INFO* i, int** o) {
     int w, h, c;
     unsigned char* d = stbi_load(fn, &w, &h, &c, 4);
     if (!d) return -1;  // Failure
@@ -1363,7 +1367,7 @@ int C4JRender::LoadTextureData(const char* fn, D3DXIMAGE_INFO* i, int** o) {
     stbi_image_free(d);
     return hr;
 }
-int C4JRender::LoadTextureData(uint8_t* pb, uint32_t nb, D3DXIMAGE_INFO* i,
+int GLRenderer::LoadTextureData(uint8_t* pb, uint32_t nb, D3DXIMAGE_INFO* i,
                                int** o) {
     int w, h, c;
     unsigned char* d = stbi_load_from_memory(pb, (int)nb, &w, &h, &c, 4);
@@ -1374,7 +1378,7 @@ int C4JRender::LoadTextureData(uint8_t* pb, uint32_t nb, D3DXIMAGE_INFO* i,
 }
 
 // TODO: TO REMOVE SOON.
-void C4JRender::UpdateGamma(unsigned short usGamma) {
+void GLRenderer::UpdateGamma(unsigned short usGamma) {
     constexpr unsigned short GAMMA_MAX = 32768;
     s_rs.gamma = 0.5f + ((float)(usGamma) * (1.0f / GAMMA_MAX));
 }
@@ -1449,25 +1453,184 @@ void glGetQueryObjectu_4J_Helper(unsigned int id, unsigned int pname,
 extern "C" {
 void glFogfv(GLenum pname, const GLfloat* params) {
     if (pname == 0x0B66)
-        RenderManager.StateSetFogColour(params[0], params[1], params[2]);
+        PlatformRenderer.StateSetFogColour(params[0], params[1], params[2]);
 }
 void glLightfv(GLenum light, GLenum pname, const GLfloat* params) {
     if (pname == 0x1203)
-        RenderManager.StateSetLightDirection(light == 0x4000 ? 0 : 1, params[0],
+        PlatformRenderer.StateSetLightDirection(light == 0x4000 ? 0 : 1, params[0],
                                              params[1], params[2]);
     else if (pname == 0x1200)
-        RenderManager.StateSetLightAmbientColour(params[0], params[1],
+        PlatformRenderer.StateSetLightAmbientColour(params[0], params[1],
                                                  params[2]);
     else if (pname == 0x1201)
-        RenderManager.StateSetLightColour(light == 0x4000 ? 0 : 1, params[0],
+        PlatformRenderer.StateSetLightColour(light == 0x4000 ? 0 : 1, params[0],
                                           params[1], params[2]);
 }
 void glLightModelfv(GLenum pname, const GLfloat* params) {
     if (pname == 0x0B53)
-        RenderManager.StateSetLightAmbientColour(params[0], params[1],
+        PlatformRenderer.StateSetLightAmbientColour(params[0], params[1],
                                                  params[2]);
 }
 void glShadeModel(GLenum) {}
 void glColorMaterial(GLenum, GLenum) {}
 void glNormal3f(GLfloat, GLfloat, GLfloat) {}
+}
+
+// MARK: LinuxStubs
+
+#ifdef GLES
+extern "C" {
+extern void glClearDepthf(float depth);
+void glClearDepth(double depth) { glClearDepthf((float)depth); }
+void glTexGeni(unsigned int, unsigned int, int) {}
+void glTexGenfv(unsigned int, unsigned int, const float*) {}
+void glTexCoordPointer(int, unsigned int, int, const void*) {}
+void glNormalPointer(unsigned int, int, const void*) {}
+void glColorPointer(int, unsigned int, int, const void*) {}
+void glVertexPointer(int, unsigned int, int, const void*) {}
+void glEndList(void) {}
+void glCallLists(int, unsigned int, const void*) {}
+}
+#endif
+
+inline int* getIntPtr(IntBuffer* buf) {
+    return buf ? (int*)buf->getBuffer() + buf->position() : nullptr;
+}
+inline void* getBytePtr(ByteBuffer* buf) {
+    return buf ? (char*)buf->getBuffer() + buf->position() : nullptr;
+}
+
+void glGenTextures_4J(IntBuffer* buf) {
+    if (!buf) return;
+    int n = buf->limit() - buf->position();
+    int* dst = getIntPtr(buf);
+    for (int i = 0; i < n; i++) dst[i] = PlatformRenderer.TextureCreate();
+}
+
+void glDeleteTextures_4J(IntBuffer* buf) {
+    if (!buf) return;
+    int n = buf->limit() - buf->position();
+    int* src = getIntPtr(buf);
+    for (int i = 0; i < n; i++) PlatformRenderer.TextureFree(src[i]);
+}
+
+void glTexImage2D_4J(int target, int level, int internalformat, int width,
+                     int height, int border, int format, int type,
+                     ByteBuffer* pixels) {
+    (void)target;
+    (void)internalformat;
+    (void)border;
+    (void)format;
+    (void)type;
+    PlatformRenderer.TextureData(width, height, getBytePtr(pixels), level,
+                              IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw);
+}
+
+void glLight_4J(int light, int pname, FloatBuffer* params) {
+    const float* p = params->_getDataPointer();
+    int idx = (light == 0x4001) ? 1 : 0;
+    if (pname == 0x1203)
+        PlatformRenderer.StateSetLightDirection(idx, p[0], p[1], p[2]);
+    else if (pname == 0x1201)
+        PlatformRenderer.StateSetLightColour(idx, p[0], p[1], p[2]);
+    else if (pname == 0x1200)
+        PlatformRenderer.StateSetLightAmbientColour(p[0], p[1], p[2]);
+}
+
+void glLightModel_4J(int pname, FloatBuffer* params) {
+    if (pname == 0x0B53) {
+        const float* p = params->_getDataPointer();
+        PlatformRenderer.StateSetLightAmbientColour(p[0], p[1], p[2]);
+    }
+}
+
+void glFog_4J(int pname, FloatBuffer* params) {
+    const float* p = params->_getDataPointer();
+    if (pname == 0x0B66) PlatformRenderer.StateSetFogColour(p[0], p[1], p[2]);
+}
+
+void glGetFloat_4J(int pname, FloatBuffer* params) {
+    const float* m = PlatformRenderer.MatrixGet(pname);
+    if (m) memcpy(params->_getDataPointer(), m, 16 * sizeof(float));
+}
+
+void glCallLists_4J(IntBuffer* lists) {
+    if (!lists) return;
+    int count = lists->limit() - lists->position();
+    int* ids = getIntPtr(lists);
+    for (int i = 0; i < count; i++) PlatformRenderer.CBuffCall(ids[i], false);
+}
+
+void glReadPixels_4J(int x, int y, int w, int h, int f, int t, ByteBuffer* p) {
+    (void)f;
+    (void)t;
+    PlatformRenderer.ReadPixels(x, y, w, h, getBytePtr(p));
+}
+
+// dead stubs
+void glTexCoordPointer_4J(int, int, FloatBuffer*) {}
+void glNormalPointer_4J(int, ByteBuffer*) {}
+void glColorPointer_4J(int, bool, int, ByteBuffer*) {}
+void glVertexPointer_4J(int, int, FloatBuffer*) {}
+void glEndList_4J(int) {}
+void glTexGen_4J(int, int, FloatBuffer*) {}
+
+#include <dlfcn.h>
+#include <stdio.h>
+#include <string.h>
+
+static PFNGLGENQUERIESARBPROC _glGenQueriesARB = nullptr;
+static PFNGLBEGINQUERYARBPROC _glBeginQueryARB = nullptr;
+static PFNGLENDQUERYARBPROC _glEndQueryARB = nullptr;
+static PFNGLGETQUERYOBJECTUIVARBPROC _glGetQueryObjectuivARB = nullptr;
+static bool _queriesInitialized = false;
+
+static void initQueryFuncs() {
+    if (_queriesInitialized) return;
+    _queriesInitialized = true;
+    _glGenQueriesARB =
+        (PFNGLGENQUERIESARBPROC)dlsym(RTLD_DEFAULT, "glGenQueriesARB");
+    _glBeginQueryARB =
+        (PFNGLBEGINQUERYARBPROC)dlsym(RTLD_DEFAULT, "glBeginQueryARB");
+    _glEndQueryARB = (PFNGLENDQUERYARBPROC)dlsym(RTLD_DEFAULT, "glEndQueryARB");
+    _glGetQueryObjectuivARB = (PFNGLGETQUERYOBJECTUIVARBPROC)dlsym(
+        RTLD_DEFAULT, "glGetQueryObjectuivARB");
+}
+
+void glGenQueriesARB_4J(IntBuffer* buf) {
+    initQueryFuncs();
+    if (_glGenQueriesARB && buf) {
+        int n = buf->limit() - buf->position();
+        if (n > 0) _glGenQueriesARB(n, (GLuint*)getIntPtr(buf));
+    }
+}
+
+void glBeginQueryARB_4J(int target, int id) {
+    initQueryFuncs();
+    if (_glBeginQueryARB) _glBeginQueryARB((GLenum)target, (GLuint)id);
+}
+
+void glEndQueryARB_4J(int target) {
+    initQueryFuncs();
+    if (_glEndQueryARB) _glEndQueryARB((GLenum)target);
+}
+
+void glGetQueryObjectuARB_4J(int id, int pname, IntBuffer* params) {
+    initQueryFuncs();
+    if (_glGetQueryObjectuivARB && params)
+        // LWJGL does not change limits/positions during these calls, it
+        // reads/writes exactly at pointer!!
+        _glGetQueryObjectuivARB((GLuint)id, (GLenum)pname,
+                                (GLuint*)getIntPtr(params));
+}
+void glGetFloat(int pname, FloatBuffer* params) {
+    glGetFloat_4J(pname, params);
+}
+void LinuxGLLogLightmapState(const char* stage, int textureId,
+                             bool scaleLight) {
+    static int logCount = 0;
+    if (logCount >= 16) return;
+    ++logCount;
+    fprintf(stderr, "[linux-lightmap] %s tex=%d scale=%d\n", stage, textureId,
+            scaleLight ? 1 : 0);
 }

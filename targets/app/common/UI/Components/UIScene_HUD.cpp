@@ -44,18 +44,18 @@ UIScene_HUD::UIScene_HUD(int iPad, void* initData, UILayer* parentLayer)
 
 std::wstring UIScene_HUD::getMoviePath() {
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             m_bSplitscreen = true;
             return L"HUDSplit";
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             m_bSplitscreen = false;
             return L"HUD";
@@ -71,43 +71,43 @@ void UIScene_HUD::updateSafeZone() {
     F64 safeRight = 0.0;
 
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
             safeLeft = getSafeZoneHalfWidth();
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             safeRight = getSafeZoneHalfWidth();
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
             safeTop = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             safeBottom = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
@@ -250,7 +250,7 @@ void UIScene_HUD::handleReload() {
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localplayers[m_iPad] == nullptr ||
         pMinecraft->localplayers[m_iPad]->m_iScreenSection ==
-            C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+            IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
         iGuiScale = app.GetGameSettings(m_iPad, eGameSetting_UISize);
     } else {
         iGuiScale = app.GetGameSettings(m_iPad, eGameSetting_UISizeSplitscreen);
@@ -669,20 +669,20 @@ void UIScene_HUD::SetHealthAbsorb(int healthAbsorb) {
 }
 
 void UIScene_HUD::render(S32 width, S32 height,
-                         C4JRender::eViewportType viewport) {
+                         IPlatformRenderer::eViewportType viewport) {
     if (m_bSplitscreen) {
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
@@ -697,22 +697,22 @@ void UIScene_HUD::render(S32 width, S32 height,
         S32 tileHeight = height;
 
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 tileHeight = (S32)(ui.getScreenHeight());
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
                 tileWidth = (S32)(ui.getScreenWidth());
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 tileWidth = (S32)(ui.getScreenWidth());
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
             default:
@@ -780,12 +780,12 @@ void UIScene_HUD::repositionHud() {
     m_parentLayer->getRenderDimensions(width, height);
 
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             height = (S32)(ui.getScreenHeight());
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             width = (S32)(ui.getScreenWidth());
             break;
         default:

@@ -22,7 +22,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "platform/input/input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "app/common/UI/All Platforms/IUIController.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
@@ -158,7 +158,7 @@ private:
 
     int m_iPressStartQuadrantsMask;
 
-    C4JRender::eViewportType m_currentRenderViewport;
+    IPlatformRenderer::eViewportType m_currentRenderViewport;
     bool m_bCustomRenderPosition;
 
     static std::uint32_t m_dwTrialTimerLimitSecs;
@@ -267,9 +267,9 @@ public:
     }
 
     virtual void render() = 0;
-    void getRenderDimensions(C4JRender::eViewportType viewport, S32& width,
+    void getRenderDimensions(IPlatformRenderer::eViewportType viewport, S32& width,
                              S32& height);
-    void setupRenderPosition(C4JRender::eViewportType viewport);
+    void setupRenderPosition(IPlatformRenderer::eViewportType viewport);
     void setupRenderPosition(S32 xOrigin, S32 yOrigin);
 
     void SetSysUIShowing(bool bVal);

@@ -6,7 +6,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
@@ -249,7 +249,7 @@ void UIScene_LoadMenu::updateTooltips() {
 void UIScene_LoadMenu::updateComponents() {
     m_parentLayer->showComponent(m_iPad, eUIComponent_Panorama, true);
 
-    if (RenderManager.IsWidescreen()) {
+    if (PlatformRenderer.IsWidescreen()) {
         m_parentLayer->showComponent(m_iPad, eUIComponent_Logo, true);
     } else {
         m_parentLayer->showComponent(m_iPad, eUIComponent_Logo, false);

@@ -6,6 +6,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <GL/gl.h>
 
 #include "AbstractContainerScreen.h"
 #include "minecraft/client/Lighting.h"
@@ -159,7 +160,7 @@ void EnchantmentScreen::renderBg(float a) {
                240 * scaleFactor);
 
     glTranslatef(-0.34f, 0.23f, 0.0f);
-    gluPerspective(90.0f, 1.3333334f, 9.0f, 80.0f);
+    PlatformRenderer.MatrixPerspective(90.0f, 1.3333334f, 9.0f, 80.0f);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

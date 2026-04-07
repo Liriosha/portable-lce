@@ -635,7 +635,7 @@ int32_t InitDevice() {
     vp.TopLeftY = 0;
     g_pImmediateContext->RSSetViewports(1, &vp);
 
-    RenderManager.Initialise(g_pd3dDevice, g_pSwapChain);
+    PlatformRenderer.Initialise(g_pd3dDevice, g_pSwapChain);
 
     return 0;
 }
@@ -706,7 +706,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
     app.loadMediaArchive();
 
-    RenderManager.Initialise(g_pd3dDevice, g_pSwapChain);
+    PlatformRenderer.Initialise(g_pd3dDevice, g_pSwapChain);
 
     app.loadStringTable();
     ui.init(g_pd3dDevice, g_pImmediateContext, g_pRenderTargetView,
@@ -780,7 +780,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
             continue;
         }
-        RenderManager.StartFrame();
+        PlatformRenderer.StartFrame();
 
         // 		static bool bPlay=false;
         // 		if(bPlay)
@@ -796,7 +796,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
 
         PlatformStorage.Tick();
 
-        RenderManager.Tick();
+        PlatformRenderer.Tick();
 
         // Tick the social networking manager.
         //		CSocialManager::Instance()->Tick();
@@ -830,7 +830,7 @@ int APIENTRY _tWinMain(_In_ HINSTANCE hInstance,
         ui.tick();
         ui.render();
         // Present the frame.
-        RenderManager.Present();
+        PlatformRenderer.Present();
 
         ui.CheckMenuDisplayed();
         // Any threading type things to deal with from the xui side?

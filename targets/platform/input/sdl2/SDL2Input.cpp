@@ -18,7 +18,7 @@
 #include <string>
 
 #include "../InputConstants.h"
-#include "../PlatformTypes.h"
+#include "../../PlatformTypes.h"
 
 SDL2Input sdl2_input_instance;
 IPlatformInput& PlatformInput = sdl2_input_instance;

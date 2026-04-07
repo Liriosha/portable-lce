@@ -21,7 +21,7 @@
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "platform/input/input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "app/common/Audio/SoundEngine.h"
 
@@ -265,7 +265,7 @@ void GameSettingsManager::actionGameSettings(int iPad, eGameSetting eVal) {
         case eGameSetting_Gamma:
             if (iPad == PlatformProfile.GetPrimaryPad()) {
                 float fVal = ((float)GameSettingsA[iPad]->ucGamma) * 327.68f;
-                RenderManager.UpdateGamma((unsigned short)fVal);
+                PlatformRenderer.UpdateGamma((unsigned short)fVal);
             }
             break;
         case eGameSetting_Difficulty:
@@ -371,7 +371,7 @@ void GameSettingsManager::actionGameSettings(int iPad, eGameSetting eVal) {
             for (std::uint8_t idx = 0; idx < XUSER_MAX_COUNT; ++idx) {
                 if (pMinecraft->localplayers[idx] != nullptr) {
                     if (pMinecraft->localplayers[idx]->m_iScreenSection ==
-                        C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+                        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
                         ui.DisplayGamertag(idx, false);
                     } else {
                         ui.DisplayGamertag(idx, true);

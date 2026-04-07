@@ -6,9 +6,9 @@
 #include <numbers>
 #include <string>
 #include <vector>
+#include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
-
+#include "platform/renderer/renderer.h"
 #include "minecraft/client/model/geom/Model.h"
 #include "minecraft/client/model/geom/ModelPart.h"
 #include "minecraft/world/entity/Entity.h"

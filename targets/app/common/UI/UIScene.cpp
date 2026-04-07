@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl.h"
@@ -145,7 +145,7 @@ F64 UIScene::getSafeZoneHalfHeight() {
 
     float safeHeight = 0.0f;
 
-    if (!RenderManager.IsHiDef() && RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && PlatformRenderer.IsWidescreen()) {
         // 90% safezone
         safeHeight = height * (0.15f / 2);
     } else {
@@ -159,7 +159,7 @@ F64 UIScene::getSafeZoneHalfWidth() {
     float width = ui.getScreenWidth();
 
     float safeWidth = 0.0f;
-    if (!RenderManager.IsHiDef() && RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && PlatformRenderer.IsWidescreen()) {
         // 85% safezone
         safeWidth = width * (0.15f / 2);
     } else {
@@ -177,35 +177,35 @@ void UIScene::updateSafeZone() {
     F64 safeRight = 0.0;
 
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
             safeTop = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
             safeTop = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             safeBottom = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
@@ -497,7 +497,7 @@ void UIScene::doHorizontalResizeCheck() {
         m_funcHorizontalResizeCheck, 0, nullptr);
 }
 
-void UIScene::render(S32 width, S32 height, C4JRender::eViewportType viewport) {
+void UIScene::render(S32 width, S32 height, IPlatformRenderer::eViewportType viewport) {
     if (m_bIsReloading) return;
     if (!m_hasTickedOnce || !swf) return;
     ui.setupRenderPosition(viewport);
@@ -560,7 +560,7 @@ void UIScene::customDrawSlotControl(IggyCustomDrawCallbackRegion* region,
                 bool useCommandBuffers = false;
 
                 if (!useCommandBuffers || m_needsCacheRendered) {
-                    if (useCommandBuffers) RenderManager.CBuffStart(list, true);
+                    if (useCommandBuffers) PlatformRenderer.CBuffStart(list, true);
                     ui.setupCustomDrawMatrices(this, customDrawRegion);
                     _customDrawSlotControl(customDrawRegion, iPad, item, fAlpha,
                                            isFoil, bDecorations,
@@ -581,11 +581,11 @@ void UIScene::customDrawSlotControl(IggyCustomDrawCallbackRegion* region,
                         delete drawData;
                     }
 
-                    if (useCommandBuffers) RenderManager.CBuffEnd();
+                    if (useCommandBuffers) PlatformRenderer.CBuffEnd();
                 }
                 m_cachedSlotDraw.clear();
 
-                if (useCommandBuffers) RenderManager.CBuffCall(list);
+                if (useCommandBuffers) PlatformRenderer.CBuffCall(list);
 
                 // Finish GDraw and anything else that needs to be finalised
                 ui.endCustomDraw(region);

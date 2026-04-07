@@ -2,7 +2,7 @@
 
 #include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "java/Random.h"

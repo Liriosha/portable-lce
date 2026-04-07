@@ -46,17 +46,17 @@ UIComponent_TutorialPopup::UIComponent_TutorialPopup(int iPad, void* initData,
 
 std::wstring UIComponent_TutorialPopup::getMoviePath() {
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             return L"TutorialPopupSplit";
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             return L"TutorialPopup";
             break;
@@ -410,9 +410,9 @@ void UIComponent_TutorialPopup::UpdateInteractScenePosition(bool visible) {
     bool isTradingScene =
         (m_interactScene->getSceneType() == eUIScene_TradingMenu);
     switch (Minecraft::GetInstance()->localplayers[m_iPad]->m_iScreenSection) {
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             bAllowAnim = true;
             break;
         default:
@@ -443,24 +443,24 @@ void UIComponent_TutorialPopup::UpdateInteractScenePosition(bool visible) {
 }
 
 void UIComponent_TutorialPopup::render(S32 width, S32 height,
-                                       C4JRender::eViewportType viewport) {
-    if (viewport != C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+                                       IPlatformRenderer::eViewportType viewport) {
+    if (viewport != IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
@@ -469,22 +469,22 @@ void UIComponent_TutorialPopup::render(S32 width, S32 height,
         }
         // Adjust for safezone
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 yPos += getSafeZoneHalfHeight();
                 break;
             default:
                 break;
         }
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos -= getSafeZoneHalfWidth();
                 break;
             default:

@@ -1,8 +1,9 @@
 #include "MushroomCowRenderer.h"
 
 #include <memory>
+#include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 
 #include "minecraft/client/model/QuadrupedModel.h"
 #include "minecraft/client/model/geom/ModelPart.h"

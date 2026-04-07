@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_Defines.h"
 #include "app/common/Minecraft_Macros.h"
 #include "app/common/DLC/DLCManager.h"
@@ -527,7 +527,7 @@ void UIScene_SkinSelectMenu::customDraw(IggyCustomDrawCallbackRegion* region) {
         // %d, stencil write= %d\n", region->stencil_func_mask,
         // region->stencil_func_ref, region->stencil_write_mask);
         if (region->stencil_func_ref != 0)
-            RenderManager.StateSetStencil(GL_EQUAL, region->stencil_func_ref,
+            PlatformRenderer.StateSetStencil(GL_EQUAL, region->stencil_func_ref,
                                           region->stencil_func_mask,
                                           region->stencil_write_mask);
         m_characters[characterId].render(region);

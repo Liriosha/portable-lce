@@ -1,8 +1,9 @@
 #include "HorseRenderer.h"
 
 #include <utility>
+#include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 #include "MobRenderer.h"
 #include "minecraft/client/model/geom/Model.h"
@@ -58,7 +59,7 @@ void HorseRenderer::renderModel(std::shared_ptr<LivingEntity> mob, float wp,
                       true);
         // Ensure that any extra layers of texturing are disabled after
         // rendering this horse
-        RenderManager.TextureBind(-1);
+        PlatformRenderer.TextureBind(-1);
     }
 }
 

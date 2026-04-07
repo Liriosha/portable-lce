@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "Button.h"
 #include "PauseScreen.h"
 #include "util/StringHelpers.h"

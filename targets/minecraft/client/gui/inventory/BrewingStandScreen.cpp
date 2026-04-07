@@ -1,6 +1,7 @@
 #include "BrewingStandScreen.h"
 
 #include <memory>
+#include <GL/gl.h>
 
 #include "minecraft/client/gui/Font.h"
 #include "minecraft/client/gui/inventory/AbstractContainerScreen.h"

@@ -1,8 +1,9 @@
 #include "PaintingRenderer.h"
 
 #include <cmath>
+#include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 
 #include "java/Random.h"

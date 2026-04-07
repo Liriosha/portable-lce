@@ -14,7 +14,7 @@
 #include <thread>
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
@@ -111,7 +111,6 @@
 #include "app/common/Tutorial/FullTutorialMode.h"
 #include "app/common/UI/All Platforms/IUIScene_CreativeMenu.h"
 #include "app/common/UI/UIFontData.h"
-#include "platform/stubs.h"
 #include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/System.h"
@@ -234,7 +233,7 @@ Minecraft::Minecraft(Component* mouseComponent, Canvas* parent,
     // code that the width is 3/4 what it actually is, to correctly present a
     // 4:3 image. Have added width_phys and height_phys for any code we add that
     // requires to know the real physical dimensions of the frame buffer.
-    if (RenderManager.IsWidescreen()) {
+    if (PlatformRenderer.IsWidescreen()) {
         this->width = width;
     } else {
         this->width = (width * 3) / 4;
@@ -391,7 +390,7 @@ void Minecraft::init() {
     }
     progressRenderer = new ProgressRenderer(this);
 
-    RenderManager.CBuffLockStaticCreations();
+    PlatformRenderer.CBuffLockStaticCreations();
 }
 
 void Minecraft::renderLoadingScreen() {
@@ -401,7 +400,7 @@ void Minecraft::renderLoadingScreen() {
     ScreenSizeCalculator ssc(options, width, height);
 
     // xxx
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -442,7 +441,7 @@ void Minecraft::renderLoadingScreen() {
 
     // Display::swapBuffers();
     // xxx
-    RenderManager.Present();
+    PlatformRenderer.Present();
 #endif
 }
 
@@ -707,7 +706,7 @@ void Minecraft::updatePlayerViewportAssignments() {
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (localplayers[i] != nullptr)
                 localplayers[i]->m_iScreenSection =
-                    C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+                    IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
         }
     } else if (viewportsRequired == 2) {
         // Split screen - TODO - option for vertical/horizontal split
@@ -718,10 +717,10 @@ void Minecraft::updatePlayerViewportAssignments() {
                 if (gameServices().getGameSettings(PlatformInput.GetPrimaryPad(),
                                         eGameSetting_SplitScreenVertical)) {
                     localplayers[i]->m_iScreenSection =
-                        C4JRender::VIEWPORT_TYPE_SPLIT_LEFT + found;
+                        IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT + found;
                 } else {
                     localplayers[i]->m_iScreenSection =
-                        C4JRender::VIEWPORT_TYPE_SPLIT_TOP + found;
+                        IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP + found;
                 }
                 found++;
             }
@@ -740,18 +739,18 @@ void Minecraft::updatePlayerViewportAssignments() {
                 // quadrant, but ending up in the 3rd viewport.
                 if (gameServices().getGameStarted()) {
                     if ((localplayers[i]->m_iScreenSection >=
-                         C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) &&
+                         IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) &&
                         (localplayers[i]->m_iScreenSection <=
-                         C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
+                         IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
                         quadrantsAllocated
                             [localplayers[i]->m_iScreenSection -
-                             C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT] = true;
+                             IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT] = true;
                     }
                 } else {
                     // Reset the viewport so that it can be assigned in the next
                     // loop
                     localplayers[i]->m_iScreenSection =
-                        C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+                        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
                 }
             }
         }
@@ -761,13 +760,13 @@ void Minecraft::updatePlayerViewportAssignments() {
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (localplayers[i] != nullptr) {
                 if ((localplayers[i]->m_iScreenSection <
-                     C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) ||
+                     IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) ||
                     (localplayers[i]->m_iScreenSection >
-                     C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
+                     IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
                     for (int j = 0; j < 4; j++) {
                         if (!quadrantsAllocated[j]) {
                             localplayers[i]->m_iScreenSection =
-                                C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT + j;
+                                IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT + j;
                             quadrantsAllocated[j] = true;
                             break;
                         }
@@ -841,7 +840,7 @@ std::shared_ptr<MultiplayerLocalPlayer> Minecraft::createExtraLocalPlayer(
     if (clientConnection == nullptr) return nullptr;
 
     if (clientConnection == m_pendingLocalConnections[idx]) {
-        int tempScreenSection = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+        int tempScreenSection = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
         if (localplayers[idx] != nullptr && localgameModes[idx] == nullptr) {
             // A temp player displaying a connecting screen
             tempScreenSection = localplayers[idx]->m_iScreenSection;
@@ -1383,7 +1382,7 @@ void Minecraft::run_middle() {
                                        !ui.IsIgnorePlayerJoinMenuDisplayed(
                                            PlatformInput.GetPrimaryPad()) &&
                                        g_NetworkManager.SessionHasSpace() &&
-                                       RenderManager.IsHiDef() &&
+                                       PlatformRenderer.IsHiDef() &&
                                        PlatformInput.ButtonPressed(i);
                         if (tryJoin) {
                             if (!ui.PressStartPlaying(i)) {
@@ -1650,8 +1649,8 @@ void Minecraft::run_middle() {
                     int iPrimaryPad = PlatformInput.GetPrimaryPad();
                     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                         if (setLocalPlayerIdx(i)) {
-                            RenderManager.StateSetViewport(
-                                (C4JRender::eViewportType)
+                            PlatformRenderer.StateSetViewport(
+                                (IPlatformRenderer::eViewportType)
                                     player->m_iScreenSection);
                             gameRenderer->render(timer->a, bFirst);
                             bFirst = false;
@@ -1679,8 +1678,8 @@ void Minecraft::run_middle() {
                     // GameRenderer directly so mc->screen draws.
                     if (bFirst) {
                         localPlayerIdx = 0;
-                        RenderManager.StateSetViewport(
-                            C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                        PlatformRenderer.StateSetViewport(
+                            IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
                         gameRenderer->render(timer->a, true);
                     }
 #endif
@@ -1689,21 +1688,21 @@ void Minecraft::run_middle() {
                     // black
                     if (unoccupiedQuadrant > -1) {
                         // render a logo
-                        RenderManager.StateSetViewport((
-                            C4JRender::
-                                eViewportType)(C4JRender::
+                        PlatformRenderer.StateSetViewport((
+                            IPlatformRenderer::
+                                eViewportType)(IPlatformRenderer::
                                                    VIEWPORT_TYPE_QUADRANT_TOP_LEFT +
                                                unoccupiedQuadrant));
                         glClearColor(0, 0, 0, 0);
                         glClear(GL_COLOR_BUFFER_BIT);
 
                         ui.SetEmptyQuadrantLogo(
-                            C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT +
+                            IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT +
                             unoccupiedQuadrant);
                     }
                     setLocalPlayerIdx(iPrimaryPad);
-                    RenderManager.StateSetViewport(
-                        C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                    PlatformRenderer.StateSetViewport(
+                        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
                 }
                 glFlush();
 
@@ -1936,7 +1935,7 @@ void Minecraft::pauseGame() {
 
 bool Minecraft::pollResize() {
     int fbw, fbh;
-    RenderManager.GetFramebufferSize(fbw, fbh);
+    PlatformRenderer.GetFramebufferSize(fbw, fbh);
     if (fbw != width_phys || fbh != height_phys) {
         resize(fbw, fbh);
         return true;
@@ -1951,7 +1950,7 @@ void Minecraft::resize(int width, int height) {
     // for non-widescreen aspect ratio to fix UI scaling.
     this->width_phys = width;
     this->height_phys = height;
-    if (RenderManager.IsWidescreen()) {
+    if (PlatformRenderer.IsWidescreen()) {
         this->width = width;
     } else {
         this->width = (width * 3) / 4;

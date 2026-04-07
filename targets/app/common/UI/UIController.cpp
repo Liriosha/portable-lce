@@ -245,7 +245,7 @@ UIController::UIController() {
 
     m_iPressStartQuadrantsMask = 0;
 
-    m_currentRenderViewport = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+    m_currentRenderViewport = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
     m_bCustomRenderPosition = false;
     m_winUserIndex = 0;
     m_accumulatedTicks = 0;
@@ -885,27 +885,27 @@ void UIController::renderScenes() {
 #endif
 }
 
-void UIController::getRenderDimensions(C4JRender::eViewportType viewport,
+void UIController::getRenderDimensions(IPlatformRenderer::eViewportType viewport,
                                        S32& width, S32& height) {
     switch (viewport) {
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
             width = (S32)(getScreenWidth());
             height = (S32)(getScreenHeight());
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
@@ -914,36 +914,36 @@ void UIController::getRenderDimensions(C4JRender::eViewportType viewport,
     }
 }
 
-void UIController::setupRenderPosition(C4JRender::eViewportType viewport) {
+void UIController::setupRenderPosition(IPlatformRenderer::eViewportType viewport) {
     if (m_bCustomRenderPosition || m_currentRenderViewport != viewport) {
         m_currentRenderViewport = viewport;
         m_bCustomRenderPosition = false;
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
                 xPos = (S32)(getScreenWidth() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 xPos = (S32)(getScreenWidth() / 4);
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
                 yPos = (S32)(getScreenHeight() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 yPos = (S32)(getScreenHeight() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
@@ -971,18 +971,18 @@ void UIController::setupCustomDrawGameState() {
     m_customRenderingClearRect.bottom = LONG_MIN;
 
 #if defined(_WINDOWS64)
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
 
     gdraw_D3D11_setViewport_4J();
 #elif defined(__linux__)
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
 #endif
-    RenderManager.Set_matrixDirty();
+    PlatformRenderer.Set_matrixDirty();
 
     // 4J Stu - We don't need to clear this here as iggy hasn't written anything
     // to the depth buffer. We DO however clear after we render which is why we
     // still setup the rectangle here
-    // RenderManager.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
+    // PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
     // glClear(GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -1061,9 +1061,9 @@ void UIController::setupCustomDrawGameStateAndMatrices(
 
 void UIController::endCustomDrawGameState() {
 #if defined(__linux__)
-    RenderManager.Clear(GL_DEPTH_BUFFER_BIT);
+    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT);
 #else
-    RenderManager.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
+    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
 #endif
     // glClear(GL_DEPTH_BUFFER_BIT);
     glDepthMask(false);
@@ -1126,7 +1126,7 @@ GDrawTexture* RADLINK UIController::TextureSubstitutionCreateCallback(
         if (image.getData() != nullptr) {
             image.preMultiplyAlpha();
             Textures* t = Minecraft::GetInstance()->textures;
-            int id = t->getTexture(&image, C4JRender::TEXTURE_FORMAT_RxGyBzAw,
+            int id = t->getTexture(&image, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw,
                                    false);
 
             // 4J Stu - All our flash controls that allow replacing textures use
@@ -1951,13 +1951,13 @@ void UIController::UpdatePlayerBasePositions() {
     for (int idx = 0; idx < XUSER_MAX_COUNT; ++idx) {
         if (pMinecraft->localplayers[idx] != nullptr) {
             if (pMinecraft->localplayers[idx]->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+                IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
                 DisplayGamertag(idx, false);
             } else {
                 DisplayGamertag(idx, true);
             }
             m_groups[idx + 1]->SetViewportType(
-                (C4JRender::eViewportType)pMinecraft->localplayers[idx]
+                (IPlatformRenderer::eViewportType)pMinecraft->localplayers[idx]
                     ->m_iScreenSection);
         } else {
             // 4J Stu - This is a legacy thing from our XUI implementation that
@@ -1965,7 +1965,7 @@ void UIController::UpdatePlayerBasePositions() {
             // no longer exist is SLOW This should probably be on all platforms,
             // but I don't have time to test them all just now!
             m_groups[idx + 1]->SetViewportType(
-                C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
             DisplayGamertag(idx, false);
         }
     }

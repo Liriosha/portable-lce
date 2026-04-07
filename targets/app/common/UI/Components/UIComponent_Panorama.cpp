@@ -4,7 +4,7 @@
 
 #include <mutex>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/iggy.h"
@@ -31,18 +31,18 @@ UIComponent_Panorama::UIComponent_Panorama(int iPad, void* initData,
 
 std::wstring UIComponent_Panorama::getMoviePath() {
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             m_bSplitscreen = true;
             return L"PanoramaSplit";
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             m_bSplitscreen = false;
             return L"Panorama";
@@ -79,20 +79,20 @@ void UIComponent_Panorama::tick() {
 }
 
 void UIComponent_Panorama::render(S32 width, S32 height,
-                                  C4JRender::eViewportType viewport) {
+                                  IPlatformRenderer::eViewportType viewport) {
     bool specialViewport =
-        (viewport == C4JRender::VIEWPORT_TYPE_SPLIT_TOP) ||
-        (viewport == C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM) ||
-        (viewport == C4JRender::VIEWPORT_TYPE_SPLIT_LEFT) ||
-        (viewport == C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT);
+        (viewport == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP) ||
+        (viewport == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM) ||
+        (viewport == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT) ||
+        (viewport == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT);
     if (m_bSplitscreen && specialViewport) {
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 break;
             default:
@@ -100,8 +100,8 @@ void UIComponent_Panorama::render(S32 width, S32 height,
         }
         ui.setupRenderPosition(xPos, yPos);
 
-        if ((viewport == C4JRender::VIEWPORT_TYPE_SPLIT_LEFT) ||
-            (viewport == C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT)) {
+        if ((viewport == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT) ||
+            (viewport == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT)) {
             // Need to render at full height, but only the left side of the
             // scene
             S32 tileXStart = 0;

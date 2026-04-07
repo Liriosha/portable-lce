@@ -4,7 +4,7 @@
 #include <wchar.h>
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
@@ -95,7 +95,7 @@ UIScene_SettingsOptionsMenu::UIScene_SettingsOptionsMenu(int iPad,
         app.GetString(m_iDifficultySettingA[app.GetGameSettings(
             m_iPad, eGameSetting_Difficulty)]);
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
     wchar_t startTags[64];
@@ -200,7 +200,7 @@ void UIScene_SettingsOptionsMenu::updateComponents() {
 
         if (app.GetLocalPlayerCount() == 1)
             m_parentLayer->showComponent(m_iPad, eUIComponent_Logo,
-                                         RenderManager.IsHiDef());
+                                         PlatformRenderer.IsHiDef());
         else
             m_parentLayer->showComponent(m_iPad, eUIComponent_Logo, false);
     }
@@ -299,7 +299,7 @@ void UIScene_SettingsOptionsMenu::handleReload() {
         app.GetString(m_iDifficultySettingA[app.GetGameSettings(
             m_iPad, eGameSetting_Difficulty)]);
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
     wchar_t startTags[64];
@@ -380,7 +380,7 @@ void UIScene_SettingsOptionsMenu::handleSliderMove(F64 sliderId,
 
             std::wstring wsText = app.GetString(m_iDifficultySettingA[value]);
             EHTMLFontSize size = eHTMLSize_Normal;
-            if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+            if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
                 size = eHTMLSize_Splitscreen;
             }
             wchar_t startTags[64];

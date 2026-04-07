@@ -1,7 +1,7 @@
 #include "UIGroup.h"
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
@@ -24,7 +24,7 @@ UIGroup::UIGroup(EUIGroup group, int iPad) {
     m_bIgnorePlayerJoinMenuDisplayed = false;
     // 4jcraft, moved this to the top
     // uninitialized memory was read.
-    m_viewportType = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+    m_viewportType = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
 
     m_updateFocusStateCountdown = 0;
 
@@ -242,7 +242,7 @@ void UIGroup::removeComponent(EUIScene scene, EUILayer layer) {
     m_layers[layer]->removeComponent(scene);
 }
 
-void UIGroup::SetViewportType(C4JRender::eViewportType type) {
+void UIGroup::SetViewportType(IPlatformRenderer::eViewportType type) {
     if (m_viewportType != type) {
         m_viewportType = type;
         for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
@@ -251,7 +251,7 @@ void UIGroup::SetViewportType(C4JRender::eViewportType type) {
     }
 }
 
-C4JRender::eViewportType UIGroup::GetViewportType() { return m_viewportType; }
+IPlatformRenderer::eViewportType UIGroup::GetViewportType() { return m_viewportType; }
 
 void UIGroup::HandleDLCMountingComplete() {
     // Ignore this group if the player isn't signed in

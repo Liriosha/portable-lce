@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/linux/Iggy/include/rrCore.h"
 #include "UILayer.h"
@@ -24,7 +24,7 @@ private:
     UIComponent_PressStartToPlay* m_pressStartToPlay;
     UIScene_HUD* m_hud;
 
-    C4JRender::eViewportType m_viewportType;
+    IPlatformRenderer::eViewportType m_viewportType;
 
     EUIGroup m_group;
     int m_iPad;
@@ -97,8 +97,8 @@ public:
     UIScene* addComponent(int iPad, EUIScene scene, EUILayer layer);
     void removeComponent(EUIScene scene, EUILayer layer);
 
-    void SetViewportType(C4JRender::eViewportType type);
-    C4JRender::eViewportType GetViewportType();
+    void SetViewportType(IPlatformRenderer::eViewportType type);
+    IPlatformRenderer::eViewportType GetViewportType();
 
     virtual void HandleDLCMountingComplete();
     virtual void HandleDLCInstalled();

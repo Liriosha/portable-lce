@@ -5,7 +5,7 @@
 #include <cstring>
 #include <unordered_map>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "DLCManager.h"
 #include "app/common/DLC/DLCFile.h"
@@ -123,7 +123,7 @@ void DLCAudioFile::addParameter(EAudioType type, EAudioParameterType ptype,
                 int maximumChars = 55;
 
                 bool bIsSDMode =
-                    !RenderManager.IsHiDef() && !RenderManager.IsWidescreen();
+                    !PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen();
 
                 if (bIsSDMode) {
                     maximumChars = 45;

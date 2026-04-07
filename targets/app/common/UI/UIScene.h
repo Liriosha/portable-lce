@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_Base.h"
@@ -198,7 +198,7 @@ public:
 
     // RENDERING
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewpBort);
+                        IPlatformRenderer::eViewportType viewpBort);
 
     virtual void customDraw(IggyCustomDrawCallbackRegion* region);
 

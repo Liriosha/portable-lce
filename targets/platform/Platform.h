@@ -5,7 +5,7 @@
 #include "IPlatformLeaderboard.h"
 #include "IPlatformNetwork.h"
 #include "IPlatformProfile.h"
-#include "IPlatformRenderer.h"
+#include "platform/renderer/renderer.h"
 #include "IPlatformSound.h"
 #include "IPlatformStorage.h"
 #include "IPlatformUIController.h"

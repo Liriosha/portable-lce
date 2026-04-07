@@ -4,9 +4,9 @@
 #include <functional>
 #include <string>
 
-#include "../PlatformTypes.h"
+#include "PlatformTypes.h"
+
 #include "../IPlatformProfile.h"
-#include "../PlatformTypes.h"
 
 class StubProfile : public IPlatformProfile {
 public:

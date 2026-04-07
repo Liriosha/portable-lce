@@ -56,7 +56,7 @@ static void sigsegv_handler(int sig) {
 #include "platform/PlatformTypes.h"
 #include "platform/input/input.h"
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "app/common/App_Defines.h"
 #include "app/common/Audio/SoundEngine.h"
@@ -439,13 +439,13 @@ int main(int argc, const char* argv[]) {
                 reqH = atoi(argv[++i]);
             }
         }
-        if (reqW > 0 && reqH > 0) RenderManager.SetWindowSize(reqW, reqH);
-        if (fs) RenderManager.SetFullscreen(true);
+        if (reqW > 0 && reqH > 0) PlatformRenderer.SetWindowSize(reqW, reqH);
+        if (fs) PlatformRenderer.SetFullscreen(true);
     }
 
     static bool bTrialTimerDisplayed = true;
 
-    RenderManager.Initialise();
+    PlatformRenderer.Initialise();
 
     // Read the file containing the product codes
     app.DebugPrintf("---ReadProductCodes()\n");
@@ -523,11 +523,11 @@ int main(int argc, const char* argv[]) {
     app.InitGameSettings();
 
     app.InitialiseTips();
-    while (!RenderManager.ShouldClose()) {
-        RenderManager.StartFrame();
+    while (!PlatformRenderer.ShouldClose()) {
+        PlatformRenderer.StartFrame();
         if (pMinecraft->pollResize()) {
             int fbw, fbh;
-            RenderManager.GetFramebufferSize(fbw, fbh);
+            PlatformRenderer.GetFramebufferSize(fbw, fbh);
             ui.setScreenSize(fbw, fbh);
         }
         app.UpdateTime();
@@ -537,7 +537,7 @@ int main(int argc, const char* argv[]) {
 
         PlatformStorage.Tick();
 
-        RenderManager.Tick();
+        PlatformRenderer.Tick();
 
         // Tick the social networking manager.
         //		CSocialManager::Instance()->Tick();
@@ -586,7 +586,7 @@ int main(int argc, const char* argv[]) {
         ui.render();
 
         // Present the frame.
-        RenderManager.Present();
+        PlatformRenderer.Present();
 
         ui.CheckMenuDisplayed();
         // has the game defined profile data been changed (by a profile load)
@@ -638,7 +638,7 @@ int main(int argc, const char* argv[]) {
     // Graceful shutdown: destroy GL context and GLFW before any C++ dtors run.
     // Without this, static/global destructors that touch GL objects cause
     // SIGSEGV.
-    RenderManager.Shutdown();
+    PlatformRenderer.Shutdown();
     _exit(0);
 }  // end main
 

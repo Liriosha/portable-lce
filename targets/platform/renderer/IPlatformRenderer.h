@@ -95,6 +95,7 @@ public:
     virtual void CBuffLockStaticCreations() = 0;
     [[nodiscard]] virtual int CBuffCreate(int count) = 0;
     virtual void CBuffDelete(int first, int count) = 0;
+    virtual void CBuffDeleteAll() = 0;
     virtual void CBuffStart(int index, bool full = false) = 0;
     virtual void CBuffClear(int index) = 0;
     [[nodiscard]] virtual int CBuffSize(int index) = 0;

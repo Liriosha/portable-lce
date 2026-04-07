@@ -6,7 +6,7 @@
 #include <cmath>
 #include <utility>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "ArrowRenderer.h"
 #include "BatRenderer.h"
 #include "BlazeRenderer.h"

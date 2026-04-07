@@ -2,8 +2,9 @@
 
 #include <utility>
 #include <vector>
+#include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "java/ByteBuffer.h"
 
 std::unordered_map<int, int> MemoryTracker::GL_LIST_IDS;

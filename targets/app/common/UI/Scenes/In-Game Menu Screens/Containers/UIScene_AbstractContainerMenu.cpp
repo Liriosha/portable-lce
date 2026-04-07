@@ -194,7 +194,7 @@ void UIScene_AbstractContainerMenu::tick() {
 }
 
 void UIScene_AbstractContainerMenu::render(S32 width, S32 height,
-                                           C4JRender::eViewportType viewpBort) {
+                                           IPlatformRenderer::eViewportType viewpBort) {
     m_cacheSlotRenders = true;
 
     m_needsCacheRendered = m_needsCacheRendered || m_menu->needsRendered();

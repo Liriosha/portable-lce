@@ -30,7 +30,7 @@
 // 4J Stu - Added for tutorial callbacks
 #include "platform/input/input.h"
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_structs.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Network/GameNetworkManager.h"
@@ -124,7 +124,7 @@ LocalPlayer::LocalPlayer(Minecraft* minecraft, Level* level, User* user,
     input = nullptr;
     m_iPad = -1;
     m_iScreenSection =
-        C4JRender::VIEWPORT_TYPE_FULLSCREEN;  // assume singleplayer default
+        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;  // assume singleplayer default
     m_bPlayerRespawned = false;
     ullButtonsPressed = 0LL;
     ullDpad_last = ullDpad_this = ullDpad_filtered = 0;

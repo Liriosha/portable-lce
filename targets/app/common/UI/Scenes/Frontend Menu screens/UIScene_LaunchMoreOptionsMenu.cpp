@@ -6,7 +6,7 @@
 
 #include "platform/input/input.h"
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
@@ -210,7 +210,7 @@ UIScene_LaunchMoreOptionsMenu::UIScene_LaunchMoreOptionsMenu(
     std::wstring wsText = app.GetString(IDS_GAMEOPTION_ONLINE);
 #endif
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
     wchar_t startTags[64];
@@ -499,7 +499,7 @@ void UIScene_LaunchMoreOptionsMenu::handleFocusChange(F64 controlId,
 
     std::wstring wsText = app.GetString(stringId);
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
     wchar_t startTags[64];

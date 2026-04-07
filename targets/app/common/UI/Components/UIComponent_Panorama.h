@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/iggy.h"
@@ -44,7 +44,7 @@ public:
 
     // RENDERING
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewport);
+                        IPlatformRenderer::eViewportType viewport);
 
 private:
     void setPanorama(bool isDay);

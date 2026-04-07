@@ -2,7 +2,7 @@
 
 #include <GL/gl.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "java/System.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Font.h"
@@ -44,7 +44,7 @@ void AchievementPopup::permanent(Achievement* ach) {
 void AchievementPopup::prepareWindow() {
     {
         int fbw, fbh;
-        RenderManager.GetFramebufferSize(fbw, fbh);
+        PlatformRenderer.GetFramebufferSize(fbw, fbh);
         glViewport(0, 0, fbw, fbh);
     }  // just future proofing
     glMatrixMode(GL_PROJECTION);

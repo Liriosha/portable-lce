@@ -10,7 +10,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "platform/input/input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "BossMobGuiInfo.h"
 #include "Chunk.h"
 #include "ItemInHandRenderer.h"
@@ -610,16 +610,16 @@ void GameRenderer::getFovAndAspect(float& fov, float& aspect, float a,
     aspect = mc->width / (float)mc->height;
     fov = getFov(a, applyEffects);
 
-    if ((mc->player->m_iScreenSection == C4JRender::VIEWPORT_TYPE_SPLIT_TOP) ||
+    if ((mc->player->m_iScreenSection == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP) ||
         (mc->player->m_iScreenSection ==
-         C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM)) {
+         IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM)) {
         aspect *= 2.0f;
         fov *= 0.7f;  // Reduce FOV to make things less fish-eye, at the expense
                       // of reducing vertical FOV from single player mode
     } else if ((mc->player->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_SPLIT_LEFT) ||
+                IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT) ||
                (mc->player->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT)) {
+                IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT)) {
         // Ideally I'd like to make the fov bigger here, but if I do then you an
         // see that the arm isn't very long...
         aspect *= 0.5f;
@@ -644,7 +644,7 @@ void GameRenderer::setupCamera(float a, int eye) {
         glTranslatef((float)zoom_x, (float)-zoom_y, 0);
         glScaled(zoom, zoom, 1);
     }
-    gluPerspective(fov, aspect, 0.05f, renderDistance * 2);
+    PlatformRenderer.MatrixPerspective(fov, aspect, 0.05f, renderDistance * 2);
 
     if (mc->gameMode->isCutScene()) {
         float s = 1 / 1.5f;
@@ -740,7 +740,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
         glTranslatef((float)zoom_x, (float)-zoom_y, 0);
         glScaled(zoom, zoom, 1);
     }
-    gluPerspective(fov, aspect, 0.05f, renderDistance * 2);
+    PlatformRenderer.MatrixPerspective(fov, aspect, 0.05f, renderDistance * 2);
 
     if (mc->gameMode->isCutScene()) {
         float s = 1 / 1.5f;
@@ -803,8 +803,7 @@ void GameRenderer::turnOffLightLayer(double alpha) {  // 4J - TODO
 #if defined(__linux__)
     if (SharedConstants::TEXTURE_LIGHTING) {
         LinuxLogStubLightmapProbe();
-        RenderManager.TextureBindVertex(-1);
-        LinuxGLLogLightmapState("turnOffLightLayer", -1, false);
+        PlatformRenderer.TextureBindVertex(-1);
     }
 #else
     // 4jcraft: manually handle this in order to ensure that the light layer is
@@ -841,12 +840,12 @@ void GameRenderer::turnOnLightLayer(
                         textureId, scaleLight ? 1 : 0);
     }
 
-    RenderManager.TextureBindVertex(textureId, scaleLight);
+    PlatformRenderer.TextureBindVertex(textureId, scaleLight);
     LinuxGLLogLightmapState("turnOnLightLayer", textureId, scaleLight);
 #else
     // 4jcraft: update light texture
     // todo: check implementation of getLightTexture.
-    RenderManager.TextureBindVertex(
+    PlatformRenderer.TextureBindVertex(
         getLightTexture(mc->player->GetXboxPad(), mc->level), scaleLight);
 #endif
 }
@@ -1119,7 +1118,7 @@ int GameRenderer::runUpdate(void* lpParam) {
     Minecraft* minecraft = Minecraft::GetInstance();
     Tesselator::CreateNewThreadStorage(1024 * 1024);
     Compression::UseDefaultThreadStorage();
-    RenderManager.InitialiseContext();
+    PlatformRenderer.InitialiseContext();
 #if defined(_LARGE_WORLDS)
     Chunk::CreateNewThreadStorage();
 #endif
@@ -1159,7 +1158,7 @@ int GameRenderer::runUpdate(void* lpParam) {
 
         //		while( minecraft->levelRenderer->updateDirtyChunks() )
         //			;
-        RenderManager.CBuffDeferredModeEnd();
+        PlatformRenderer.CBuffDeferredModeEnd();
 
         // If any renderable tile entities were flagged in this last block of
         // chunk(s) that were udpated, then change their flags to say that this
@@ -1265,9 +1264,9 @@ void GameRenderer::renderLevel(float a, int64_t until) {
         if (mc->options->anaglyph3d) {
             GameRenderer::anaglyphPass = i;
             if (GameRenderer::anaglyphPass == 0)
-                RenderManager.StateSetWriteEnable(false, true, true, false);
+                PlatformRenderer.StateSetWriteEnable(false, true, true, false);
             else
-                RenderManager.StateSetWriteEnable(true, false, false, false);
+                PlatformRenderer.StateSetWriteEnable(true, false, false, false);
         }
 
         glViewport(0, 0, mc->width, mc->height);
@@ -1297,7 +1296,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
         setupFog(1, a);
 
         if (mc->options->ambientOcclusion) {
-            GL11::glShadeModel(GL11::GL_SMOOTH);
+            glShadeModel(GL_SMOOTH);
         }
 
         //		Culler *frustum = new FrustumCuller();
@@ -1345,7 +1344,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
         Lighting::turnOff();
         levelRenderer->render(cameraEntity, 0, a, updateChunks);
 
-        GL11::glShadeModel(GL11::GL_FLAT);
+        glShadeModel(GL_FLAT);
 
         if (cameraFlip == 0) {
             Lighting::turnOn();
@@ -1401,8 +1400,8 @@ void GameRenderer::renderLevel(float a, int64_t until) {
 
         glDisable(GL_BLEND);
         glEnable(GL_CULL_FACE);
-        RenderManager.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        RenderManager.StateSetDepthMask(true);
+        PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        PlatformRenderer.StateSetDepthMask(true);
         setupFog(0, a);
         glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
@@ -1416,14 +1415,14 @@ void GameRenderer::renderLevel(float a, int64_t until) {
         if (true)  // (mc->options->fancyGraphics)
         {
             if (mc->options->ambientOcclusion) {
-                GL11::glShadeModel(GL11::GL_SMOOTH);
+                glShadeModel(GL_SMOOTH);
             }
 
-            RenderManager.StateSetBlendFunc(GL_ZERO, GL_ONE);
+            PlatformRenderer.StateSetBlendFunc(GL_ZERO, GL_ONE);
             int visibleWaterChunks =
                 levelRenderer->render(cameraEntity, 1, a, updateChunks);
 
-            RenderManager.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             if (visibleWaterChunks > 0) {
                 levelRenderer->render(
@@ -1433,7 +1432,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
                                     // that anymore
             }
 
-            GL11::glShadeModel(GL11::GL_FLAT);
+            glShadeModel(GL_FLAT);
         } else {
             levelRenderer->render(cameraEntity, 1, a, updateChunks);
         }
@@ -1458,7 +1457,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
         turnOffLightLayer(a);  // 4J - brought forward from 1.8.2
         ////////////////////////// End of 4J added section
 
-        RenderManager.StateSetDepthMask(true);
+        PlatformRenderer.StateSetDepthMask(true);
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
 
@@ -1482,7 +1481,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
         */
 
         glEnable(GL_BLEND);
-        RenderManager.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE);
         {
             FRAME_PROFILE_SCOPE(WeatherSky);
             levelRenderer->renderDestroyAnimation(
@@ -1516,7 +1515,7 @@ void GameRenderer::renderLevel(float a, int64_t until) {
             return;
         }
     }
-    RenderManager.StateSetWriteEnable(true, true, true, false);
+    PlatformRenderer.StateSetWriteEnable(true, true, true, false);
 }
 
 void GameRenderer::prepareAndRenderClouds(LevelRenderer* levelRenderer,
@@ -1615,7 +1614,7 @@ void GameRenderer::renderSnowAndRain(float a) {
     if (rainLevel <= 0) return;
 
     // 4J - rain is relatively low poly, but high fill-rate - better to clip it
-    RenderManager.StateSetEnableViewportClipPlanes(true);
+    PlatformRenderer.StateSetEnableViewportClipPlanes(true);
 
     turnOnLightLayer(a);
 
@@ -1645,7 +1644,7 @@ void GameRenderer::renderSnowAndRain(float a) {
     glDisable(GL_CULL_FACE);
     glNormal3f(0, 1, 0);
     glEnable(GL_BLEND);
-    RenderManager.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glAlphaFunc(GL_GREATER, 0.01f);
 
     mc->textures->bindTexture(
@@ -1815,13 +1814,13 @@ void GameRenderer::renderSnowAndRain(float a) {
     glAlphaFunc(GL_GREATER, 0.1f);
     turnOffLightLayer(a);
 
-    RenderManager.StateSetEnableViewportClipPlanes(false);
+    PlatformRenderer.StateSetEnableViewportClipPlanes(false);
 }
 
 // 4J - added forceScale parameter
 void GameRenderer::setupGuiScreen(int forceScale /*=-1*/) {
     int fbw, fbh;
-    RenderManager.GetFramebufferSize(fbw, fbh);
+    PlatformRenderer.GetFramebufferSize(fbw, fbh);
 
     // 4jcraft: use actual framebuffer dimensions instead of mc->width/height
     // to ensure GUI scales correctly after a window resize.
@@ -1829,17 +1828,17 @@ void GameRenderer::setupGuiScreen(int forceScale /*=-1*/) {
 
     // 4jcraft: Java GUI screens still assume a clean 2D fixed-function style
     // state.
-    RenderManager.StateSetFaceCull(false);
+    PlatformRenderer.StateSetFaceCull(false);
     glDisable(GL_LIGHTING);
     glDisable(GL_FOG);
     glColor4f(1, 1, 1, 1);
     glEnable(GL_ALPHA_TEST);
     glAlphaFunc(GL_GREATER, 0.1f);
     glEnable(GL_DEPTH_TEST);
-    RenderManager.StateSetDepthFunc(GL_LEQUAL);
-    RenderManager.StateSetDepthMask(true);
+    PlatformRenderer.StateSetDepthFunc(GL_LEQUAL);
+    PlatformRenderer.StateSetDepthMask(true);
 
-    RenderManager.TextureBindVertex(-1);
+    PlatformRenderer.TextureBindVertex(-1);
 
     glClientActiveTexture(GL_TEXTURE1);
     glActiveTexture(GL_TEXTURE1);

@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <string>
+#include <GL/gl.h>
 
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/Minecraft.h"

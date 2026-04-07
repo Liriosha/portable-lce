@@ -11,7 +11,7 @@
 
 #include "platform/input/input.h"
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Game.h"
@@ -1501,16 +1501,16 @@ void CGameNetworkManager::ServerStoppedWait() {
     if (C4JThread::isMainThread()) {
         int result = C4JThread::WaitResult::Timeout;
         do {
-            RenderManager.StartFrame();
+            PlatformRenderer.StartFrame();
             result = m_hServerStoppedEvent->waitForSignal(20);
             // Tick some simple things
             PlatformProfile.Tick();
             PlatformStorage.Tick();
             PlatformInput.Tick();
-            RenderManager.Tick();
+            PlatformRenderer.Tick();
             ui.tick();
             ui.render();
-            RenderManager.Present();
+            PlatformRenderer.Present();
         } while (result == C4JThread::WaitResult::Timeout);
     } else {
         if (m_hServerStoppedEvent != nullptr) {

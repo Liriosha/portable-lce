@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "LevelRenderer.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "util/FrameProfiler.h"
@@ -412,7 +412,7 @@ void Chunk::rebuild() {
             levelRenderer->setGlobalChunkFlag(this->x, this->y, this->z, level,
                                               LevelRenderer::CHUNK_FLAG_EMPTY0,
                                               currentLayer);
-            RenderManager.CBuffClear(lists + currentLayer);
+            PlatformRenderer.CBuffClear(lists + currentLayer);
         }
 
         int globalIdx = levelRenderer->getGlobalIndexForChunk(this->x, this->y,
@@ -523,12 +523,12 @@ void Chunk::rebuild() {
             levelRenderer->setGlobalChunkFlag(this->x, this->y, this->z, level,
                                               LevelRenderer::CHUNK_FLAG_EMPTY0,
                                               currentLayer);
-            RenderManager.CBuffClear(lists + currentLayer);
+            PlatformRenderer.CBuffClear(lists + currentLayer);
         }
         if ((currentLayer == 0) && (!renderNextLayer)) {
             levelRenderer->setGlobalChunkFlag(this->x, this->y, this->z, level,
                                               LevelRenderer::CHUNK_FLAG_EMPTY1);
-            RenderManager.CBuffClear(lists + 1);
+            PlatformRenderer.CBuffClear(lists + 1);
             break;
         }
     }
@@ -744,7 +744,7 @@ void Chunk::reset() {
                     for (int i = 0; i < 2; i++) {
                         // 4J - added - clear any renderer data associated with
                         // this unused list
-                        RenderManager.CBuffClear(lists + i);
+                        PlatformRenderer.CBuffClear(lists + i);
                     }
                     levelRenderer->setGlobalChunkFlags(x, y, z, level, 0);
                 }

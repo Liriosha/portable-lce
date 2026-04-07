@@ -3,7 +3,7 @@
 
 #include "platform/PlatformTypes.h"
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
@@ -627,7 +627,7 @@ bool Game::IsLocalMultiplayerAvailable() {
             ++connectedControllers;
     }
 
-    bool available = RenderManager.IsHiDef() && connectedControllers > 1;
+    bool available = PlatformRenderer.IsHiDef() && connectedControllers > 1;
 
     return available;
 

@@ -4,7 +4,7 @@
 
 #include <numbers>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 #include "LivingEntityRenderer.h"
 #include "minecraft/GameEnums.h"

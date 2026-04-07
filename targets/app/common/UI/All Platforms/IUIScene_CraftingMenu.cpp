@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/Tutorial/Tutorial.h"
@@ -480,7 +480,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
     // Vita)
     bool bNoScrollSlots = false;
     if (m_bSplitscreen ||
-        (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+        (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
         bNoScrollSlots = true;
     }
 
@@ -1034,7 +1034,7 @@ void IUIScene_CraftingMenu::UpdateVerticalSlots() {
         // splits & Vita)
         bool bNoScrollSlots = false;
         if (m_bSplitscreen ||
-            (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+            (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
             bNoScrollSlots = true;
         }
 
@@ -1314,7 +1314,7 @@ void IUIScene_CraftingMenu::UpdateDescriptionText(bool bCanBeMade) {
             // 12 for splitscreen, 14 for normal
             EHTMLFontSize size = eHTMLSize_Normal;
             if (m_bSplitscreen ||
-                (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+                (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
                 size = eHTMLSize_Splitscreen;
             }
             wchar_t startTags[64];

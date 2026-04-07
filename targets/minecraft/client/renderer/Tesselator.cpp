@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/linux/LinuxGame.h"
 #include "platform/stubs.h"
 #include "minecraft/client/MemoryTracker.h"
@@ -106,15 +106,15 @@ void Tesselator::end() {
         }
         if (mode == GL_QUADS && TRIANGLE_MODE) {
             // glDrawArrays(GL_TRIANGLES, 0, vertices); // 4J - changed for xbox
-            RenderManager.DrawVertices(
-                C4JRender::PRIMITIVE_TYPE_TRIANGLE_LIST, vertices,
+            PlatformRenderer.DrawVertices(
+                IPlatformRenderer::PRIMITIVE_TYPE_TRIANGLE_LIST, vertices,
                 _array->data(),
                 useCompactFormat360
-                    ? C4JRender::VERTEX_TYPE_COMPRESSED
-                    : C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
+                    ? IPlatformRenderer::VERTEX_TYPE_COMPRESSED
+                    : IPlatformRenderer::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
                 useProjectedTexturePixelShader
-                    ? C4JRender::PIXEL_SHADER_TYPE_PROJECTION
-                    : C4JRender::PIXEL_SHADER_TYPE_STANDARD);
+                    ? IPlatformRenderer::PIXEL_SHADER_TYPE_PROJECTION
+                    : IPlatformRenderer::PIXEL_SHADER_TYPE_STANDARD);
         } else {
             //            glDrawArrays(mode, 0, vertices);	// 4J - changed
             //            for xbox
@@ -124,23 +124,23 @@ void Tesselator::end() {
             // axis aligned UVs (eg flowing lava/water)
             int vertexCount = vertices;
             if (useCompactFormat360) {
-                RenderManager.DrawVertices(
-                    (C4JRender::ePrimitiveType)mode, vertexCount,
-                    _array->data(), C4JRender::VERTEX_TYPE_COMPRESSED,
-                    C4JRender::PIXEL_SHADER_TYPE_STANDARD);
+                PlatformRenderer.DrawVertices(
+                    (IPlatformRenderer::ePrimitiveType)mode, vertexCount,
+                    _array->data(), IPlatformRenderer::VERTEX_TYPE_COMPRESSED,
+                    IPlatformRenderer::PIXEL_SHADER_TYPE_STANDARD);
             } else {
                 if (useProjectedTexturePixelShader) {
-                    RenderManager.DrawVertices(
-                        (C4JRender::ePrimitiveType)mode, vertexCount,
+                    PlatformRenderer.DrawVertices(
+                        (IPlatformRenderer::ePrimitiveType)mode, vertexCount,
                         _array->data(),
-                        C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TEXGEN,
-                        C4JRender::PIXEL_SHADER_TYPE_PROJECTION);
+                        IPlatformRenderer::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TEXGEN,
+                        IPlatformRenderer::PIXEL_SHADER_TYPE_PROJECTION);
                 } else {
-                    RenderManager.DrawVertices(
-                        (C4JRender::ePrimitiveType)mode, vertexCount,
+                    PlatformRenderer.DrawVertices(
+                        (IPlatformRenderer::ePrimitiveType)mode, vertexCount,
                         _array->data(),
-                        C4JRender::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
-                        C4JRender::PIXEL_SHADER_TYPE_STANDARD);
+                        IPlatformRenderer::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1,
+                        IPlatformRenderer::PIXEL_SHADER_TYPE_STANDARD);
                 }
             }
         }
@@ -539,7 +539,7 @@ void Tesselator::vertex(float x, float y, float z) {
 #endif
         } else {
             // -512 each for u/v will mean that the renderer will use global
-            // settings (set via RenderManager.StateSetVertexTextureUV) rather
+            // settings (set via PlatformRenderer.StateSetVertexTextureUV) rather
             // than these local ones
             *(unsigned int*)(&_array->data()[p + 7]) = 0xfe00fe00;
         }

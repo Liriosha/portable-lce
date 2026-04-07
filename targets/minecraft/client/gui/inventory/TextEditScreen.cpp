@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "platform/stubs.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"

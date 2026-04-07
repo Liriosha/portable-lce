@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "platform/profile/profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
@@ -70,7 +70,7 @@ void IUIScene_HUD::updateFrameTick() {
     int iGuiScale;
 
     if (pMinecraft->localplayers[iPad]->m_iScreenSection ==
-        C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
         iGuiScale = app.GetGameSettings(iPad, eGameSetting_UISize);
     } else {
         iGuiScale = app.GetGameSettings(iPad, eGameSetting_UISizeSplitscreen);

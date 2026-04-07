@@ -1,6 +1,7 @@
 #include "TradeSwitchButton.h"
 
 #include <string>
+#include <GL/gl.h>
 
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Button.h"
