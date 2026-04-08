@@ -5,16 +5,15 @@
 #include <utility>
 #include <vector>
 
-
-#include "platform/renderer/renderer.h"
-#include "minecraft/client/BufferedImage.h"
-#include "util/StringHelpers.h"
 #include "java/Random.h"
 #include "minecraft/SharedConstants.h"
+#include "minecraft/client/BufferedImage.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/Textures.h"
 #include "minecraft/client/resources/ResourceLocation.h"
+#include "platform/renderer/renderer.h"
+#include "util/StringHelpers.h"
 
 Font::Font(Options* options, const std::string& name, Textures* textures,
            bool enforceUnicode, ResourceLocation* textureLocation, int cols,
@@ -183,9 +182,13 @@ void Font::draw(const std::string& str, bool dropShadow) {
 
     for (int i = 0; i < (int)cleanStr.length(); ++i) {
         // Map character
-        char c = cleanStr.at(i);
+        unsigned char c = cleanStr.at(i);
 
-        if (c == 167 && i + 1 < cleanStr.length()) {
+        // 4jcraft: this is a check for §. This was easy in UTF-16, since a
+        // single widechar can fit §, but it's encoded as 0xA7 0xC2 in UTF-8, so
+        // we need to check both characters.
+        if (i + 2 < cleanStr.length() && c == '\xC2' &&
+            (unsigned char)cleanStr[i + 1] == '\xA7') {
             // 4J - following block was:
             // int colorN =
             // "0123456789abcdefk".indexOf(str.toLowerCase().charAt(i + 1));
@@ -256,11 +259,13 @@ int Font::width(const std::string& str) {
     int len = 0;
 
     for (int i = 0; i < cleanStr.length(); ++i) {
-        char c = cleanStr.at(i);
+        unsigned char c = cleanStr.at(i);
 
-        if (c == 167) {
-            // Ignore the character used to define coloured text
-            ++i;
+        // skip § (used for color codes)
+        // 4jcraft: modified for UTF-8
+        if (i + 2 < (int)cleanStr.length() && c == 0xC2 &&
+            (unsigned char)cleanStr[i + 1] == 0xA7) {
+            i += 2;
         } else {
             len += charWidths[c];
         }
@@ -301,8 +306,8 @@ bool Font::CharacterExists(char c) {
     }
 }
 
-void Font::drawWordWrap(const std::string& string, int x, int y, int w,
-                        int col, int h) {
+void Font::drawWordWrap(const std::string& string, int x, int y, int w, int col,
+                        int h) {
     // if (bidirectional)
     //{
     //	string = reorderBidi(string);
@@ -315,8 +320,8 @@ void Font::drawWordWrapInternal(const std::string& string, int x, int y, int w,
     drawWordWrapInternal(string, x, y, w, col, false, h);
 }
 
-void Font::drawWordWrap(const std::string& string, int x, int y, int w,
-                        int col, bool darken, int h) {
+void Font::drawWordWrap(const std::string& string, int x, int y, int w, int col,
+                        bool darken, int h) {
     // if (bidirectional)
     //{
     //	string = reorderBidi(string);
@@ -415,11 +420,13 @@ void Font::setBidirectional(bool bidirectional) {
 
 bool Font::AllCharactersValid(const std::string& str) {
     for (int i = 0; i < (int)str.length(); ++i) {
-        char c = str.at(i);
+        unsigned char c = str.at(i);
 
-        if (c == 167 && i + 1 < str.length()) {
-            // skip special color setting
-            i += 1;
+        // skip § (used for color codes)
+        // 4jcraft: modified for UTF-8
+        if (i + 2 < (int)str.length() && c == 0xC2 &&
+            (unsigned char)str[i + 1] == 0xA7) {
+            i += 2;
             continue;
         }
 
