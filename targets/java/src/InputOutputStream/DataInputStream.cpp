@@ -473,9 +473,8 @@ std::string DataInputStream::readUTF() {
                 break;
             }
 
-            char readChar =
-                (char)(((firstByte & 0x1F) << 6) | (secondByte & 0x3F));
-            outputString.push_back(readChar);
+            outputString.push_back((char)firstByte);
+            outputString.push_back((char)secondByte);
             continue;
         } else if ((firstByte & 0xF0) == 0xE0) {
             // Three byte UTF
@@ -516,10 +515,9 @@ std::string DataInputStream::readUTF() {
                 break;
             }
 
-            char readChar =
-                (char)(((firstByte & 0x0F) << 12) |
-                          ((secondByte & 0x3F) << 6) | (thirdByte & 0x3F));
-            outputString.push_back(readChar);
+            outputString.push_back((char)firstByte);
+            outputString.push_back((char)secondByte);
+            outputString.push_back((char)thirdByte);
             continue;
         }
     }
