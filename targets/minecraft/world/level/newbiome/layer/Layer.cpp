@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "BiomeOverrideLayer.h"
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "minecraft/world/level/LevelType.h"
@@ -27,7 +27,6 @@
 #include "minecraft/world/level/newbiome/layer/SwampRiversLayer.h"
 #include "minecraft/world/level/newbiome/layer/VoronoiZoom.h"
 #include "minecraft/world/level/newbiome/layer/ZoomLayer.h"
-#include "platform/PlatformServices.h"
 
 std::vector<std::shared_ptr<Layer>> Layer::getDefaultLayers(
     int64_t seed, LevelType* levelType) {

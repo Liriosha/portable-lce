@@ -11,19 +11,20 @@
 #include "util/Timer.h"
 
 #ifdef __linux__
+
 #include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
-#include "app/linux/Stubs/d3d11_stubs.h"
+
 #elif defined(_WINDOWS64)
 #include "app/windows/Iggy/include/iggy.h"
 #endif
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Render.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
+#include "platform/storage/storage.h"
 #include "app/common/UI/All Platforms/IUIController.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
@@ -40,6 +41,15 @@ class UIComponent_DebugUIMarketingGuide;
 class C4JThread;
 class Tutorial;
 class UIScene;
+
+// 4jcraft, used to be D3D11_RECT.
+// This was the only class that used it, so it's here now. 
+struct RECT {
+    long left;
+    long top;
+    long right;
+    long bottom;
+};
 
 // Base class for all shared functions between UIControllers
 class UIController : public IUIController {
@@ -158,7 +168,7 @@ private:
 
     int m_iPressStartQuadrantsMask;
 
-    C4JRender::eViewportType m_currentRenderViewport;
+    IPlatformRenderer::eViewportType m_currentRenderViewport;
     bool m_bCustomRenderPosition;
 
     static std::uint32_t m_dwTrialTimerLimitSecs;
@@ -187,7 +197,7 @@ private:
     int m_accumulatedTicks;
     uint64_t m_lastUiSfx;  // Tracks time (ms) of last UI sound effect
 
-    D3D11_RECT m_customRenderingClearRect;
+    RECT m_customRenderingClearRect;
 
     std::unordered_map<size_t, UIScene*>
         m_registeredCallbackScenes;  // A collection of scenes and unique id's
@@ -267,9 +277,9 @@ public:
     }
 
     virtual void render() = 0;
-    void getRenderDimensions(C4JRender::eViewportType viewport, S32& width,
+    void getRenderDimensions(IPlatformRenderer::eViewportType viewport, S32& width,
                              S32& height);
-    void setupRenderPosition(C4JRender::eViewportType viewport);
+    void setupRenderPosition(IPlatformRenderer::eViewportType viewport);
     void setupRenderPosition(S32 xOrigin, S32 yOrigin);
 
     void SetSysUIShowing(bool bVal);
@@ -410,7 +420,7 @@ public:
     virtual void ShowAutosaveCountdownTimer(bool show);
     virtual void UpdateAutosaveCountdownTimer(unsigned int uiSeconds);
     virtual void ShowSavingMessage(unsigned int iPad,
-                                   C4JStorage::ESavingMessage eVal);
+                                   IPlatformStorage::ESavingMessage eVal);
 
     virtual void ShowPlayerDisplayname(bool show);
     virtual bool PressStartPlaying(unsigned int iPad);
@@ -418,33 +428,33 @@ public:
     virtual void HidePressStart();
     void ClearPressStart();
 
-    virtual C4JStorage::EMessageResult RequestAlertMessage(
+    virtual IPlatformStorage::EMessageResult RequestAlertMessage(
         uint32_t uiTitle, uint32_t uiText, uint32_t* uiOptionA,
         uint32_t uiOptionC, uint32_t dwPad = XUSER_INDEX_ANY,
-        int (*Func)(void*, int, const C4JStorage::EMessageResult) = nullptr,
+        int (*Func)(void*, int, const IPlatformStorage::EMessageResult) = nullptr,
         void* lpParam = nullptr, wchar_t* pwchFormatString = nullptr);
-    virtual C4JStorage::EMessageResult RequestErrorMessage(
+    virtual IPlatformStorage::EMessageResult RequestErrorMessage(
         uint32_t uiTitle, uint32_t uiText, uint32_t* uiOptionA,
         uint32_t uiOptionC, uint32_t dwPad = XUSER_INDEX_ANY,
-        int (*Func)(void*, int, const C4JStorage::EMessageResult) = nullptr,
+        int (*Func)(void*, int, const IPlatformStorage::EMessageResult) = nullptr,
         void* lpParam = nullptr, wchar_t* pwchFormatString = nullptr);
 
 private:
-    virtual C4JStorage::EMessageResult RequestMessageBox(
+    virtual IPlatformStorage::EMessageResult RequestMessageBox(
         uint32_t uiTitle, uint32_t uiText, uint32_t* uiOptionA,
         uint32_t uiOptionC, uint32_t dwPad,
-        int (*Func)(void*, int, const C4JStorage::EMessageResult),
+        int (*Func)(void*, int, const IPlatformStorage::EMessageResult),
         void* lpParam, wchar_t* pwchFormatString, uint32_t dwFocusButton,
         bool bIsError);
 
 public:
-    C4JStorage::EMessageResult RequestUGCMessageBox(
+    IPlatformStorage::EMessageResult RequestUGCMessageBox(
         int title = -1, int message = -1, int iPad = -1,
-        int (*Func)(void*, int, const C4JStorage::EMessageResult) = nullptr,
+        int (*Func)(void*, int, const IPlatformStorage::EMessageResult) = nullptr,
         void* lpParam = nullptr);
-    C4JStorage::EMessageResult RequestContentRestrictedMessageBox(
+    IPlatformStorage::EMessageResult RequestContentRestrictedMessageBox(
         int title = -1, int message = -1, int iPad = -1,
-        int (*Func)(void*, int, const C4JStorage::EMessageResult) = nullptr,
+        int (*Func)(void*, int, const IPlatformStorage::EMessageResult) = nullptr,
         void* lpParam = nullptr);
 
     virtual void SetWinUserIndex(unsigned int iPad);

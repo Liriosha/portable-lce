@@ -5,7 +5,6 @@
 #include <string>
 
 #include "PlatformTypes.h"
-#include "PlatformTypes.h"
 
 class CXuiStringTable;
 

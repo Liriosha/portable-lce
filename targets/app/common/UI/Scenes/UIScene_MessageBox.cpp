@@ -2,8 +2,7 @@
 #include "UIScene_MessageBox.h"
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
@@ -115,7 +114,7 @@ void UIScene_MessageBox::handleInput(int iPad, int key, bool repeat,
             if (pressed) {
                 navigateBack();
                 if (m_Func)
-                    m_Func(m_lpParam, iPad, C4JStorage::EMessage_Cancelled);
+                    m_Func(m_lpParam, iPad, IPlatformStorage::EMessage_Cancelled);
             }
             break;
         case ACTION_MENU_OK:
@@ -130,19 +129,19 @@ void UIScene_MessageBox::handleInput(int iPad, int key, bool repeat,
 }
 
 void UIScene_MessageBox::handlePress(F64 controlId, F64 childId) {
-    C4JStorage::EMessageResult result = C4JStorage::EMessage_Cancelled;
+    IPlatformStorage::EMessageResult result = IPlatformStorage::EMessage_Cancelled;
     switch ((int)controlId) {
         case 0:
-            result = C4JStorage::EMessage_ResultAccept;
+            result = IPlatformStorage::EMessage_ResultAccept;
             break;
         case 1:
-            result = C4JStorage::EMessage_ResultDecline;
+            result = IPlatformStorage::EMessage_ResultDecline;
             break;
         case 2:
-            result = C4JStorage::EMessage_ResultThirdOption;
+            result = IPlatformStorage::EMessage_ResultThirdOption;
             break;
         case 3:
-            result = C4JStorage::EMessage_ResultFourthOption;
+            result = IPlatformStorage::EMessage_ResultFourthOption;
             break;
     }
 
@@ -156,7 +155,7 @@ bool UIScene_MessageBox::hasFocus(int iPad) {
     if (m_iPad == 255) {
         // Message box is for everyone
         return bHasFocus;
-    } else if (ProfileManager.IsSignedIn(m_iPad)) {
+    } else if (PlatformProfile.IsSignedIn(m_iPad)) {
         // Owner is still present
         return bHasFocus && (iPad == m_iPad);
     } else {

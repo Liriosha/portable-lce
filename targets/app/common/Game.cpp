@@ -2,10 +2,9 @@
 #include "app/common/Game.h"
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/storage/storage.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
@@ -25,7 +24,6 @@
 #include "platform/NetTypes.h"
 #include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
-#include "platform/PlatformServices.h"
 #include "java/Class.h"
 #include "java/File.h"
 #include "java/Random.h"
@@ -74,7 +72,7 @@
 #include <utility>
 #include <vector>
 
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/DLC/DLCPack.h"
@@ -121,7 +119,7 @@ Game::Game() {
             "%d\n",
             sizeof(GAME_SETTINGS), GAME_SETTINGS_PROFILE_DATA_BYTES);
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
     }
 
@@ -158,7 +156,7 @@ void Game::DebugPrintf(const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-    OutputDebugStringA(buf);
+    fputs(buf, stderr);
 #endif
 }
 
@@ -170,7 +168,7 @@ void Game::DebugPrintf(int user, const char* szFormat, ...) {
     va_start(ap, szFormat);
     vsnprintf(buf, sizeof(buf), szFormat, ap);
     va_end(ap);
-    OutputDebugStringA(buf);
+    fputs(buf, stderr);
     if (user == USER_UI) {
         ui.logDebugString(buf);
     }
@@ -235,12 +233,12 @@ void Game::SetAppPaused(bool val) { m_bIsAppPaused = val; }
 
 
 int Game::BannedLevelDialogReturned(
-    void* pParam, int iPad, const C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, const IPlatformStorage::EMessageResult result) {
     Game* pApp = (Game*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
     } else {
-        if (iPad == ProfileManager.GetPrimaryPad()) {
+        if (iPad == PlatformProfile.GetPrimaryPad()) {
             pApp->SetAction(iPad, eAppAction_ExitWorld);
         } else {
             pApp->SetAction(iPad, eAppAction_ExitPlayer);
@@ -253,12 +251,12 @@ int Game::BannedLevelDialogReturned(
 #if defined(_DEBUG_MENUS_ENABLED)
 bool Game::DebugArtToolsOn() {
     return m_debugOptions.debugArtToolsOn(
-        GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()));
+        GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()));
 }
 #endif
 
 void Game::SetDebugSequence(const char* pchSeq) {
-    InputManager.SetDebugSequence(pchSeq, [this]() -> int {
+    PlatformInput.SetDebugSequence(pchSeq, [this]() -> int {
         // printf("sequence matched\n");
         m_debugOptions.setDebugOptions(!m_debugOptions.settingsOn());
 
@@ -317,10 +315,10 @@ int Game::GetLocalPlayerCount(void) {
 // 			 std::uint32_t dwSize=0;
 // 			 // 4J-PB - out for now for DaveK so he doesn't get the
 // birthday cape #ifdef _CONTENT_PACKAGE
-// C4JStorage::ETMSStatus eTMSStatus;
-// 			 eTMSStatus=StorageManager.ReadTMSFile(ProfileManager.GetPrimaryPad(),C4JStorage::eGlobalStorage_Title,C4JStorage::eTMS_FileType_Graphic,
+// IPlatformStorage::ETMSStatus eTMSStatus;
+// 			 eTMSStatus=PlatformStorage.ReadTMSFile(PlatformProfile.GetPrimaryPad(),IPlatformStorage::eGlobalStorage_Title,IPlatformStorage::eTMS_FileType_Graphic,
 // L"Default_Cape.png",&pBuffer, &dwSize);
-// 			 if(eTMSStatus==C4JStorage::ETMSStatus_Idle)
+// 			 if(eTMSStatus==IPlatformStorage::ETMSStatus_Idle)
 // 			 {
 // 				 app.AddMemoryTextureFile(wTemp,pBuffer,dwSize);
 // 			 }
@@ -331,7 +329,7 @@ int Game::GetLocalPlayerCount(void) {
 
 
 //  int Game::DLCReadCallback(void*
-//  pParam,C4JStorage::DLC_FILE_DETAILS *pDLCData)
+//  pParam,IPlatformStorage::DLC_FILE_DETAILS *pDLCData)
 //  {
 //
 //
@@ -608,7 +606,7 @@ int32_t Game::RegisterConfigValues(wchar_t* pType, int iValue) {
 
 // AUTOSAVE
 void Game::SetAutosaveTimerTime(void) {
-    int settingValue = GetGameSettings(ProfileManager.GetPrimaryPad(), eGameSetting_Autosave);
+    int settingValue = GetGameSettings(PlatformProfile.GetPrimaryPad(), eGameSetting_Autosave);
     m_saveManager.setAutosaveTimerTime(settingValue);
 }
 
@@ -624,28 +622,28 @@ float Game::getTrialTimer(void) {
 bool Game::IsLocalMultiplayerAvailable() {
     unsigned int connectedControllers = 0;
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-        if (InputManager.IsPadConnected(i) || ProfileManager.IsSignedIn(i))
+        if (PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))
             ++connectedControllers;
     }
 
-    bool available = RenderManager.IsHiDef() && connectedControllers > 1;
+    bool available = PlatformRenderer.IsHiDef() && connectedControllers > 1;
 
     return available;
 
     // Found this in GameNetworkManager?
     // #ifdef 0
     //		iOtherConnectedControllers =
-    // InputManager.GetConnectedGamepadCount();
-    //		if((InputManager.IsPadConnected(userIndex) ||
-    // ProfileManager.IsSignedIn(userIndex)))
+    // PlatformInput.GetConnectedGamepadCount();
+    //		if((PlatformInput.IsPadConnected(userIndex) ||
+    // PlatformProfile.IsSignedIn(userIndex)))
     //		{
     //			--iOtherConnectedControllers;
     //		}
     // #else
     //		for(unsigned int i = 0; i < XUSER_MAX_COUNT; ++i)
     //		{
-    //			if( (i!=userIndex) && (InputManager.IsPadConnected(i) ||
-    // ProfileManager.IsSignedIn(i)) )
+    //			if( (i!=userIndex) && (PlatformInput.IsPadConnected(i) ||
+    // PlatformProfile.IsSignedIn(i)) )
     //			{
     //				iOtherConnectedControllers++;
     //			}

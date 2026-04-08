@@ -5,8 +5,7 @@
 
 #include <memory>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
@@ -65,7 +64,7 @@ UIScene_PauseMenu::UIScene_PauseMenu(int iPad, void* initData,
     // IsLocalGame() issues on Iggy
     if (/*g_NetworkManager.IsLocalGame() &&*/ g_NetworkManager
             .GetPlayerCount() == 1) {
-        app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
+        app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
                                eXuiServerAction_PauseServer, (void*)true);
     }
 
@@ -107,9 +106,9 @@ std::wstring UIScene_PauseMenu::getMoviePath() {
 void UIScene_PauseMenu::tick() { UIScene::tick(); }
 
 void UIScene_PauseMenu::updateTooltips() {
-    // bool bUserisClientSide = ProfileManager.IsSignedInLive(m_iPad);
+    // bool bUserisClientSide = PlatformProfile.IsSignedInLive(m_iPad);
     // bool bIsisPrimaryHost =
-    //     g_NetworkManager.IsHost() && (ProfileManager.GetPrimaryPad() ==
+    //     g_NetworkManager.IsHost() && (PlatformProfile.GetPrimaryPad() ==
     //     m_iPad);
 
     int iY = -1;
@@ -146,7 +145,7 @@ void UIScene_PauseMenu::updateControlsVisibility() {
     // Pause Menu does not have a Leaderboards option. TCR # 128:  XLA Pause
     // Menu:   When in a multiplayer game as a client the Pause Menu does not
     // have an Achievements option.
-    if (ProfileManager.GetPrimaryPad() ==
+    if (PlatformProfile.GetPrimaryPad() ==
         m_iPad)  // && g_NetworkManager.IsHost())
     {
         // are we in splitscreen?
@@ -170,7 +169,7 @@ void UIScene_PauseMenu::updateControlsVisibility() {
     }
 
     // is saving disabled?
-    if (StorageManager.GetSaveDisabled()) {
+    if (PlatformStorage.GetSaveDisabled()) {
     }
 }
 
@@ -192,10 +191,10 @@ void UIScene_PauseMenu::handleInput(int iPad, int key, bool repeat,
                 // TODO: proper fix for pausing
                 // 4jcraft: replace IsLocalGame() with GetPlayerCount() == 1 due
                 // to IsLocalGame() issues on Iggy
-                if (iPad == ProfileManager.GetPrimaryPad() &&
+                if (iPad == PlatformProfile.GetPrimaryPad() &&
                     /*g_NetworkManager.IsLocalGame()*/ g_NetworkManager
                             .GetPlayerCount() == 1) {
-                    app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
+                    app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
                                            eXuiServerAction_PauseServer,
                                            (void*)false);
                 }
@@ -224,7 +223,7 @@ void UIScene_PauseMenu::handleInput(int iPad, int key, bool repeat,
                 // SD, the title crashes.
                 m_bIgnoreInput = true;
 
-                StorageManager.SetSaveDevice(
+                PlatformStorage.SetSaveDevice(
                     &UIScene_PauseMenu::DeviceSelectReturned, this, true);
             }
             rfHandled = true;
@@ -261,10 +260,10 @@ void UIScene_PauseMenu::handlePress(F64 controlId, F64 childId) {
             // TODO: proper fix for pausing
             // 4jcraft: replace IsLocalGame() with GetPlayerCount() == 1 due to
             // IsLocalGame() issues on Iggy
-            if (m_iPad == ProfileManager.GetPrimaryPad() &&
+            if (m_iPad == PlatformProfile.GetPrimaryPad() &&
                 /*g_NetworkManager.IsLocalGame()*/ g_NetworkManager
                         .GetPlayerCount() == 1) {
-                app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
+                app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
                                        eXuiServerAction_PauseServer,
                                        (void*)false);
             }
@@ -276,11 +275,11 @@ void UIScene_PauseMenu::handlePress(F64 controlId, F64 childId) {
 
             // 4J Gordon: Being used for the leaderboards proper now
             //  guests can't look at leaderboards
-            if (ProfileManager.IsGuest(m_iPad)) {
+            if (PlatformProfile.IsGuest(m_iPad)) {
                 ui.RequestAlertMessage(IDS_PRO_GUESTPROFILE_TITLE,
                                        IDS_PRO_GUESTPROFILE_TEXT, uiIDA, 1,
-                                       ProfileManager.GetPrimaryPad());
-            } else if (!ProfileManager.IsSignedInLive(m_iPad)) {
+                                       PlatformProfile.GetPrimaryPad());
+            } else if (!PlatformProfile.IsSignedInLive(m_iPad)) {
                 unsigned int uiIDA[1] = {IDS_OK};
                 ui.RequestErrorMessage(IDS_PRO_NOTONLINE_TITLE,
                                        IDS_PRO_NOTONLINE_TEXT, uiIDA, 1,
@@ -304,12 +303,12 @@ void UIScene_PauseMenu::handlePress(F64 controlId, F64 childId) {
         } break;
         case BUTTON_PAUSE_ACHIEVEMENTS:
             // guests can't look at achievements
-            if (ProfileManager.IsGuest(m_iPad)) {
+            if (PlatformProfile.IsGuest(m_iPad)) {
                 unsigned int uiIDA[1];
                 uiIDA[0] = IDS_OK;
                 ui.RequestAlertMessage(IDS_PRO_GUESTPROFILE_TITLE,
                                        IDS_PRO_GUESTPROFILE_TEXT, uiIDA, 1,
-                                       ProfileManager.GetPrimaryPad());
+                                       PlatformProfile.GetPrimaryPad());
             } else {
                 // XShowAchievementsUI(m_iPad);
             }
@@ -326,14 +325,14 @@ void UIScene_PauseMenu::handlePress(F64 controlId, F64 childId) {
             unsigned int uiIDA[3];
 
             // is it the primary player exiting?
-            if (m_iPad == ProfileManager.GetPrimaryPad()) {
+            if (m_iPad == PlatformProfile.GetPrimaryPad()) {
                 int playTime = -1;
                 if (pMinecraft->localplayers[m_iPad] != nullptr) {
                     playTime = (int)pMinecraft->localplayers[m_iPad]
                                    ->getSessionTimer();
                 }
 
-                if (StorageManager.GetSaveDisabled()) {
+                if (PlatformStorage.GetSaveDisabled()) {
                     uiIDA[0] = IDS_CONFIRM_CANCEL;
                     uiIDA[1] = IDS_CONFIRM_OK;
                     ui.RequestAlertMessage(
@@ -419,8 +418,8 @@ void UIScene_PauseMenu::PerformActionSaveGame() {
 
     // does the save exist?
     bool bSaveExists;
-    C4JStorage::ESaveGameState result =
-        StorageManager.DoesSaveExist(&bSaveExists);
+    IPlatformStorage::ESaveGameState result =
+        PlatformStorage.DoesSaveExist(&bSaveExists);
 
     {
         // we need to ask if they are sure they want to overwrite the
@@ -471,7 +470,7 @@ void UIScene_PauseMenu::HandleDLCMountingComplete() {
 }
 
 int UIScene_PauseMenu::UnlockFullSaveReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
     return 0;

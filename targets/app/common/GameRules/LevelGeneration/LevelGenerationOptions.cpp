@@ -30,9 +30,9 @@
 #include "minecraft/world/level/dimension/Dimension.h"
 #include "minecraft/world/level/levelgen/structure/BoundingBox.h"
 #include "minecraft/world/phys/AABB.h"
-#include "platform/PlatformServices.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/fs/fs.h"
+#include "platform/profile/profile.h"
+#include "platform/storage/storage.h"
 #include "strings.h"
 #include "util/StringHelpers.h"
 
@@ -551,8 +551,8 @@ void LevelGenerationOptions::loadBaseSaveData() {
         mountIndex = m_parentDLCPack->GetDLCMountIndex();
 
     if (mountIndex > -1) {
-        if (StorageManager.MountInstalledDLC(
-                ProfileManager.GetPrimaryPad(), mountIndex,
+        if (PlatformStorage.MountInstalledDLC(
+                PlatformProfile.GetPrimaryPad(), mountIndex,
                 [this](int pad, std::uint32_t err, std::uint32_t lic) {
                     return onPackMounted(pad, err, lic);
                 },
@@ -560,7 +560,7 @@ void LevelGenerationOptions::loadBaseSaveData() {
             // corrupt DLC
             setLoadedData();
             app.DebugPrintf("Failed to mount LGO DLC %d for pad %d\n",
-                            mountIndex, ProfileManager.GetPrimaryPad());
+                            mountIndex, PlatformProfile.GetPrimaryPad());
         } else {
             m_bLoadingData = true;
             app.DebugPrintf("Attempted to mount DLC data for LGO %d\n",
@@ -568,7 +568,7 @@ void LevelGenerationOptions::loadBaseSaveData() {
         }
     } else {
         setLoadedData();
-        app.SetAction(ProfileManager.GetPrimaryPad(),
+        app.SetAction(PlatformProfile.GetPrimaryPad(),
                       eAppAction_ReloadTexturePack);
     }
 }
@@ -599,10 +599,10 @@ int LevelGenerationOptions::onPackMounted(int iPad, uint32_t dwErr,
                     uint32_t dwFileSize = grf.length();
                     if (dwFileSize > 0) {
                         uint8_t* pbData = (uint8_t*)new uint8_t[dwFileSize];
-                        auto readResult = PlatformFileIO.readFile(
+                        auto readResult = PlatformFilesystem.readFile(
                             grf.getPath(), pbData, dwFileSize);
                         if (readResult.status !=
-                            IPlatformFileIO::ReadStatus::Ok) {
+                            IPlatformFilesystem::ReadStatus::Ok) {
                             app.FatalLoadError();
                         }
 
@@ -623,12 +623,12 @@ int LevelGenerationOptions::onPackMounted(int iPad, uint32_t dwErr,
                                       lgo->getBaseSavePath(), true, L"WPACK:"));
             if (save.exists()) {
                 std::size_t dwFileSize =
-                    PlatformFileIO.fileSize(save.getPath());
+                    PlatformFilesystem.fileSize(save.getPath());
                 if (dwFileSize > 0) {
                     uint8_t* pbData = (uint8_t*)new uint8_t[dwFileSize];
-                    auto readResult = PlatformFileIO.readFile(
+                    auto readResult = PlatformFilesystem.readFile(
                         save.getPath(), pbData, dwFileSize);
-                    if (readResult.status != IPlatformFileIO::ReadStatus::Ok) {
+                    if (readResult.status != IPlatformFilesystem::ReadStatus::Ok) {
                         app.FatalLoadError();
                     }
 
@@ -638,7 +638,7 @@ int LevelGenerationOptions::onPackMounted(int iPad, uint32_t dwErr,
                 }
             }
         }
-        uint32_t result = StorageManager.UnmountInstalledDLC("WPACK");
+        uint32_t result = PlatformStorage.UnmountInstalledDLC("WPACK");
     }
 
     lgo->setLoadedData();

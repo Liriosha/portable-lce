@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/IUIScene_AbstractContainerMenu.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_Cursor.h"
@@ -83,7 +83,7 @@ public:
     }
 
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewpBort);
+                        IPlatformRenderer::eViewportType viewpBort);
     virtual void customDraw(IggyCustomDrawCallbackRegion* region);
 
     // INPUT

@@ -2,13 +2,13 @@
 #include "minecraft/util/Log.h"
 #include "ItemInHandRenderer.h"
 
-#include <GL/gl.h>
+
 
 #include <cmath>
 #include <numbers>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"
@@ -302,7 +302,7 @@ void ItemInHandRenderer::renderItem(std::shared_ptr<LivingEntity> mob,
             LOD = 2;  // Force LOD level 2 to achieve texture reads from 256x256
                       // map
         }
-        RenderManager.StateSetForceLOD(LOD);
+        PlatformRenderer.StateSetForceLOD(LOD);
 
         // 4J Original comment
         // Yes, these are backwards.
@@ -364,7 +364,7 @@ void ItemInHandRenderer::renderItem(std::shared_ptr<LivingEntity> mob,
             glDepthFunc(GL_LEQUAL);
         }
 
-        RenderManager.StateSetForceLOD(-1);
+        PlatformRenderer.StateSetForceLOD(-1);
 
         glDisable(GL_RESCALE_NORMAL);
     }
@@ -417,15 +417,15 @@ void ItemInHandRenderer::render(float a) {
         std::dynamic_pointer_cast<LocalPlayer>(player);
     if (localPlayer) {
         if (localPlayer->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM ||
+                IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM ||
             localPlayer->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_SPLIT_TOP) {
+                IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP) {
             fudgeY = 0.08f;
             splitHoriz = true;
         } else if (localPlayer->m_iScreenSection ==
-                       C4JRender::VIEWPORT_TYPE_SPLIT_LEFT ||
+                       IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT ||
                    localPlayer->m_iScreenSection ==
-                       C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT) {
+                       IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT) {
             fudgeX = -0.18f;
         }
     }

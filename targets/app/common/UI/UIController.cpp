@@ -10,8 +10,8 @@
 #include <memory>
 #include <utility>
 
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
@@ -245,7 +245,7 @@ UIController::UIController() {
 
     m_iPressStartQuadrantsMask = 0;
 
-    m_currentRenderViewport = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+    m_currentRenderViewport = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
     m_bCustomRenderPosition = false;
     m_winUserIndex = 0;
     m_accumulatedTicks = 0;
@@ -387,7 +387,7 @@ void UIController::SetupFont() {
     if (m_eTargetFont == m_eCurrentFont) {
         // 4J-JEV: If we're ingame, reload the font to update all the text.
         if (app.GetGameStarted())
-            app.SetAction(ProfileManager.GetPrimaryPad(),
+            app.SetAction(PlatformProfile.GetPrimaryPad(),
                           eAppAction_ReloadFont);
         return;
     }
@@ -434,7 +434,7 @@ void UIController::SetupFont() {
 
     // Reload ui to set new font.
     if (m_eCurrentFont != eFont_NotLoaded) {
-        app.SetAction(ProfileManager.GetPrimaryPad(), eAppAction_ReloadFont);
+        app.SetAction(PlatformProfile.GetPrimaryPad(), eAppAction_ReloadFont);
     } else {
         updateCurrentFont();
     }
@@ -459,7 +459,7 @@ void UIController::tick() {
         ui.CleanUpSkinReload();
 
         if (m_navigateToHomeOnReload || !g_NetworkManager.IsInSession()) {
-            ui.NavigateToScene(ProfileManager.GetPrimaryPad(),
+            ui.NavigateToScene(PlatformProfile.GetPrimaryPad(),
                                eUIScene_MainMenu);
         } else {
             ui.CloseAllPlayersScenes();
@@ -697,7 +697,7 @@ void UIController::CleanUpSkinReload() {
     if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
         if (!Minecraft::GetInstance()->skins->getSelected()->hasAudio()) {
             const unsigned int result =
-                StorageManager.UnmountInstalledDLC("TPACK");
+                PlatformStorage.UnmountInstalledDLC("TPACK");
         }
     }
 
@@ -737,7 +737,7 @@ void UIController::tickInput() {
     if (!m_bSystemUIShowing) {
 #if defined(ENABLE_IGGY_PERFMON)
         if (m_iggyPerfmonEnabled) {
-            if (InputManager.ButtonPressed(ProfileManager.GetPrimaryPad(),
+            if (PlatformInput.ButtonPressed(PlatformProfile.GetPrimaryPad(),
                                            ACTION_MENU_STICK_PRESS))
                 m_iggyPerfmonEnabled = !m_iggyPerfmonEnabled;
         } else
@@ -765,9 +765,9 @@ void UIController::handleKeyPress(unsigned int iPad, unsigned int key) {
     bool released = false;  // Toggle
     bool repeat = false;
 
-    down = InputManager.ButtonDown(iPad, key);
-    pressed = InputManager.ButtonPressed(iPad, key);    // Toggle
-    released = InputManager.ButtonReleased(iPad, key);  // Toggle
+    down = PlatformInput.ButtonDown(iPad, key);
+    pressed = PlatformInput.ButtonPressed(iPad, key);    // Toggle
+    released = PlatformInput.ButtonReleased(iPad, key);  // Toggle
 
     if (pressed) app.DebugPrintf("Pressed %d\n", key);
     if (released) app.DebugPrintf("Released %d\n", key);
@@ -847,30 +847,30 @@ void UIController::renderScenes() {
         IggyPerfmonPad pm_pad;
 
         pm_pad.bits = 0;
-        pm_pad.field.dpad_up = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_UP);
-        pm_pad.field.dpad_down = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_DOWN);
-        pm_pad.field.dpad_left = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_LEFT);
-        pm_pad.field.dpad_right = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_RIGHT);
-        pm_pad.field.button_up = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_Y);
-        pm_pad.field.button_down = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_A);
-        pm_pad.field.button_left = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_X);
-        pm_pad.field.button_right = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_B);
-        pm_pad.field.shoulder_left_hi = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_LEFT_SCROLL);
-        pm_pad.field.shoulder_right_hi = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_RIGHT_SCROLL);
-        pm_pad.field.trigger_left_low = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_PAGEUP);
-        pm_pad.field.trigger_right_low = InputManager.ButtonPressed(
-            ProfileManager.GetPrimaryPad(), ACTION_MENU_PAGEDOWN);
+        pm_pad.field.dpad_up = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_UP);
+        pm_pad.field.dpad_down = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_DOWN);
+        pm_pad.field.dpad_left = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_LEFT);
+        pm_pad.field.dpad_right = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_RIGHT);
+        pm_pad.field.button_up = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_Y);
+        pm_pad.field.button_down = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_A);
+        pm_pad.field.button_left = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_X);
+        pm_pad.field.button_right = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_B);
+        pm_pad.field.shoulder_left_hi = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_LEFT_SCROLL);
+        pm_pad.field.shoulder_right_hi = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_RIGHT_SCROLL);
+        pm_pad.field.trigger_left_low = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_PAGEUP);
+        pm_pad.field.trigger_right_low = PlatformInput.ButtonPressed(
+            PlatformProfile.GetPrimaryPad(), ACTION_MENU_PAGEDOWN);
         // IggyPerfmonPadFromXInputStatePointer(pm_pad, &xi_pad);
 
         // gdraw_D3D_SetTileOrigin( fb,
@@ -885,27 +885,27 @@ void UIController::renderScenes() {
 #endif
 }
 
-void UIController::getRenderDimensions(C4JRender::eViewportType viewport,
+void UIController::getRenderDimensions(IPlatformRenderer::eViewportType viewport,
                                        S32& width, S32& height) {
     switch (viewport) {
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
             width = (S32)(getScreenWidth());
             height = (S32)(getScreenHeight());
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             width = (S32)(getScreenWidth() / 2);
             height = (S32)(getScreenHeight() / 2);
             break;
@@ -914,36 +914,36 @@ void UIController::getRenderDimensions(C4JRender::eViewportType viewport,
     }
 }
 
-void UIController::setupRenderPosition(C4JRender::eViewportType viewport) {
+void UIController::setupRenderPosition(IPlatformRenderer::eViewportType viewport) {
     if (m_bCustomRenderPosition || m_currentRenderViewport != viewport) {
         m_currentRenderViewport = viewport;
         m_bCustomRenderPosition = false;
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
                 xPos = (S32)(getScreenWidth() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 xPos = (S32)(getScreenWidth() / 4);
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
                 yPos = (S32)(getScreenHeight() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 yPos = (S32)(getScreenHeight() / 4);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(getScreenWidth() / 2);
                 yPos = (S32)(getScreenHeight() / 2);
                 break;
@@ -971,18 +971,18 @@ void UIController::setupCustomDrawGameState() {
     m_customRenderingClearRect.bottom = LONG_MIN;
 
 #if defined(_WINDOWS64)
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
 
     gdraw_D3D11_setViewport_4J();
 #elif defined(__linux__)
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
 #endif
-    RenderManager.Set_matrixDirty();
+    PlatformRenderer.Set_matrixDirty();
 
     // 4J Stu - We don't need to clear this here as iggy hasn't written anything
     // to the depth buffer. We DO however clear after we render which is why we
     // still setup the rectangle here
-    // RenderManager.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
+    // PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
     // glClear(GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -1061,9 +1061,9 @@ void UIController::setupCustomDrawGameStateAndMatrices(
 
 void UIController::endCustomDrawGameState() {
 #if defined(__linux__)
-    RenderManager.Clear(GL_DEPTH_BUFFER_BIT);
+    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT);
 #else
-    RenderManager.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
+    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
 #endif
     // glClear(GL_DEPTH_BUFFER_BIT);
     glDepthMask(false);
@@ -1126,7 +1126,7 @@ GDrawTexture* RADLINK UIController::TextureSubstitutionCreateCallback(
         if (image.getData() != nullptr) {
             image.preMultiplyAlpha();
             Textures* t = Minecraft::GetInstance()->textures;
-            int id = t->getTexture(&image, C4JRender::TEXTURE_FORMAT_RxGyBzAw,
+            int id = t->getTexture(&image, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw,
                                    false);
 
             // 4J Stu - All our flash controls that allow replacing textures use
@@ -1195,7 +1195,7 @@ bool UIController::NavigateToScene(int iPad, EUIScene scene, void* initData,
     // times
     if ((scene == eUIScene_LoadOrJoinMenu) &&
         (bSeenUpdateTextThisSession == false) &&
-        (app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+        (app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                              eGameSetting_DisplayUpdateMessage) != 0)) {
         scene = eUIScene_NewUpdateMessage;
         bSeenUpdateTextThisSession = true;
@@ -1368,7 +1368,7 @@ void UIController::NavigateToHomeMenu() {
         // 		{
         // 			pDLCTexPack->m_pSoundBank->Destroy();
         // 		}
-        const unsigned int result = StorageManager.UnmountInstalledDLC("TPACK");
+        const unsigned int result = PlatformStorage.UnmountInstalledDLC("TPACK");
 
         app.DebugPrintf("Unmount result is %d\n", result);
     }
@@ -1378,7 +1378,7 @@ void UIController::NavigateToHomeMenu() {
     if (pMinecraft->skins->needsUIUpdate()) {
         m_navigateToHomeOnReload = true;
     } else {
-        ui.NavigateToScene(ProfileManager.GetPrimaryPad(), eUIScene_MainMenu);
+        ui.NavigateToScene(PlatformProfile.GetPrimaryPad(), eUIScene_MainMenu);
 #if defined(ENABLE_JAVA_GUIS)
         pMinecraft->setScreen(new TitleScreen());
 #endif
@@ -1482,7 +1482,7 @@ void UIController::CloseUIScenes(int iPad, bool forceIPad) {
 void UIController::setFullscreenMenuDisplayed(bool displayed) {
     // Show/hide the tooltips for the fullscreen group
     m_groups[(int)eUIGroup_Fullscreen]->showComponent(
-        ProfileManager.GetPrimaryPad(), eUIComponent_Tooltips,
+        PlatformProfile.GetPrimaryPad(), eUIComponent_Tooltips,
         eUILayer_Tooltips, displayed);
 
     // Show/hide tooltips for the other layers
@@ -1582,7 +1582,7 @@ void UIController::SetMenuDisplayed(int iPad, bool bVal) {
     if (bVal) {
         if (iPad == XUSER_INDEX_ANY) {
             for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-                InputManager.SetMenuDisplayed(i, true);
+                PlatformInput.SetMenuDisplayed(i, true);
                 m_bMenuDisplayed[i] = true;
                 // 4J Stu - Fix for #11018 - Functional: When the controller is
                 // unplugged during active gameplay and plugged back in at the
@@ -1590,7 +1590,7 @@ void UIController::SetMenuDisplayed(int iPad, bool bVal) {
                 m_bMenuToBeClosed[i] = false;
             }
         } else {
-            InputManager.SetMenuDisplayed(iPad, true);
+            PlatformInput.SetMenuDisplayed(iPad, true);
             m_bMenuDisplayed[iPad] = true;
             // 4J Stu - Fix for #11018 - Functional: When the controller is
             // unplugged during active gameplay and plugged back in at the
@@ -1618,7 +1618,7 @@ void UIController::CheckMenuDisplayed() {
             } else {
                 m_bMenuToBeClosed[iPad] = false;
                 m_bMenuDisplayed[iPad] = false;
-                InputManager.SetMenuDisplayed(iPad, false);
+                PlatformInput.SetMenuDisplayed(iPad, false);
             }
         }
     }
@@ -1777,7 +1777,7 @@ void UIController::PlayUISFX(ESoundEffect eSound) {
 
 void UIController::DisplayGamertag(unsigned int iPad, bool show) {
     // The host decides whether these are on or off
-    if (app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+    if (app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                             eGameSetting_DisplaySplitscreenGamertags) == 0) {
         show = false;
     }
@@ -1951,13 +1951,13 @@ void UIController::UpdatePlayerBasePositions() {
     for (int idx = 0; idx < XUSER_MAX_COUNT; ++idx) {
         if (pMinecraft->localplayers[idx] != nullptr) {
             if (pMinecraft->localplayers[idx]->m_iScreenSection ==
-                C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+                IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
                 DisplayGamertag(idx, false);
             } else {
                 DisplayGamertag(idx, true);
             }
             m_groups[idx + 1]->SetViewportType(
-                (C4JRender::eViewportType)pMinecraft->localplayers[idx]
+                (IPlatformRenderer::eViewportType)pMinecraft->localplayers[idx]
                     ->m_iScreenSection);
         } else {
             // 4J Stu - This is a legacy thing from our XUI implementation that
@@ -1965,7 +1965,7 @@ void UIController::UpdatePlayerBasePositions() {
             // no longer exist is SLOW This should probably be on all platforms,
             // but I don't have time to test them all just now!
             m_groups[idx + 1]->SetViewportType(
-                C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
             DisplayGamertag(idx, false);
         }
     }
@@ -2070,14 +2070,14 @@ void UIController::UpdateAutosaveCountdownTimer(unsigned int uiSeconds) {
 }
 
 void UIController::ShowSavingMessage(unsigned int iPad,
-                                     C4JStorage::ESavingMessage eVal) {
+                                     IPlatformStorage::ESavingMessage eVal) {
     bool show = false;
     switch (eVal) {
-        case C4JStorage::ESavingMessage_None:
+        case IPlatformStorage::ESavingMessage_None:
             show = false;
             break;
-        case C4JStorage::ESavingMessage_Short:
-        case C4JStorage::ESavingMessage_Long:
+        case IPlatformStorage::ESavingMessage_Short:
+        case IPlatformStorage::ESavingMessage_Long:
             show = true;
             break;
     }
@@ -2154,28 +2154,28 @@ void UIController::HidePressStart() {
 
 void UIController::ClearPressStart() { m_iPressStartQuadrantsMask = 0; }
 
-C4JStorage::EMessageResult UIController::RequestAlertMessage(
+IPlatformStorage::EMessageResult UIController::RequestAlertMessage(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult), void* lpParam,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
     wchar_t* pwchFormatString) {
     return RequestMessageBox(uiTitle, uiText, uiOptionA, uiOptionC, dwPad, Func,
                              lpParam, pwchFormatString, 0, false);
 }
 
-C4JStorage::EMessageResult UIController::RequestErrorMessage(
+IPlatformStorage::EMessageResult UIController::RequestErrorMessage(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult), void* lpParam,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
     wchar_t* pwchFormatString) {
     return RequestMessageBox(uiTitle, uiText, uiOptionA, uiOptionC, dwPad, Func,
                              lpParam, pwchFormatString, 0, true);
 }
 
-C4JStorage::EMessageResult UIController::RequestMessageBox(
+IPlatformStorage::EMessageResult UIController::RequestMessageBox(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult), void* lpParam,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
     wchar_t* pwchFormatString, unsigned int dwFocusButton, bool bIsError)
 
 {
@@ -2214,15 +2214,15 @@ C4JStorage::EMessageResult UIController::RequestMessageBox(
         // This may happen if we had to queue the message box, or there was
         // already a message box displaying and so the NavigateToScene returned
         // false;
-        return C4JStorage::EMessage_Pending;
+        return IPlatformStorage::EMessage_Pending;
     } else {
-        return C4JStorage::EMessage_Busy;
+        return IPlatformStorage::EMessage_Busy;
     }
 }
 
-C4JStorage::EMessageResult UIController::RequestUGCMessageBox(
+IPlatformStorage::EMessageResult UIController::RequestUGCMessageBox(
     int title /* = -1 */, int message /* = -1 */, int iPad /* = -1*/,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult) /* = nullptr*/,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult) /* = nullptr*/,
     void* lpParam /* = nullptr*/) {
     // Default title / messages
     if (title == -1) {
@@ -2234,7 +2234,7 @@ C4JStorage::EMessageResult UIController::RequestUGCMessageBox(
     }
 
     // Default pad to primary player
-    if (iPad == -1) iPad = ProfileManager.GetPrimaryPad();
+    if (iPad == -1) iPad = PlatformProfile.GetPrimaryPad();
 
     unsigned int uiIDA[1];
     uiIDA[0] = IDS_CONFIRM_OK;
@@ -2242,9 +2242,9 @@ C4JStorage::EMessageResult UIController::RequestUGCMessageBox(
                                   lpParam);
 }
 
-C4JStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
+IPlatformStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
     int title /* = -1 */, int message /* = -1 */, int iPad /* = -1*/,
-    int (*Func)(void*, int, const C4JStorage::EMessageResult) /* = nullptr*/,
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult) /* = nullptr*/,
     void* lpParam /* = nullptr*/) {
     // Default title / messages
     if (title == -1) {
@@ -2261,7 +2261,7 @@ C4JStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
     }
 
     // Default pad to primary player
-    if (iPad == -1) iPad = ProfileManager.GetPrimaryPad();
+    if (iPad == -1) iPad = PlatformProfile.GetPrimaryPad();
 
     unsigned int uiIDA[1];
     uiIDA[0] = IDS_CONFIRM_OK;

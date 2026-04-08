@@ -43,10 +43,10 @@ void SignTileEntity::save(CompoundTag* tag) {
     tag->putString(L"Text3", m_wsmessages[2]);
     tag->putString(L"Text4", m_wsmessages[3]);
 #if !defined(_CONTENT_PACKAGE)
-    OutputDebugStringW(L"### - Saving a sign with text - \n");
+    fwprintf(stderr, L"### - Saving a sign with text - \n");
     for (int i = 0; i < 4; i++) {
-        OutputDebugStringW(m_wsmessages[i].c_str());
-        OutputDebugStringW(L"\n");
+        fwprintf(stderr, m_wsmessages[i].c_str());
+        fwprintf(stderr, L"\n");
     }
 #endif
 }
@@ -62,10 +62,10 @@ void SignTileEntity::load(CompoundTag* tag) {
             m_wsmessages[i] = m_wsmessages[i].substr(0, MAX_LINE_LENGTH);
     }
 #if !defined(_CONTENT_PACKAGE)
-    OutputDebugStringW(L"### - Loaded a sign with text - \n");
+    fwprintf(stderr, L"### - Loaded a sign with text - \n");
     for (int i = 0; i < 4; i++) {
-        OutputDebugStringW(m_wsmessages[i].c_str());
-        OutputDebugStringW(L"\n");
+        fwprintf(stderr, m_wsmessages[i].c_str());
+        fwprintf(stderr, L"\n");
     }
 #endif
 

@@ -1,8 +1,7 @@
 
 #include "UIScene_SettingsMenu.h"
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
@@ -28,7 +27,7 @@ UIScene_SettingsMenu::UIScene_SettingsMenu(int iPad, void* initData,
     m_buttons[BUTTON_ALL_RESETTODEFAULTS].init(IDS_RESET_TO_DEFAULTS,
                                                BUTTON_ALL_RESETTODEFAULTS);
 
-    if (ProfileManager.GetPrimaryPad() != m_iPad) {
+    if (PlatformProfile.GetPrimaryPad() != m_iPad) {
         removeControl(&m_buttons[BUTTON_ALL_AUDIO], bNotInGame);
         removeControl(&m_buttons[BUTTON_ALL_GRAPHICS], bNotInGame);
     }
@@ -55,7 +54,7 @@ std::wstring UIScene_SettingsMenu::getMoviePath() {
 void UIScene_SettingsMenu::handleReload() {
     bool bNotInGame = (Minecraft::GetInstance()->level == nullptr);
 
-    if (ProfileManager.GetPrimaryPad() != m_iPad) {
+    if (PlatformProfile.GetPrimaryPad() != m_iPad) {
         removeControl(&m_buttons[BUTTON_ALL_AUDIO], bNotInGame);
         removeControl(&m_buttons[BUTTON_ALL_GRAPHICS], bNotInGame);
     }
@@ -145,13 +144,13 @@ void UIScene_SettingsMenu::handlePress(F64 controlId, F64 childId) {
 }
 
 int UIScene_SettingsMenu::ResetDefaultsDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_SettingsMenu* pClass = (UIScene_SettingsMenu*)pParam;
 
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         app.SetDefaultOptions(
-            ProfileManager.GetDashboardProfileSettings(pClass->m_iPad),
+            PlatformProfile.GetDashboardProfileSettings(pClass->m_iPad),
             pClass->m_iPad);
         // if the profile data has been changed, then force a profile write
         // It seems we're allowed to break the 5 minute rule if it's the result

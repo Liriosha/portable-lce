@@ -1,7 +1,7 @@
 #include "UIComponent_Tooltips.h"
 
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/UILayer.h"
@@ -30,18 +30,18 @@ UIComponent_Tooltips::UIComponent_Tooltips(int iPad, void* initData,
 
 std::wstring UIComponent_Tooltips::getMoviePath() {
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             m_bSplitscreen = true;
             return L"ToolTipsSplit";
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             m_bSplitscreen = false;
             return L"ToolTips";
@@ -55,7 +55,7 @@ F64 UIComponent_Tooltips::getSafeZoneHalfWidth() {
     float safeWidth = 0.0f;
 
     // 85% safezone for tooltips in either SD mode
-    if (!RenderManager.IsHiDef()) {
+    if (!PlatformRenderer.IsHiDef()) {
         // 85% safezone
         safeWidth = m_movieWidth * (0.15f / 2);
     } else {
@@ -73,39 +73,39 @@ void UIComponent_Tooltips::updateSafeZone() {
     F64 safeRight = 0.0;
 
     switch (m_parentLayer->getViewport()) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
             safeLeft = getSafeZoneHalfWidth();
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             safeRight = getSafeZoneHalfWidth();
             safeBottom = getSafeZoneHalfHeight();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
             safeTop = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
             safeTop = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
             safeBottom = getSafeZoneHalfHeight();
             safeLeft = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             safeBottom = getSafeZoneHalfHeight();
             safeRight = getSafeZoneHalfWidth();
             break;
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
         default:
             safeTop = getSafeZoneHalfHeight();
             safeBottom = getSafeZoneHalfHeight();
@@ -120,7 +120,7 @@ void UIComponent_Tooltips::tick() {
     UIScene::tick();
 
     // set the opacity of the tooltip items
-    unsigned char ucAlpha = app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+    unsigned char ucAlpha = app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                                                 eGameSetting_InterfaceOpacity);
     float fVal;
 
@@ -166,8 +166,8 @@ void UIComponent_Tooltips::tick() {
 }
 
 void UIComponent_Tooltips::render(S32 width, S32 height,
-                                  C4JRender::eViewportType viewport) {
-    if ((ProfileManager.GetLockedProfile() != -1) &&
+                                  IPlatformRenderer::eViewportType viewport) {
+    if ((PlatformProfile.GetLockedProfile() != -1) &&
         !ui.GetMenuDisplayed(m_iPad) &&
         (app.GetGameSettings(m_iPad, eGameSetting_Tooltips) == 0 ||
          app.GetGameSettings(m_iPad, eGameSetting_DisplayHUD) == 0)) {
@@ -178,15 +178,15 @@ void UIComponent_Tooltips::render(S32 width, S32 height,
         S32 xPos = 0;
         S32 yPos = 0;
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 xPos = (S32)(ui.getScreenWidth() / 2);
                 yPos = (S32)(ui.getScreenHeight() / 2);
                 break;
@@ -201,22 +201,22 @@ void UIComponent_Tooltips::render(S32 width, S32 height,
         S32 tileHeight = height;
 
         switch (viewport) {
-            case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
-            case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
                 tileHeight = (S32)(ui.getScreenHeight());
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
                 tileWidth = (S32)(ui.getScreenWidth());
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+            case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
                 tileWidth = (S32)(ui.getScreenWidth());
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
-            case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+            case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
                 tileYStart = (S32)(m_movieHeight / 2);
                 break;
             default:

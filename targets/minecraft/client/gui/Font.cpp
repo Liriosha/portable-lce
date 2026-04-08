@@ -5,7 +5,8 @@
 #include <utility>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+
+#include "platform/renderer/renderer.h"
 #include "minecraft/client/BufferedImage.h"
 #include "util/StringHelpers.h"
 #include "java/Random.h"

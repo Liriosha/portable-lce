@@ -13,8 +13,8 @@
 #include <utility>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/profile/profile.h"
+#include "platform/storage/storage.h"
 #include "ConsoleInput.h"
 #include "DispenserBootstrap.h"
 #include "minecraft/GameEnums.h"
@@ -66,7 +66,7 @@
 #if defined(SPLIT_SAVES)
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileSplit.h"
 #endif
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "platform/ShutdownManager.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/GameRules/LevelGeneration/ConsoleSchematicFile.h"
@@ -832,7 +832,7 @@ void MinecraftServer::saveAllChunks() {
 void MinecraftServer::saveGameRules() {
 #if !defined(_CONTENT_PACKAGE)
     if (gameServices().debugSettingsOn() &&
-        gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+        gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_DistributableSave)) {
         // Do nothing
     } else
@@ -860,7 +860,7 @@ void MinecraftServer::saveGameRules() {
 void MinecraftServer::Suspend() {
     m_suspending = true;
     time_util::Timer timer;
-    if (m_bLoaded && (!StorageManager.GetSaveDisabled())) {
+    if (m_bLoaded && (!PlatformStorage.GetSaveDisabled())) {
         if (players != nullptr) {
             players->saveAll(nullptr);
         }
@@ -903,11 +903,11 @@ void MinecraftServer::stopServer(bool didInit) {
     // also need to check for a profile switch here - primary player signs out,
     // and another player signs in before dismissing the dash
     if ((m_bPrimaryPlayerSignedOut == false) &&
-        ProfileManager.IsSignedIn(InputManager.GetPrimaryPad())) {
+        PlatformProfile.IsSignedIn(PlatformInput.GetPrimaryPad())) {
         // if trial version or saving is disabled, then don't save anything.
         // Also don't save anything if we didn't actually get through the server
         // initialisation.
-        if (m_saveOnExit && (!StorageManager.GetSaveDisabled()) && didInit) {
+        if (m_saveOnExit && (!PlatformStorage.GetSaveDisabled()) && didInit) {
             if (players != nullptr) {
                 players->saveAll(Minecraft::GetInstance()->progressRenderer,
                                  true);

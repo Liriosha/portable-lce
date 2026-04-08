@@ -63,7 +63,7 @@ std::shared_ptr<SavedData> SavedDataStorage::get(const std::type_info& clazz,
                         new StructureFeatureSavedData(id)));
             } else {
                 // Handling of new SavedData class required
-                __debugbreak();
+                assert(0);
             }
 
             ConsoleSaveFileInputStream fis =

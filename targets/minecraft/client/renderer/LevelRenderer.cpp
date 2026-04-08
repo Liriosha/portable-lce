@@ -2,7 +2,7 @@
 #include "minecraft/util/Log.h"
 #include "LevelRenderer.h"
 
-#include <GL/gl.h>
+
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,8 +16,8 @@
 #include <utility>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
 #include "Chunk.h"
 #include "GameRenderer.h"
 #include "minecraft/GameEnums.h"
@@ -27,7 +27,6 @@
 #include "app/linux/LinuxGame.h"
 #include "util/FrameProfiler.h"
 #include "minecraft/client/renderer/MobSkinMemTextureProcessor.h"
-#include "platform/stubs.h"
 #include "Tesselator.h"
 #include "util/StringHelpers.h"
 #include "java/Class.h"
@@ -303,7 +302,7 @@ LevelRenderer::LevelRenderer(Minecraft* mc, Textures* textures) {
         t->color(0xffffff);
 
         for (unsigned int i = 0; i <= ARC_SEGMENTS; ++i) {
-            float DIFF = abs(i - HALF_ARC_SEG);
+            float DIFF = std::abs(i - HALF_ARC_SEG);
             if (DIFF < (HALF_ARC_SEG - WIDE_ARC_SEGS))
                 DIFF = 0;
             else
@@ -439,8 +438,8 @@ void LevelRenderer::setLevel(int playerIndex, MultiPlayerLevel* level) {
         // tile entities in the world dissappear We should only do this when
         // actually exiting the game, so only when the primary player sets there
         // level to nullptr
-        if (playerIndex == InputManager.GetPrimaryPad()) {
-            RenderManager.CBuffDeleteAll();
+        if (playerIndex == PlatformInput.GetPrimaryPad()) {
+            PlatformRenderer.CBuffDeleteAll();
             {
                 std::lock_guard<std::mutex> lock(m_csRenderableTileEntities);
                 renderableTileEntities.clear();
@@ -862,16 +861,16 @@ int LevelRenderer::renderChunks(int from, int to, int layer, double alpha) {
 
             // 4jcraft: replaced glPushMatrix/glTranslatef/glPopMatrix per chunk
             // no more full MVP upload per chunk, can also be bkwards compat
-            RenderManager.SetChunkOffset((float)chunk->chunk->x,
+            PlatformRenderer.SetChunkOffset((float)chunk->chunk->x,
                                          (float)chunk->chunk->y,
                                          (float)chunk->chunk->z);
 
-            if (RenderManager.CBuffCall(list, first)) {
+            if (PlatformRenderer.CBuffCall(list, first)) {
                 first = false;
             }
             count++;
         }
-        RenderManager.SetChunkOffset(0.f, 0.f, 0.f);
+        PlatformRenderer.SetChunkOffset(0.f, 0.f, 0.f);
     }
 
     glPopMatrix();
@@ -1168,7 +1167,7 @@ void LevelRenderer::renderClouds(float alpha) {
     int playerIndex = mc->player->GetXboxPad();
 
     // if the primary player has clouds off, so do all players on this machine
-    if (gameServices().getGameSettings(InputManager.GetPrimaryPad(),
+    if (gameServices().getGameSettings(PlatformInput.GetPrimaryPad(),
                             eGameSetting_Clouds) == 0) {
         return;
     }
@@ -1182,7 +1181,7 @@ void LevelRenderer::renderClouds(float alpha) {
     }
 
     if (gameServices().debugSettingsOn()) {
-        if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+        if (gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_FreezeTime)) {
             iTicks = m_freezeticks;
         }
@@ -1260,7 +1259,7 @@ void LevelRenderer::renderClouds(float alpha) {
     glEnable(GL_CULL_FACE);
 
     if (gameServices().debugSettingsOn()) {
-        if (!(gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+        if (!(gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
               (1L << eDebugSetting_FreezeTime))) {
             m_freezeticks = iTicks;
         }
@@ -1435,7 +1434,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
     // stencilling to limit the area drawn to. Clouds have a relatively large
     // fill area compared to the number of vertices that they have, and so
     // enabling clipping here to try and reduce fill rate cost.
-    RenderManager.StateSetEnableViewportClipPlanes(true);
+    PlatformRenderer.StateSetEnableViewportClipPlanes(true);
     float yOffs =
         (float)(mc->cameraTargetPlayer->yOld +
                 (mc->cameraTargetPlayer->y - mc->cameraTargetPlayer->yOld) *
@@ -1446,7 +1445,7 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
     int iTicks = ticks;
 
     if (gameServices().debugSettingsOn()) {
-        if (gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+        if (gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
             (1L << eDebugSetting_FreezeTime)) {
             iTicks = m_freezeticks;
         }
@@ -1693,12 +1692,12 @@ void LevelRenderer::renderAdvancedClouds(float alpha) {
     glEnable(GL_CULL_FACE);
 
     if (gameServices().debugSettingsOn()) {
-        if (!(gameServices().debugGetMask(InputManager.GetPrimaryPad()) &
+        if (!(gameServices().debugGetMask(PlatformInput.GetPrimaryPad()) &
               (1L << eDebugSetting_FreezeTime))) {
             m_freezeticks = iTicks;
         }
     }
-    RenderManager.StateSetEnableViewportClipPlanes(false);
+    PlatformRenderer.StateSetEnableViewportClipPlanes(false);
 }
 
 bool LevelRenderer::updateDirtyChunks() {
@@ -1749,7 +1748,7 @@ bool LevelRenderer::updateDirtyChunks() {
     {
         FRAME_PROFILE_SCOPE(ChunkDirtyScan);
 
-        unsigned int memAlloc = RenderManager.CBuffSize(-1);
+        unsigned int memAlloc = PlatformRenderer.CBuffSize(-1);
         /*
         static int throttle = 0;
         if( ( throttle % 100 ) == 0 )
@@ -1964,7 +1963,7 @@ bool LevelRenderer::updateDirtyChunks() {
                 // exactly the same thing would happen further away, but we just
                 // don't care about it so much from terms of visual impact.
                 if (veryNearCount > 0) {
-                    RenderManager.CBuffDeferredModeStart();
+                    PlatformRenderer.CBuffDeferredModeStart();
                 }
                 // Build this chunk & return false to continue processing
                 chunk->clearDirty();
@@ -2056,7 +2055,7 @@ bool LevelRenderer::updateDirtyChunks() {
             // happen further away, but we just don't care about it so much from
             // terms of visual impact.
             if (veryNearCount > 0) {
-                RenderManager.CBuffDeferredModeStart();
+                PlatformRenderer.CBuffDeferredModeStart();
             }
             // Build this chunk & return false to continue processing
             chunk->clearDirty();
@@ -2225,12 +2224,12 @@ void LevelRenderer::renderHitOutline(std::shared_ptr<Player> player,
 
         // 4J-PB - If Display HUD is false, don't render the hit outline
         if (gameServices().getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) return;
-        RenderManager.StateSetLightingEnable(false);
+        PlatformRenderer.StateSetLightingEnable(false);
         glDisable(GL_TEXTURE_2D);
 
         // draw hit outline
-        RenderManager.StateSetColour(0.0f, 0.0f, 0.0f, 0.4f);
-        RenderManager.StateSetLineWidth(1.0f);
+        PlatformRenderer.StateSetColour(0.0f, 0.0f, 0.0f, 0.4f);
+        PlatformRenderer.StateSetLineWidth(1.0f);
 
         // hack
         glDepthFunc(GL_LEQUAL);
@@ -2255,17 +2254,17 @@ void LevelRenderer::renderHitOutline(std::shared_ptr<Player> player,
 
         // restore
         glDisable(GL_POLYGON_OFFSET_LINE);
-        RenderManager.StateSetColour(1.0f, 1.0f, 1.0f, 1.0f);
+        PlatformRenderer.StateSetColour(1.0f, 1.0f, 1.0f, 1.0f);
         glEnable(GL_TEXTURE_2D);
-        RenderManager.StateSetLightingEnable(true);
+        PlatformRenderer.StateSetLightingEnable(true);
     }
 }
 
 void LevelRenderer::render(AABB* b) {
     Tesselator* t = Tesselator::getInstance();
-    RenderManager.StateSetLightingEnable(false);
+    PlatformRenderer.StateSetLightingEnable(false);
     glDisable(GL_TEXTURE_2D);
-    RenderManager.StateSetColour(0.0f, 0.0f, 0.0f, 0.4f);
+    PlatformRenderer.StateSetColour(0.0f, 0.0f, 0.0f, 0.4f);
 
     // prevent zfight
     glEnable(GL_POLYGON_OFFSET_LINE);
@@ -2306,9 +2305,9 @@ void LevelRenderer::render(AABB* b) {
 
     t->end();
     glDisable(GL_POLYGON_OFFSET_LINE);
-    RenderManager.StateSetLightingEnable(true);
+    PlatformRenderer.StateSetLightingEnable(true);
     glEnable(GL_TEXTURE_2D);
-    RenderManager.StateSetColour(1.0f, 1.0f, 1.0f, 1.0f);
+    PlatformRenderer.StateSetColour(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void LevelRenderer::setDirty(int x0, int y0, int z0, int x1, int y1, int z1,
@@ -4046,7 +4045,7 @@ void LevelRenderer::staticCtor() {
 
 int LevelRenderer::rebuildChunkThreadProc(void* lpParam) {
     Tesselator::CreateNewThreadStorage(1024 * 1024);
-    RenderManager.InitialiseContext();
+    PlatformRenderer.InitialiseContext();
     Chunk::CreateNewThreadStorage();
     Tile::CreateNewThreadStorage();
 

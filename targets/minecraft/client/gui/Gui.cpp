@@ -5,8 +5,8 @@
 #include <algorithm>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
 #include "Facing.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
@@ -17,6 +17,7 @@
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "java/System.h"
+#include "java/Color.h"
 #include "minecraft/client/ClientConstants.h"
 #include "minecraft/client/GuiMessage.h"
 #include "minecraft/client/Lighting.h"
@@ -56,7 +57,6 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/PortalTile.h"
 #include "minecraft/world/level/tile/Tile.h"
-#include "platform/stubs.h"
 
 #include "strings.h"
 
@@ -104,7 +104,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
                        // scaling above to move the gui out of the way of the
                        // tool tips
     int guiScale;      // = ( minecraft->player->m_iScreenSection ==
-                       // C4JRender::VIEWPORT_TYPE_FULLSCREEN ? 3 : 2 );
+                       // IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN ? 3 : 2 );
     int iPad = minecraft->player->GetXboxPad();
     int iWidthOffset = 0,
         iHeightOffset = 0;  // used to get the interface looking right on a 2
@@ -112,7 +112,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 
     // 4J-PB - selected the gui scale based on the slider settings
     if (minecraft->player->m_iScreenSection ==
-        C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
         guiScale = gameServices().getGameSettings(iPad, eGameSetting_UISize) + 2;
     } else {
         guiScale =
@@ -148,14 +148,14 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
 
     // Check which screen section this player is in
     switch (minecraft->player->m_iScreenSection) {
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
             // single player
             iSafezoneXHalf = screenWidth / 20;   // 5%
             iSafezoneYHalf = screenHeight / 20;  // 5%
             iSafezoneTopYHalf = iSafezoneYHalf;
             iTooltipsYOffset = 40 + splitYOffset;
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
             iSafezoneXHalf =
                 screenWidth /
                 10;  // 5%  (need to treat the whole screen is 2x this screen)
@@ -168,7 +168,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             bTwoPlayerSplitscreen = true;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
             iSafezoneXHalf =
                 screenWidth /
                 10;  // 5% (need to treat the whole screen is 2x this screen)
@@ -183,7 +183,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             bTwoPlayerSplitscreen = true;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT:
             iSafezoneXHalf =
                 screenWidth / 10;  // 5% (the whole screen is 2x this screen)
             iSafezoneYHalf = splitYOffset +
@@ -196,7 +196,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             bTwoPlayerSplitscreen = true;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_SPLIT_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_RIGHT:
             iSafezoneXHalf = 0;
             iSafezoneYHalf = splitYOffset +
                              screenHeight / 10;  // 5% (need to treat the whole
@@ -208,7 +208,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             bTwoPlayerSplitscreen = true;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT:
             iSafezoneXHalf =
                 screenWidth / 10;  // 5% (the whole screen is 2x this screen)
             iSafezoneYHalf = splitYOffset;
@@ -216,14 +216,14 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             iTooltipsYOffset = 44;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_RIGHT:
             iSafezoneXHalf = 0;
             iSafezoneYHalf = splitYOffset;  // 5%
             iSafezoneTopYHalf = screenHeight / 10;
             iTooltipsYOffset = 44;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_LEFT:
             iSafezoneXHalf =
                 screenWidth / 10;  // 5%  (the whole screen is 2x this screen)
             iSafezoneYHalf =
@@ -233,7 +233,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             iTooltipsYOffset = 44;
             currentGuiScaleFactor *= 0.5f;
             break;
-        case C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
+        case IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT:
             iSafezoneXHalf = 0;
             iSafezoneYHalf =
                 splitYOffset +
@@ -253,7 +253,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
     // if tooltips are off, set the y offset to zero
     if (gameServices().getGameSettings(iPad, eGameSetting_Tooltips) == 0 && bDisplayGui) {
         switch (minecraft->player->m_iScreenSection) {
-            case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
+            case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
                 iTooltipsYOffset = screenHeight / 10;
                 break;
             default:
@@ -335,7 +335,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
         // 4J - this is where to set the blend factor for gui things
         // use the primary player's settings
         unsigned char ucAlpha = gameServices().getGameSettings(
-            InputManager.GetPrimaryPad(), eGameSetting_InterfaceOpacity);
+            PlatformInput.GetPrimaryPad(), eGameSetting_InterfaceOpacity);
 
         // If the user has started to navigate their quickselect bar, ignore the
         // alpha setting, and display at default value
@@ -358,10 +358,10 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             fVal = fAlphaIncrementPerCent * (float)ucAlpha;
         }
 
-        RenderManager.StateSetBlendFactor(0xffffff |
+        PlatformRenderer.StateSetBlendFactor(0xffffff |
                                           (((unsigned int)fVal) << 24));
         currentGuiBlendFactor = fVal / 255.0f;
-        //	RenderManager.StateSetBlendFactor(0x40ffffff);
+        //	PlatformRenderer.StateSetBlendFactor(0x40ffffff);
         glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
 
         blitOffset = -90;
@@ -410,7 +410,7 @@ void Gui::render(float a, bool mouseFree, int xMouse, int yMouse) {
             minecraft->textures->bindTexture(
                 &GUI_ICONS_LOCATION);  // L"/gui/icons.png"));
             glEnable(GL_BLEND);
-            RenderManager.StateSetBlendFactor(0xffffff |
+            PlatformRenderer.StateSetBlendFactor(0xffffff |
                                               (((unsigned int)fVal) << 24));
             glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
             // glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE_MINUS_SRC_COLOR);
@@ -1085,7 +1085,7 @@ max) + "% (" + (total / 1024 / 1024) + "MB)"; drawString(font, msg, screenWidth
 
             int col = 0xffffff;
             if (animateOverlayMessageColor) {
-                col = Color::HSBtoRGB(t / 50.0f, 0.7f, 0.6f) & 0xffffff;
+                col = Color::getHSBColor(t / 50.0f, 0.7f, 0.6f).getRGB() & 0xffffff;
             }
             // 4J-PB - this is the string displayed when cds are placed in a
             // jukebox
@@ -1374,9 +1374,9 @@ void Gui::addMessage(const std::wstring& _string, int iPad,
     std::wstring string = _string;  // 4J - Take copy of input as it is const
     // int iScale=1;
 
-    // if((minecraft->player->m_iScreenSection==C4JRender::VIEWPORT_TYPE_SPLIT_TOP)
+    // if((minecraft->player->m_iScreenSection==IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP)
     // ||
-    //	(minecraft->player->m_iScreenSection==C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM))
+    //	(minecraft->player->m_iScreenSection==IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM))
     //{
     //	iScale=2;
     // }
@@ -1404,10 +1404,10 @@ void Gui::addMessage(const std::wstring& _string, int iPad,
     int maximumChars;
 
     switch (minecraft->player->m_iScreenSection) {
-        case C4JRender::VIEWPORT_TYPE_SPLIT_TOP:
-        case C4JRender::VIEWPORT_TYPE_SPLIT_BOTTOM:
-        case C4JRender::VIEWPORT_TYPE_FULLSCREEN:
-            if (RenderManager.IsHiDef()) {
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP:
+        case IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM:
+        case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
+            if (PlatformRenderer.IsHiDef()) {
                 maximumChars = 105;
             } else {
                 maximumChars = 55;
@@ -1416,7 +1416,7 @@ void Gui::addMessage(const std::wstring& _string, int iPad,
                 case XC_LANGUAGE_JAPANESE:
                 case XC_LANGUAGE_TCHINESE:
                 case XC_LANGUAGE_KOREAN:
-                    if (RenderManager.IsHiDef()) {
+                    if (PlatformRenderer.IsHiDef()) {
                         maximumChars = 70;
                     } else {
                         maximumChars = 35;

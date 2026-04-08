@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Components/UIComponent_Chat.h"
 #include "app/common/UI/Components/UIComponent_DebugUIConsole.h"
@@ -138,7 +138,7 @@ void UILayer::tick() {
     }
 }
 
-void UILayer::render(S32 width, S32 height, C4JRender::eViewportType viewport) {
+void UILayer::render(S32 width, S32 height, IPlatformRenderer::eViewportType viewport) {
     if (!ui.IsExpectingOrReloadingSkin()) {
         for (auto it = m_components.begin(); it != m_components.end(); ++it) {
             auto itRef = m_componentRefCount.find((*it)->getSceneType());
@@ -808,7 +808,7 @@ void UILayer::HandleMessage(EUIMessage message, void* data) {
 
 bool UILayer::IsFullscreenGroup() { return m_parentGroup->IsFullscreenGroup(); }
 
-C4JRender::eViewportType UILayer::getViewport() {
+IPlatformRenderer::eViewportType UILayer::getViewport() {
     return m_parentGroup->GetViewportType();
 }
 

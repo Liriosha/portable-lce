@@ -6,11 +6,12 @@
 #include "app/common/DLC/DLCSkinFile.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
+#include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "platform/sdl2/Storage.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/storage/storage.h"
+#include "platform/profile/profile.h"
 #include "platform/XboxStubs.h"
 
 #include <cstring>
@@ -46,7 +47,7 @@ std::uint32_t DLCController::m_dwContentTypeA[e_Marketplace_MAX] = {
 };
 
 int DLCController::marketplaceCountsCallback(
-    void* pParam, C4JStorage::DLC_TMS_DETAILS* pTMSDetails, int iPad) {
+    void* pParam, IPlatformStorage::DLC_TMS_DETAILS* pTMSDetails, int iPad) {
     app.DebugPrintf("Marketplace Counts= New - %d Total - %d\n",
                     pTMSDetails->dwNewOffers, pTMSDetails->dwTotalOffers);
 
@@ -73,9 +74,9 @@ bool DLCController::startInstallDLCProcess(int iPad) {
         m_iTotalDLCInstalled = 0;
         app.DebugPrintf(
             "--- DLCController::startInstallDLCProcess - "
-            "StorageManager.GetInstalledDLC\n");
+            "PlatformStorage.GetInstalledDLC\n");
 
-        StorageManager.GetInstalledDLC(
+        PlatformStorage.GetInstalledDLC(
             iPad, [this](int iInstalledC, int pad) {
                 return dlcInstalledCallback(iInstalledC, pad);
             });
@@ -99,7 +100,7 @@ int DLCController::dlcInstalledCallback(int iInstalledC, int iPad) {
 void DLCController::mountNextDLC(int iPad) {
     app.DebugPrintf("--- DLCController::mountNextDLC: pad=%i.\n", iPad);
     if (m_iTotalDLCInstalled < m_iTotalDLC) {
-        if (StorageManager.MountInstalledDLC(
+        if (PlatformStorage.MountInstalledDLC(
                 iPad, m_iTotalDLCInstalled,
                 [this](int pad, std::uint32_t dwErr,
                        std::uint32_t dwLicenceMask) {
@@ -110,7 +111,7 @@ void DLCController::mountNextDLC(int iPad) {
             ++m_iTotalDLCInstalled;
             mountNextDLC(iPad);
         } else {
-            app.DebugPrintf("StorageManager.MountInstalledDLC ok\n");
+            app.DebugPrintf("PlatformStorage.MountInstalledDLC ok\n");
         }
     } else {
         m_bDLCInstallPending = false;
@@ -135,7 +136,7 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
         app.m_dlcManager.incrementUnnamedCorruptCount();
     } else {
         XCONTENT_DATA ContentData =
-            StorageManager.GetDLC(m_iTotalDLCInstalled);
+            PlatformStorage.GetDLC(m_iTotalDLCInstalled);
 
         DLCPack* pack =
             app.m_dlcManager.getPack(CONTENT_DATA_DISPLAY_NAME(ContentData));
@@ -176,7 +177,7 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
             pack->updateLicenseMask(dwLicenceMask);
         }
 
-        StorageManager.UnmountInstalledDLC();
+        PlatformStorage.UnmountInstalledDLC();
     }
     ++m_iTotalDLCInstalled;
     mountNextDLC(iPad);
@@ -190,7 +191,7 @@ void DLCController::handleDLC(DLCPack* pack) {
 #if defined(_WINDOWS64) || defined(__linux__)
     std::vector<std::string> dlcFilenames;
 #endif
-    StorageManager.GetMountedDLCFileList("DLCDrive", dlcFilenames);
+    PlatformStorage.GetMountedDLCFileList("DLCDrive", dlcFilenames);
     for (int i = 0; i < dlcFilenames.size(); i++) {
         app.m_dlcManager.readDLCDataFile(dwFilesProcessed, dlcFilenames[i],
                                           pack);
@@ -413,8 +414,8 @@ unsigned int DLCController::addDLCRequest(eDLCMarketplaceType eType,
 }
 
 bool DLCController::retrieveNextDLCContent() {
-    int primPad = ProfileManager.GetPrimaryPad();
-    if (primPad == -1 || !ProfileManager.IsSignedInLive(primPad)) {
+    int primPad = PlatformProfile.GetPrimaryPad();
+    if (primPad == -1 || !PlatformProfile.IsSignedInLive(primPad)) {
         return true;
     }
 
@@ -436,13 +437,13 @@ bool DLCController::retrieveNextDLCContent() {
                 app.DebugPrintf("RetrieveNextDLCContent - type = %d\n",
                                 pCurrent->dwType);
 #endif
-                C4JStorage::EDLCStatus status = StorageManager.GetDLCOffers(
-                    ProfileManager.GetPrimaryPad(),
+                IPlatformStorage::EDLCStatus status = PlatformStorage.GetDLCOffers(
+                    PlatformProfile.GetPrimaryPad(),
                     [this](int iOfferC, std::uint32_t dwType, int pad) {
                         return dlcOffersReturned(iOfferC, dwType, pad);
                     },
                     pCurrent->dwType);
-                if (status == C4JStorage::EDLC_Pending) {
+                if (status == IPlatformStorage::EDLC_Pending) {
                     pCurrent->eState = e_DLC_ContentState_Retrieving;
                 } else {
                     app.DebugPrintf("RetrieveNextDLCContent - PROBLEM\n");
@@ -597,9 +598,9 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
                                     &DLCController::tmsPPFileReturned;
                                 pTMSPPreq->lpCallbackParam = this;
                                 pTMSPPreq->eStorageFacility =
-                                    C4JStorage::eGlobalStorage_Title;
+                                    IPlatformStorage::eGlobalStorage_Title;
                                 pTMSPPreq->eFileTypeVal =
-                                    C4JStorage::TMS_FILETYPE_BINARY;
+                                    IPlatformStorage::TMS_FILETYPE_BINARY;
                                 memcpy(pTMSPPreq->wchFilename,
                                        pDLC->wchDataFile,
                                        sizeof(wchar_t) * MAX_BANNERNAME_SIZE);
@@ -645,9 +646,9 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
                                 &DLCController::tmsPPFileReturned;
                             pTMSPPreq->lpCallbackParam = this;
                             pTMSPPreq->eStorageFacility =
-                                C4JStorage::eGlobalStorage_Title;
+                                IPlatformStorage::eGlobalStorage_Title;
                             pTMSPPreq->eFileTypeVal =
-                                C4JStorage::TMS_FILETYPE_BINARY;
+                                IPlatformStorage::TMS_FILETYPE_BINARY;
                             memcpy(pTMSPPreq->wchFilename, pDLC->wchBanner,
                                    sizeof(wchar_t) * MAX_BANNERNAME_SIZE);
                             pTMSPPreq->eType = eType;
@@ -670,7 +671,7 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
 }
 
 int DLCController::tmsPPFileReturned(void* pParam, int iPad, int iUserData,
-                                     C4JStorage::PTMSPP_FILEDATA pFileData,
+                                     IPlatformStorage::PTMSPP_FILEDATA pFileData,
                                      const char* szFilename) {
     DLCController* pClass = (DLCController*)pParam;
 

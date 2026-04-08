@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/linux/LinuxGame.h"

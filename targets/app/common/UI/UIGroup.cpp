@@ -1,7 +1,7 @@
 #include "UIGroup.h"
 
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
@@ -24,7 +24,7 @@ UIGroup::UIGroup(EUIGroup group, int iPad) {
     m_bIgnorePlayerJoinMenuDisplayed = false;
     // 4jcraft, moved this to the top
     // uninitialized memory was read.
-    m_viewportType = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+    m_viewportType = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
 
     m_updateFocusStateCountdown = 0;
 
@@ -84,7 +84,7 @@ void UIGroup::ReloadAll() {
 
 void UIGroup::tick() {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return;
     for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
         m_layers[i]->tick();
 
@@ -101,7 +101,7 @@ void UIGroup::tick() {
 
 void UIGroup::render() {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return;
     S32 width = 0;
     S32 height = 0;
     ui.getRenderDimensions(m_viewportType, width, height);
@@ -117,7 +117,7 @@ void UIGroup::render() {
 
 bool UIGroup::hidesLowerScenes() {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return false;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return false;
     bool hidesScenes = false;
     for (int i = eUILayer_COUNT - 1; i >= 0; --i) {
         hidesScenes = m_layers[i]->hidesLowerScenes();
@@ -203,7 +203,7 @@ bool UIGroup::HasFocus(int iPad) {
 void UIGroup::handleInput(int iPad, int key, bool repeat, bool pressed,
                           bool released, bool& handled) {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return;
     for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
         m_layers[i]->handleInput(iPad, key, repeat, pressed, released, handled);
         if (handled) break;
@@ -242,7 +242,7 @@ void UIGroup::removeComponent(EUIScene scene, EUILayer layer) {
     m_layers[layer]->removeComponent(scene);
 }
 
-void UIGroup::SetViewportType(C4JRender::eViewportType type) {
+void UIGroup::SetViewportType(IPlatformRenderer::eViewportType type) {
     if (m_viewportType != type) {
         m_viewportType = type;
         for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
@@ -251,11 +251,11 @@ void UIGroup::SetViewportType(C4JRender::eViewportType type) {
     }
 }
 
-C4JRender::eViewportType UIGroup::GetViewportType() { return m_viewportType; }
+IPlatformRenderer::eViewportType UIGroup::GetViewportType() { return m_viewportType; }
 
 void UIGroup::HandleDLCMountingComplete() {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return;
     for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
         app.DebugPrintf("UIGroup::HandleDLCMountingComplete - m_layers[%d]\n",
                         i);
@@ -265,7 +265,7 @@ void UIGroup::HandleDLCMountingComplete() {
 
 void UIGroup::HandleDLCInstalled() {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return;
     for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
         m_layers[i]->HandleDLCInstalled();
     }
@@ -273,7 +273,7 @@ void UIGroup::HandleDLCInstalled() {
 
 void UIGroup::HandleMessage(EUIMessage message, void* data) {
     // Ignore this group if the player isn't signed in
-    if (m_iPad >= 0 && !ProfileManager.IsSignedIn(m_iPad)) return;
+    if (m_iPad >= 0 && !PlatformProfile.IsSignedIn(m_iPad)) return;
     for (unsigned int i = 0; i < eUILayer_COUNT; ++i) {
         m_layers[i]->HandleMessage(message, data);
     }

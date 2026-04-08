@@ -13,8 +13,8 @@
 #include <unordered_set>
 
 #include "platform/PlatformTypes.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/App_structs.h"
 #include "app/common/ConsoleGameMode.h"
@@ -228,7 +228,7 @@ ClientConnection::ClientConnection(Minecraft* minecraft, Socket* socket,
     this->minecraft = minecraft;
 
     if (iUserIndex < 0) {
-        m_userIndex = InputManager.GetPrimaryPad();
+        m_userIndex = PlatformInput.GetPrimaryPad();
     } else {
         m_userIndex = iUserIndex;
     }
@@ -272,7 +272,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
     if (done) return;
 
     PlayerUID OnlineXuid;
-    ProfileManager.GetXUID(m_userIndex, &OnlineXuid, true);  // online xuid
+    PlatformProfile.GetXUID(m_userIndex, &OnlineXuid, true);  // online xuid
     MOJANG_DATA* pMojangData = nullptr;
 
     if (!g_NetworkManager.IsLocalGame()) {
@@ -290,7 +290,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
     INetworkPlayer* networkPlayer = connection->getSocket()->getPlayer();
     int iUserID = -1;
 
-    if (m_userIndex == InputManager.GetPrimaryPad()) {
+    if (m_userIndex == PlatformInput.GetPrimaryPad()) {
         iUserID = m_userIndex;
     } else {
         if (!networkPlayer->IsGuest() && networkPlayer->IsLocal()) {
@@ -346,13 +346,13 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         gameServices().setBanListCheck(iUserID, false);
     }
 
-    if (m_userIndex == InputManager.GetPrimaryPad()) {
+    if (m_userIndex == PlatformInput.GetPrimaryPad()) {
         if (gameServices().getTutorialMode()) {
             minecraft->gameMode = new FullTutorialMode(
-                InputManager.GetPrimaryPad(), minecraft, this);
+                PlatformInput.GetPrimaryPad(), minecraft, this);
         } else {
             minecraft->gameMode = new ConsoleGameMode(
-                InputManager.GetPrimaryPad(), minecraft, this);
+                PlatformInput.GetPrimaryPad(), minecraft, this);
         }
 
         Level* dimensionLevel = minecraft->getLevel(packet->dimension);
@@ -387,7 +387,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         minecraft->player->setCustomSkin(gameServices().getPlayerSkinId(m_userIndex));
         minecraft->player->setCustomCape(gameServices().getPlayerCapeId(m_userIndex));
 
-        minecraft->createPrimaryLocalPlayer(InputManager.GetPrimaryPad());
+        minecraft->createPrimaryLocalPlayer(PlatformInput.GetPrimaryPad());
 
         minecraft->player->dimension = packet->dimension;
         minecraft->setScreen(new ReceivingLevelScreen(this));
@@ -412,7 +412,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         displayPrivilegeChanges(minecraft->player, startingPrivileges);
 
         // update the debugoptions
-        gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),
+        gameServices().setGameSettingsDebugMask(PlatformInput.GetPrimaryPad(),
                                      gameServices().debugGetMask(-1, true));
     } else {
         // 4J-PB - this isn't the level we want
@@ -445,7 +445,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
             dimensionLevel->difficulty = packet->difficulty;  // 4J Added
             dimensionLevel->isClientSide = true;
             level = dimensionLevel;
-            // 4J Stu - At time of writing ProfileManager.GetGamertag() does not
+            // 4J Stu - At time of writing PlatformProfile.GetGamertag() does not
             // always return the correct name, if sign-ins are turned off while
             // the player signed in. Using the qnetPlayer instead. need to have
             // a level before create extra local player
@@ -869,12 +869,12 @@ void ClientConnection::handleAddPlayer(
         // need to use the XUID here
         PlayerUID playerXUIDOnline = INVALID_XUID,
                   playerXUIDOffline = INVALID_XUID;
-        ProfileManager.GetXUID(idx, &playerXUIDOnline, true);
-        ProfileManager.GetXUID(idx, &playerXUIDOffline, false);
+        PlatformProfile.GetXUID(idx, &playerXUIDOnline, true);
+        PlatformProfile.GetXUID(idx, &playerXUIDOffline, false);
         if ((playerXUIDOnline != INVALID_XUID &&
-             ProfileManager.AreXUIDSEqual(playerXUIDOnline, packet->xuid)) ||
+             PlatformProfile.AreXUIDSEqual(playerXUIDOnline, packet->xuid)) ||
             (playerXUIDOffline != INVALID_XUID &&
-             ProfileManager.AreXUIDSEqual(playerXUIDOffline, packet->xuid))) {
+             PlatformProfile.AreXUIDSEqual(playerXUIDOffline, packet->xuid))) {
             Log::info(
                 "AddPlayerPacket received with XUID of local player\n");
             return;
@@ -1362,12 +1362,12 @@ void ClientConnection::onDisconnect(DisconnectPacket::eDisconnectReason reason,
     if (g_NetworkManager.IsHost() &&
         (reason == DisconnectPacket::eDisconnect_TimeOut ||
          reason == DisconnectPacket::eDisconnect_Overflow) &&
-        m_userIndex == InputManager.GetPrimaryPad() &&
+        m_userIndex == PlatformInput.GetPrimaryPad() &&
         !MinecraftServer::saveOnExitAnswered()) {
         unsigned int uiIDA[1];
         uiIDA[0] = IDS_CONFIRM_OK;
         ui.RequestErrorMessage(IDS_EXITING_GAME, IDS_GENERIC_ERROR, uiIDA, 1,
-                               InputManager.GetPrimaryPad(),
+                               PlatformInput.GetPrimaryPad(),
                                &ClientConnection::HostDisconnectReturned,
                                nullptr);
     } else {
@@ -1936,7 +1936,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
         // 4J-PB - if we go straight in from the menus via an invite, we won't
         // have the DLC info
         if (gameServices().getTMSGlobalFileListRead() == false) {
-            gameServices().setTMSAction(InputManager.GetPrimaryPad(),
+            gameServices().setTMSAction(PlatformInput.GetPrimaryPad(),
                              eTMSAction_TMSPP_RetrieveFiles_RunPlayGame);
         }
     }
@@ -1951,7 +1951,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
         cantPlayContentRestricted) {
         DisconnectPacket::eDisconnectReason reason =
             DisconnectPacket::eDisconnect_NoUGC_Remote;
-        if (m_userIndex == InputManager.GetPrimaryPad()) {
+        if (m_userIndex == PlatformInput.GetPrimaryPad()) {
             if (!isFriendsWithHost)
                 reason = DisconnectPacket::eDisconnect_NotFriendsWithHost;
             else if (!isAtLeastOneFriend)
@@ -1967,7 +1967,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
                 "privileges: %d\n",
                 reason);
             gameServices().setDisconnectReason(reason);
-            gameServices().setAction(InputManager.GetPrimaryPad(), eAppAction_ExitWorld,
+            gameServices().setAction(PlatformInput.GetPrimaryPad(), eAppAction_ExitWorld,
                           (void*)true);
         } else {
             if (!isFriendsWithHost)
@@ -2014,7 +2014,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
         // send this before the LoginPacket so that it gets handled first, as
         // once the LoginPacket is received on the client the game is close to
         // starting
-        if (m_userIndex == InputManager.GetPrimaryPad()) {
+        if (m_userIndex == PlatformInput.GetPrimaryPad()) {
             Minecraft* pMinecraft = Minecraft::GetInstance();
             if (pMinecraft->skins->selectTexturePackById(
                     packet->m_texturePackId)) {
@@ -2040,22 +2040,22 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
         // need to use the XUID here
         PlayerUID offlineXUID = INVALID_XUID;
         PlayerUID onlineXUID = INVALID_XUID;
-        if (ProfileManager.IsSignedInLive(m_userIndex)) {
+        if (PlatformProfile.IsSignedInLive(m_userIndex)) {
             // Guest don't have an offline XUID as they cannot play offline, so
             // use their online one
-            ProfileManager.GetXUID(m_userIndex, &onlineXUID, true);
+            PlatformProfile.GetXUID(m_userIndex, &onlineXUID, true);
         }
 
         // On PS3, all non-signed in players (even guests) can get a useful
         // offlineXUID
-        if (!ProfileManager.IsGuest(m_userIndex)) {
+        if (!PlatformProfile.IsGuest(m_userIndex)) {
             // All other players we use their offline XUID so that they can play
             // the game offline
-            ProfileManager.GetXUID(m_userIndex, &offlineXUID, false);
+            PlatformProfile.GetXUID(m_userIndex, &offlineXUID, false);
         }
         bool allAllowed = false;
         bool friendsAllowed = false;
-        ProfileManager.AllowedPlayerCreatedContent(
+        PlatformProfile.AllowedPlayerCreatedContent(
             m_userIndex, true, &allAllowed, &friendsAllowed);
         fprintf(stderr,
                 "[LOGIN] Sending LoginPacket: user=%ls netVer=%d userIdx=%d "
@@ -2068,7 +2068,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
             offlineXUID, onlineXUID, (!allAllowed && friendsAllowed),
             packet->m_ugcPlayersVersion, gameServices().getPlayerSkinId(m_userIndex),
             gameServices().getPlayerCapeId(m_userIndex),
-            ProfileManager.IsGuest(m_userIndex)));
+            PlatformProfile.IsGuest(m_userIndex)));
         fprintf(stderr, "[LOGIN] LoginPacket sent successfully\n");
 
         if (!g_NetworkManager.IsHost()) {
@@ -3009,11 +3009,11 @@ void ClientConnection::handleGameEvent(
         Log::info("handleGameEvent packet for WIN_GAME - %d\n",
                         m_userIndex);
         // This just allows it to be shown
-        if (minecraft->localgameModes[InputManager.GetPrimaryPad()] != nullptr)
-            minecraft->localgameModes[InputManager.GetPrimaryPad()]
+        if (minecraft->localgameModes[PlatformInput.GetPrimaryPad()] != nullptr)
+            minecraft->localgameModes[PlatformInput.GetPrimaryPad()]
                 ->getTutorial()
                 ->showTutorialPopup(false);
-        ui.NavigateToScene(InputManager.GetPrimaryPad(), eUIScene_EndPoem,
+        ui.NavigateToScene(PlatformInput.GetPrimaryPad(), eUIScene_EndPoem,
                            nullptr, eUILayer_Scene, eUIGroup_Fullscreen);
     } else if (event == GameEventPacket::START_SAVING) {
         if (!g_NetworkManager.IsHost()) {
@@ -3021,7 +3021,7 @@ void ClientConnection::handleGameEvent(
             // back-to-back START/STOP packets leave the client stuck in the
             // loading screen
             gameServices().setGameStarted(false);
-            gameServices().setAction(InputManager.GetPrimaryPad(),
+            gameServices().setAction(PlatformInput.GetPrimaryPad(),
                           eAppAction_RemoteServerSave);
         }
     } else if (event == GameEventPacket::STOP_SAVING) {
@@ -3428,7 +3428,7 @@ void ClientConnection::handleUpdateGameRuleProgressPacket(
 // Fix for #13191 - The host of a game can get a message informing them that the
 // connection to the server has been lost
 int ClientConnection::HostDisconnectReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // 4J-PB - if they have a trial texture pack, they don't get to save the
     // world
     if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
@@ -3448,7 +3448,7 @@ int ClientConnection::HostDisconnectReturned(
     // Give the player the option to save their game
     // does the save exist?
     bool bSaveExists;
-    StorageManager.DoesSaveExist(&bSaveExists);
+    PlatformStorage.DoesSaveExist(&bSaveExists);
     // 4J-PB - we check if the save exists inside the libs
     // we need to ask if they are sure they want to overwrite the existing game
     if (bSaveExists) {
@@ -3456,7 +3456,7 @@ int ClientConnection::HostDisconnectReturned(
         uiIDA[0] = IDS_CONFIRM_CANCEL;
         uiIDA[1] = IDS_CONFIRM_OK;
         ui.RequestErrorMessage(IDS_TITLE_SAVE_GAME, IDS_CONFIRM_SAVE_GAME,
-                               uiIDA, 2, InputManager.GetPrimaryPad(),
+                               uiIDA, 2, PlatformInput.GetPrimaryPad(),
                                &ClientConnection::ExitGameAndSaveReturned,
                                nullptr);
     } else {
@@ -3469,13 +3469,13 @@ int ClientConnection::HostDisconnectReturned(
 }
 
 int ClientConnection::ExitGameAndSaveReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         // int32_t saveOrCheckpointId = 0;
         // bool validSave =
-        // StorageManager.GetSaveUniqueNumber(&saveOrCheckpointId);
-        // SentientManager.RecordLevelSaveOrCheckpoint(InputManager.GetPrimaryPad(),
+        // PlatformStorage.GetSaveUniqueNumber(&saveOrCheckpointId);
+        // SentientManager.RecordLevelSaveOrCheckpoint(PlatformInput.GetPrimaryPad(),
         // saveOrCheckpointId);
         MinecraftServer::getInstance()->setSaveOnExit(true);
     } else {

@@ -4,10 +4,9 @@
 
 #include <utility>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
@@ -74,8 +73,8 @@ UIScene_LaunchMoreOptionsMenu::UIScene_LaunchMoreOptionsMenu(
 #endif
 
     m_bMultiplayerAllowed =
-        ProfileManager.IsSignedInLive(m_params->iPad) &&
-        ProfileManager.AllowedToPlayMultiplayer(m_params->iPad);
+        PlatformProfile.IsSignedInLive(m_params->iPad) &&
+        PlatformProfile.AllowedToPlayMultiplayer(m_params->iPad);
 
     bool bOnlineGame, bInviteOnly, bAllowFriendsOfFriends;
     bOnlineGame = m_params->bOnlineGame;
@@ -83,7 +82,7 @@ UIScene_LaunchMoreOptionsMenu::UIScene_LaunchMoreOptionsMenu(
     bAllowFriendsOfFriends = m_params->bAllowFriendsOfFriends;
 
     // 4J-PB - to stop an offline game being able to select the online flag
-    if (ProfileManager.IsSignedInLive(m_params->iPad) == false) {
+    if (PlatformProfile.IsSignedInLive(m_params->iPad) == false) {
         m_checkboxes[eLaunchCheckbox_Online].SetEnable(false);
     }
 
@@ -211,7 +210,7 @@ UIScene_LaunchMoreOptionsMenu::UIScene_LaunchMoreOptionsMenu(
     std::wstring wsText = app.GetString(IDS_GAMEOPTION_ONLINE);
 #endif
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
     wchar_t startTags[64];
@@ -263,8 +262,8 @@ void UIScene_LaunchMoreOptionsMenu::tick() {
     UIScene::tick();
 
     bool bMultiplayerAllowed =
-        ProfileManager.IsSignedInLive(m_params->iPad) &&
-        ProfileManager.AllowedToPlayMultiplayer(m_params->iPad);
+        PlatformProfile.IsSignedInLive(m_params->iPad) &&
+        PlatformProfile.AllowedToPlayMultiplayer(m_params->iPad);
 
     if (bMultiplayerAllowed != m_bMultiplayerAllowed) {
         m_checkboxes[eLaunchCheckbox_Online].SetEnable(bMultiplayerAllowed);
@@ -500,7 +499,7 @@ void UIScene_LaunchMoreOptionsMenu::handleFocusChange(F64 controlId,
 
     std::wstring wsText = app.GetString(stringId);
     EHTMLFontSize size = eHTMLSize_Normal;
-    if (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen()) {
+    if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
         size = eHTMLSize_Splitscreen;
     }
     wchar_t startTags[64];
@@ -520,9 +519,9 @@ void UIScene_LaunchMoreOptionsMenu::handleTimerComplete(int id) {
     case GAME_CREATE_ONLINE_TIMER_ID:
             {
                     bool bMultiplayerAllowed
-                            =	ProfileManager.IsSignedInLive(m_params->iPad)
+                            =	PlatformProfile.IsSignedInLive(m_params->iPad)
                             &&
-    ProfileManager.AllowedToPlayMultiplayer(m_params->iPad);
+    PlatformProfile.AllowedToPlayMultiplayer(m_params->iPad);
 
                     if (bMultiplayerAllowed != m_bMultiplayerAllowed)
                     {
@@ -547,21 +546,21 @@ void UIScene_LaunchMoreOptionsMenu::handlePress(F64 controlId, F64 childId) {
     switch ((int)controlId) {
         case eControl_EditSeed: {
             m_bIgnoreInput = true;
-            InputManager.RequestKeyboard(
+            PlatformInput.RequestKeyboard(
                 app.GetString(IDS_CREATE_NEW_WORLD_SEED), m_editSeed.getLabel(),
                 0, 60,
                 [this](bool bRes) -> int {
                     // 4J HEG - No reason to set value if keyboard was cancelled
                     if (bRes) {
                         std::wstring str =
-                            convStringToWstring(InputManager.GetText());
+                            convStringToWstring(PlatformInput.GetText());
                         m_editSeed.setLabel(str);
                         m_params->seed = std::move(str);
                     }
                     m_bIgnoreInput = false;
                     return 0;
                 },
-                C_4JInput::EKeyboardMode_Default);
+                IPlatformInput::EKeyboardMode_Default);
         } break;
     }
 }

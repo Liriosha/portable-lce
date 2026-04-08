@@ -8,7 +8,8 @@
 #include <string>
 #include <utility>
 
-#include "platform/sdl2/Render.h"
+
+#include "platform/renderer/renderer.h"
 #include "HttpTexture.h"
 #include "app/linux/LinuxGame.h"
 #include "minecraft/client/BufferedImage.h"
@@ -39,8 +40,8 @@
 // Mesa/Nvidia drivers) and the per-level crispBlend loop is both wasteful and
 // still causes visible blurring.
 bool Textures::MIPMAP = false;
-C4JRender::eTextureFormat Textures::TEXTURE_FORMAT =
-    C4JRender::TEXTURE_FORMAT_RxGyBzAw;
+IPlatformRenderer::eTextureFormat Textures::TEXTURE_FORMAT =
+    IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw;
 
 int Textures::preLoadedIdx[TN_COUNT];
 const wchar_t* Textures::preLoaded[TN_COUNT] = {
@@ -416,7 +417,7 @@ int Textures::loadTexture(int idx) {
 void Textures::setTextureFormat(const std::wstring& resourceName) {
     // 4J Stu - These texture formats are not currently in the render header
     {
-        TEXTURE_FORMAT = C4JRender::TEXTURE_FORMAT_RxGyBzAw;
+        TEXTURE_FORMAT = IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw;
     }
 }
 
@@ -525,7 +526,7 @@ void Textures::bindTextureLayers(ResourceLocation* resource) {
                 mergedWidth, mergedHeight, BufferedImage::TYPE_INT_ARGB);
             memcpy(mergedImage->getData(), mergedPixels.data(),
                    mergedWidth * mergedHeight * sizeof(int));
-            id = getTexture(mergedImage, C4JRender::TEXTURE_FORMAT_RxGyBzAw,
+            id = getTexture(mergedImage, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw,
                             false);
         } else {
             id = 0;
@@ -534,7 +535,7 @@ void Textures::bindTextureLayers(ResourceLocation* resource) {
         idMap[cacheKey] = id;
     }
 
-    RenderManager.TextureBind(id);
+    PlatformRenderer.TextureBind(id);
 }
 
 void Textures::bind(int id) {
@@ -639,7 +640,7 @@ int Textures::loadTexture(TEXTURE_NAME texId,
 
     idMap[resourceName] = id;
     MIPMAP = true;  // 4J added
-    TEXTURE_FORMAT = C4JRender::TEXTURE_FORMAT_RxGyBzAw;
+    TEXTURE_FORMAT = IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw;
     return id;
     /*
 } catch (IOException e) {
@@ -653,13 +654,13 @@ return id;
 */
 }
 
-int Textures::getTexture(BufferedImage* img, C4JRender::eTextureFormat format,
+int Textures::getTexture(BufferedImage* img, IPlatformRenderer::eTextureFormat format,
                          bool mipmap) {
     int id = MemoryTracker::genTextures();
     TEXTURE_FORMAT = format;
     MIPMAP = mipmap;
     loadTexture(img, id);
-    TEXTURE_FORMAT = C4JRender::TEXTURE_FORMAT_RxGyBzAw;
+    TEXTURE_FORMAT = IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw;
     MIPMAP = true;
     loadedImages[id] = img;
     return id;
@@ -742,11 +743,11 @@ void Textures::loadTexture(BufferedImage* img, int id, bool blur, bool clamp) {
         while ((8 << iHeightMips) < h) iHeightMips++;
 
         iMipLevels = (iWidthMips < iHeightMips) ? iWidthMips : iHeightMips;
-        // RenderManager.TextureSetTextureLevels(5);	// 4J added
+        // PlatformRenderer.TextureSetTextureLevels(5);	// 4J added
         if (iMipLevels > 5) iMipLevels = 5;
-        RenderManager.TextureSetTextureLevels(iMipLevels);  // 4J added
+        PlatformRenderer.TextureSetTextureLevels(iMipLevels);  // 4J added
     }
-    RenderManager.TextureData(w, h, pixels->getBuffer(), 0, TEXTURE_FORMAT);
+    PlatformRenderer.TextureData(w, h, pixels->getBuffer(), 0, TEXTURE_FORMAT);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL12.GL_BGRA,
     // GL12.GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
 
@@ -803,7 +804,7 @@ void Textures::loadTexture(BufferedImage* img, int id, bool blur, bool clamp) {
                     pixels->putInt((x + y * ww) * 4, tempData[x + y * ww]);
                 }
             delete[] tempData;
-            RenderManager.TextureData(ww, hh, pixels->getBuffer(), level,
+            PlatformRenderer.TextureData(ww, hh, pixels->getBuffer(), level,
                                       TEXTURE_FORMAT);
         }
     }
@@ -880,7 +881,7 @@ void Textures::replaceTexture(std::vector<int>& rawPixels, int w, int h,
     // New
     // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL12.GL_BGRA,
     // GL12.GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
-    RenderManager.TextureDataUpdate(0, 0, w, h, pixels->getBuffer(), 0);
+    PlatformRenderer.TextureDataUpdate(0, 0, w, h, pixels->getBuffer(), 0);
     // Old
     // glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE,
     // pixels);
@@ -903,7 +904,7 @@ void Textures::replaceTextureDirect(const std::vector<int>& rawPixels, int w,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    RenderManager.TextureDataUpdate(0, 0, w, h,
+    PlatformRenderer.TextureDataUpdate(0, 0, w, h,
                                     const_cast<int*>(rawPixels.data()), 0);
 }
 
@@ -923,7 +924,7 @@ void Textures::replaceTextureDirect(const std::vector<short>& rawPixels, int w,
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    RenderManager.TextureDataUpdate(0, 0, w, h,
+    PlatformRenderer.TextureDataUpdate(0, 0, w, h,
                                     const_cast<short*>(rawPixels.data()), 0);
 }
 
@@ -1020,7 +1021,7 @@ int Textures::loadMemTexture(const std::wstring& url,
             if (texture->id < 0) {
                 texture->id =
                     getTexture(texture->loadedImage,
-                               C4JRender::TEXTURE_FORMAT_RxGyBzAw, MIPMAP);
+                               IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw, MIPMAP);
             } else {
                 loadTexture(texture->loadedImage, texture->id);
             }
@@ -1057,7 +1058,7 @@ int Textures::loadMemTexture(const std::wstring& url, int backup) {
             if (texture->id < 0) {
                 texture->id =
                     getTexture(texture->loadedImage,
-                               C4JRender::TEXTURE_FORMAT_RxGyBzAw, MIPMAP);
+                               IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw, MIPMAP);
             } else {
                 loadTexture(texture->loadedImage, texture->id);
             }
@@ -1148,10 +1149,10 @@ void Textures::tick(
         // 4J - added - tell renderer that we're about to do a block of dynamic
         // texture updates, so we can unlock the resources after they are done
         // rather than a series of locks/unlocks
-        // RenderManager.TextureDynamicUpdateStart();
+        // PlatformRenderer.TextureDynamicUpdateStart();
         terrain->cycleAnimationFrames();
         items->cycleAnimationFrames();
-        // RenderManager.TextureDynamicUpdateEnd();	// 4J added - see
+        // PlatformRenderer.TextureDynamicUpdateEnd();	// 4J added - see
         // comment above
     }
 

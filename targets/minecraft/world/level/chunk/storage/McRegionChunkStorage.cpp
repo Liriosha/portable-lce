@@ -10,7 +10,7 @@
 #include <thread>
 #include <utility>
 
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "platform/C4JThread.h"
@@ -32,7 +32,6 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "nbt/CompoundTag.h"
 #include "nbt/NbtIo.h"
-#include "platform/PlatformServices.h"
 
 class DataInput;
 

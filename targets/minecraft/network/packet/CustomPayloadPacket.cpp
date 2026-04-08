@@ -33,7 +33,7 @@ CustomPayloadPacket::CustomPayloadPacket(const std::wstring& identifier,
         if (length > std::numeric_limits<short>::max()) {
             Log::info("Payload may not be larger than 32K\n");
 #ifndef _CONTENT_PACKAGE
-            __debugbreak();
+            assert(0);
 #endif
             // throw new IllegalArgumentException("Payload may not be larger
             // than 32k");

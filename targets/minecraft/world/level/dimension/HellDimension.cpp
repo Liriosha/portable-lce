@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/Console_Debug_enum.h"
@@ -17,7 +17,6 @@
 #include "minecraft/world/level/levelgen/HellRandomLevelSource.h"
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/phys/Vec3.h"
-#include "platform/PlatformServices.h"
 
 void HellDimension::init() {
     biomeSource = new FixedBiomeSource(Biome::hell, 1, 0);

@@ -14,7 +14,7 @@ Objective* Scoreboard::addObjective(const std::wstring& name,
     //	if (objective != nullptr)
     //	{
     // #indef _CONTENT_PACKAGE
-    //		__debugbreak();
+    //		assert(0);
     // #endif
     //		//throw new IllegalArgumentException("An objective with the name
     //'" + name + "' already exists!");

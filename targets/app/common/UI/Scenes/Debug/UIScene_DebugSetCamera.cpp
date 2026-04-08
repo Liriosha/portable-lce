@@ -5,9 +5,8 @@
 
 #include <memory>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
@@ -109,7 +108,7 @@ void UIScene_DebugSetCamera::handleInput(int iPad, int key, bool repeat,
 void UIScene_DebugSetCamera::handlePress(F64 controlId, F64 childId) {
     switch ((int)controlId) {
         case eControl_Teleport:
-            app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
+            app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
                                    eXuiServerAction_SetCameraLocation,
                                    (void*)currentPosition);
             break;
@@ -119,12 +118,12 @@ void UIScene_DebugSetCamera::handlePress(F64 controlId, F64 childId) {
         case eControl_YRot:
         case eControl_Elevation:
             m_keyboardCallbackControl = (eControls)((int)controlId);
-            InputManager.RequestKeyboard(
+            PlatformInput.RequestKeyboard(
                 L"Enter something", L"", 0, 25,
                 [this](bool bRes) -> int {
                     return handleKeyboardComplete(bRes);
                 },
-                C_4JInput::EKeyboardMode_Default);
+                IPlatformInput::EKeyboardMode_Default);
             break;
     };
 }
@@ -139,7 +138,7 @@ void UIScene_DebugSetCamera::handleCheckboxToggled(F64 controlId,
 }
 
 int UIScene_DebugSetCamera::handleKeyboardComplete(bool bRes) {
-    const char* text = InputManager.GetText();
+    const char* text = PlatformInput.GetText();
     if (text[0] != '\0') {
         std::wstring value = convStringToWstring(text);
         double val = 0;

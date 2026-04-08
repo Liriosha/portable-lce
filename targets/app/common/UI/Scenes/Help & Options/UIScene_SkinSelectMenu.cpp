@@ -5,9 +5,8 @@
 
 #include <vector>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/App_Defines.h"
 #include "app/common/Minecraft_Macros.h"
 #include "app/common/DLC/DLCManager.h"
@@ -427,7 +426,7 @@ void UIScene_SkinSelectMenu::InputActionOK(unsigned int iPad) {
                         uiIDA[0] = IDS_OK;
 
                         // We need to upsell the full version
-                        if (ProfileManager.IsGuest(iPad)) {
+                        if (PlatformProfile.IsGuest(iPad)) {
                             // can't buy
                             ui.RequestAlertMessage(IDS_PRO_GUESTPROFILE_TITLE,
                                                    IDS_PRO_GUESTPROFILE_TEXT,
@@ -528,7 +527,7 @@ void UIScene_SkinSelectMenu::customDraw(IggyCustomDrawCallbackRegion* region) {
         // %d, stencil write= %d\n", region->stencil_func_mask,
         // region->stencil_func_ref, region->stencil_write_mask);
         if (region->stencil_func_ref != 0)
-            RenderManager.StateSetStencil(GL_EQUAL, region->stencil_func_ref,
+            PlatformRenderer.StateSetStencil(GL_EQUAL, region->stencil_func_ref,
                                           region->stencil_func_mask,
                                           region->stencil_write_mask);
         m_characters[characterId].render(region);
@@ -1230,12 +1229,12 @@ void UIScene_SkinSelectMenu::showNotOnlineDialog(int iPad) {
 }
 
 int UIScene_SkinSelectMenu::UnlockSkinReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_SkinSelectMenu* pScene = (UIScene_SkinSelectMenu*)pParam;
 
-    if ((result == C4JStorage::EMessage_ResultAccept) &&
-        ProfileManager.IsSignedIn(iPad)) {
-        if (ProfileManager.IsSignedInLive(iPad)) {
+    if ((result == IPlatformStorage::EMessage_ResultAccept) &&
+        PlatformProfile.IsSignedIn(iPad)) {
+        if (PlatformProfile.IsSignedInLive(iPad)) {
         } else  // Is signed in, but not live.
         {
             pScene->showNotOnlineDialog(iPad);

@@ -5,7 +5,7 @@
 #include <numbers>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 #include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
@@ -498,7 +498,7 @@ void LivingEntityRenderer::renderNameTag(std::shared_ptr<LivingEntity> mob,
     // 4J Stu - If it's beyond readable distance, then just render a coloured
     // box
     int readableDist = PLAYER_NAME_READABLE_FULLSCREEN;
-    if (!RenderManager.IsHiDef()) {
+    if (!PlatformRenderer.IsHiDef()) {
         readableDist = PLAYER_NAME_READABLE_DISTANCE_SD;
     } else if (gameServices().getLocalPlayerCount() > 2) {
         readableDist = PLAYER_NAME_READABLE_DISTANCE_SPLITSCREEN;

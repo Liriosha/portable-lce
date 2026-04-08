@@ -12,7 +12,7 @@
 #include <memory>
 #include <utility>
 
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "LevelData.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/GameRules/GameRuleManager.h"
@@ -42,8 +42,7 @@
 #include "nbt/DoubleTag.h"
 #include "nbt/ListTag.h"
 #include "nbt/NbtIo.h"
-#include "platform/IPlatformStorage.h"
-#include "platform/PlatformServices.h"
+#include "platform/storage/storage.h"
 
 const std::wstring DirectoryLevelStorage::sc_szPlayerDir(L"players/");
 
@@ -71,7 +70,7 @@ int _MapDataMappings::getDimension(int id) {
         default:
 #if !defined(_CONTENT_PACKAGE)
             printf("Read invalid dimension from MapDataMapping\n");
-            __debugbreak();
+            assert(0);
 #endif
             break;
     }
@@ -99,7 +98,7 @@ void _MapDataMappings::setMapping(int id, PlayerUID xuid, int dimension) {
 #if !defined(_CONTENT_PACKAGE)
             printf(
                 "Trinyg to set a MapDataMapping for an invalid dimension.\n");
-            __debugbreak();
+            assert(0);
 #endif
             break;
     }

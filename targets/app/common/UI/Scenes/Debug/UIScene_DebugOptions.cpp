@@ -1,14 +1,13 @@
 #include "UIScene_DebugOptions.h"
 
-#include "platform/InputActions.h"
 #include "app/common/Console_Debug_enum.h"
-#include "app/common/UI/Controls/UIControl_CheckBox.h"
 #include "app/common/UI/UIScene.h"
 #include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
 #include "app/linux/LinuxGame.h"
+#include "platform/input/InputConstants.h"
 
 class UILayer;
 

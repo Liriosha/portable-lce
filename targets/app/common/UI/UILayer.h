@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/linux/Iggy/include/rrCore.h"
 
@@ -44,7 +44,7 @@ public:
     UILayer(UIGroup* parent);
 
     void tick();
-    void render(S32 width, S32 height, C4JRender::eViewportType viewport);
+    void render(S32 width, S32 height, IPlatformRenderer::eViewportType viewport);
     void getRenderDimensions(S32& width, S32& height);
 
     void DestroyAll();
@@ -83,7 +83,7 @@ public:
 
 public:
     bool IsFullscreenGroup();
-    C4JRender::eViewportType getViewport();
+    IPlatformRenderer::eViewportType getViewport();
 
     virtual void HandleDLCMountingComplete();
     virtual void HandleDLCInstalled();

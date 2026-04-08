@@ -4,7 +4,6 @@
 #include <cmath>
 #include <memory>
 
-#include "platform/InputActions.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
@@ -195,7 +194,7 @@ void UIScene_AbstractContainerMenu::tick() {
 }
 
 void UIScene_AbstractContainerMenu::render(S32 width, S32 height,
-                                           C4JRender::eViewportType viewpBort) {
+                                           IPlatformRenderer::eViewportType viewpBort) {
     m_cacheSlotRenders = true;
 
     m_needsCacheRendered = m_needsCacheRendered || m_menu->needsRendered();

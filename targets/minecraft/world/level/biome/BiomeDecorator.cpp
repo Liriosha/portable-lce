@@ -37,7 +37,7 @@ void BiomeDecorator::decorate(Level* level, Random* random, int xo, int zo) {
     if (this->level != nullptr) {
         Log::info("BiomeDecorator::decorate - Already decorating!!\n");
 #ifndef _CONTENT_PACKAGE
-        __debugbreak();
+        assert(0);
         // throw new RuntimeException("Already decorating!!");
 #endif
     }

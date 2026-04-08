@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
@@ -32,12 +32,12 @@
 class TexturePack;
 
 int IUIScene_PauseMenu::ExitGameDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     IUIScene_PauseMenu* pScene = dynamic_cast<IUIScene_PauseMenu*>(
         ui.GetSceneFromCallbackId((std::size_t)pParam));
 
     // Results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         if (pScene) pScene->SetIgnoreInput(true);
         app.SetAction(iPad, eAppAction_ExitWorld);
     }
@@ -45,15 +45,15 @@ int IUIScene_PauseMenu::ExitGameDialogReturned(
 }
 
 int IUIScene_PauseMenu::ExitGameSaveDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     IUIScene_PauseMenu* pScene = dynamic_cast<IUIScene_PauseMenu*>(
         ui.GetSceneFromCallbackId((std::size_t)pParam));
 
     // Exit with or without saving
     // Decline means save in this dialog
-    if (result == C4JStorage::EMessage_ResultDecline ||
-        result == C4JStorage::EMessage_ResultThirdOption) {
-        if (result == C4JStorage::EMessage_ResultDecline)  // Save
+    if (result == IPlatformStorage::EMessage_ResultDecline ||
+        result == IPlatformStorage::EMessage_ResultThirdOption) {
+        if (result == IPlatformStorage::EMessage_ResultDecline)  // Save
         {
             // 4J-PB - Is the player trying to save but they are using a trial
             // texturepack ?
@@ -76,7 +76,7 @@ int IUIScene_PauseMenu::ExitGameSaveDialogReturned(
                     ui.RequestAlertMessage(
                         IDS_WARNING_DLC_TRIALTEXTUREPACK_TITLE,
                         IDS_WARNING_DLC_TRIALTEXTUREPACK_TEXT, uiIDA, 2,
-                        ProfileManager.GetPrimaryPad(),
+                        PlatformProfile.GetPrimaryPad(),
                         &IUIScene_PauseMenu::WarningTrialTexturePackReturned,
                         pParam);
 
@@ -86,7 +86,7 @@ int IUIScene_PauseMenu::ExitGameSaveDialogReturned(
 
             // does the save exist?
             bool bSaveExists;
-            StorageManager.DoesSaveExist(&bSaveExists);
+            PlatformStorage.DoesSaveExist(&bSaveExists);
             // 4J-PB - we check if the save exists inside the libs
             // we need to ask if they are sure they want to overwrite the
             // existing game
@@ -96,7 +96,7 @@ int IUIScene_PauseMenu::ExitGameSaveDialogReturned(
                 uiIDA[1] = IDS_CONFIRM_OK;
                 ui.RequestAlertMessage(
                     IDS_TITLE_SAVE_GAME, IDS_CONFIRM_SAVE_GAME, uiIDA, 2,
-                    ProfileManager.GetPrimaryPad(),
+                    PlatformProfile.GetPrimaryPad(),
                     &IUIScene_PauseMenu::ExitGameAndSaveReturned, pParam);
                 return 0;
             } else {
@@ -109,7 +109,7 @@ int IUIScene_PauseMenu::ExitGameSaveDialogReturned(
             uiIDA[1] = IDS_CONFIRM_OK;
             ui.RequestAlertMessage(
                 IDS_TITLE_DECLINE_SAVE_GAME, IDS_CONFIRM_DECLINE_SAVE_GAME,
-                uiIDA, 2, ProfileManager.GetPrimaryPad(),
+                uiIDA, 2, PlatformProfile.GetPrimaryPad(),
                 &IUIScene_PauseMenu::ExitGameDeclineSaveReturned, pParam);
             return 0;
         }
@@ -122,17 +122,17 @@ int IUIScene_PauseMenu::ExitGameSaveDialogReturned(
 }
 
 int IUIScene_PauseMenu::ExitGameAndSaveReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // 4J-PB - we won't come in here if we have a trial texture pack
     IUIScene_PauseMenu* pScene = dynamic_cast<IUIScene_PauseMenu*>(
         ui.GetSceneFromCallbackId((std::size_t)pParam));
 
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         // int32_t saveOrCheckpointId = 0;
         // bool validSave =
-        // StorageManager.GetSaveUniqueNumber(&saveOrCheckpointId);
-        // SentientManager.RecordLevelSaveOrCheckpoint(ProfileManager.GetPrimaryPad(),
+        // PlatformStorage.GetSaveUniqueNumber(&saveOrCheckpointId);
+        // SentientManager.RecordLevelSaveOrCheckpoint(PlatformProfile.GetPrimaryPad(),
         // saveOrCheckpointId);
         if (pScene) pScene->SetIgnoreInput(true);
         MinecraftServer::getInstance()->setSaveOnExit(true);
@@ -141,7 +141,7 @@ int IUIScene_PauseMenu::ExitGameAndSaveReturned(
     } else {
         // has someone disconnected the ethernet here, causing the pause menu to
         // shut?
-        if (ui.IsPauseMenuDisplayed(ProfileManager.GetPrimaryPad())) {
+        if (ui.IsPauseMenuDisplayed(PlatformProfile.GetPrimaryPad())) {
             unsigned int uiIDA[3];
             // you cancelled the save on exit after choosing exit and save? You
             // go back to the Exit choices then.
@@ -153,12 +153,12 @@ int IUIScene_PauseMenu::ExitGameAndSaveReturned(
                 ui.RequestAlertMessage(
                     IDS_EXIT_GAME,
                     IDS_CONFIRM_EXIT_GAME_CONFIRM_DISCONNECT_SAVE, uiIDA, 3,
-                    ProfileManager.GetPrimaryPad(),
+                    PlatformProfile.GetPrimaryPad(),
                     &IUIScene_PauseMenu::ExitGameSaveDialogReturned, pParam);
             } else {
                 ui.RequestAlertMessage(
                     IDS_EXIT_GAME, IDS_CONFIRM_EXIT_GAME, uiIDA, 3,
-                    ProfileManager.GetPrimaryPad(),
+                    PlatformProfile.GetPrimaryPad(),
                     &IUIScene_PauseMenu::ExitGameSaveDialogReturned, pParam);
             }
         }
@@ -167,12 +167,12 @@ int IUIScene_PauseMenu::ExitGameAndSaveReturned(
 }
 
 int IUIScene_PauseMenu::ExitGameDeclineSaveReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     IUIScene_PauseMenu* pScene = dynamic_cast<IUIScene_PauseMenu*>(
         ui.GetSceneFromCallbackId((std::size_t)pParam));
 
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         if (pScene) pScene->SetIgnoreInput(true);
         MinecraftServer::getInstance()->setSaveOnExit(false);
         // flag a app action of exit game
@@ -180,7 +180,7 @@ int IUIScene_PauseMenu::ExitGameDeclineSaveReturned(
     } else {
         // has someone disconnected the ethernet here, causing the pause menu to
         // shut?
-        if (ui.IsPauseMenuDisplayed(ProfileManager.GetPrimaryPad())) {
+        if (ui.IsPauseMenuDisplayed(PlatformProfile.GetPrimaryPad())) {
             unsigned int uiIDA[3];
             // you cancelled the save on exit after choosing exit and save? You
             // go back to the Exit choices then.
@@ -192,12 +192,12 @@ int IUIScene_PauseMenu::ExitGameDeclineSaveReturned(
                 ui.RequestAlertMessage(
                     IDS_EXIT_GAME,
                     IDS_CONFIRM_EXIT_GAME_CONFIRM_DISCONNECT_SAVE, uiIDA, 3,
-                    ProfileManager.GetPrimaryPad(),
+                    PlatformProfile.GetPrimaryPad(),
                     &IUIScene_PauseMenu::ExitGameSaveDialogReturned, pParam);
             } else {
                 ui.RequestAlertMessage(
                     IDS_EXIT_GAME, IDS_CONFIRM_EXIT_GAME, uiIDA, 3,
-                    ProfileManager.GetPrimaryPad(),
+                    PlatformProfile.GetPrimaryPad(),
                     &IUIScene_PauseMenu::ExitGameSaveDialogReturned, pParam);
             }
         }
@@ -206,17 +206,17 @@ int IUIScene_PauseMenu::ExitGameDeclineSaveReturned(
 }
 
 int IUIScene_PauseMenu::WarningTrialTexturePackReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     return 0;
 }
 
 int IUIScene_PauseMenu::SaveWorldThreadProc(void* lpParameter) {
     bool bAutosave = (bool)lpParameter;
     if (bAutosave) {
-        app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
+        app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
                                eXuiServerAction_AutoSaveGame);
     } else {
-        app.SetXuiServerAction(ProfileManager.GetPrimaryPad(),
+        app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
                                eXuiServerAction_SaveGame);
     }
 
@@ -230,7 +230,7 @@ int IUIScene_PauseMenu::SaveWorldThreadProc(void* lpParameter) {
 
     app.SetGameStarted(false);
 
-    while (app.GetXuiServerAction(ProfileManager.GetPrimaryPad()) !=
+    while (app.GetXuiServerAction(PlatformProfile.GetPrimaryPad()) !=
                eXuiServerAction_Idle &&
            !MinecraftServer::serverHalted()) {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -272,7 +272,7 @@ void IUIScene_PauseMenu::_ExitWorld(void* lpParameter) {
     if (pMinecraft->isClientSide() || g_NetworkManager.IsInSession()) {
         if (lpParameter != nullptr) {
             // 4J-PB - check if we have lost connection to Live
-            // if (ProfileManager.GetLiveConnectionStatus() !=
+            // if (PlatformProfile.GetLiveConnectionStatus() !=
             //     XONLINE_S_LOGON_CONNECTION_ESTABLISHED) {
             //     exitReasonStringId = IDS_CONNECTION_LOST_LIVE;
             // } else {
@@ -336,10 +336,10 @@ void IUIScene_PauseMenu::_ExitWorld(void* lpParameter) {
             // that is most likely the cause of the disconnection so don't
             // display a message box. This will allow the message box requested
             // by the libraries to be brought up
-            if (ProfileManager.IsSignedIn(ProfileManager.GetPrimaryPad()))
+            if (PlatformProfile.IsSignedIn(PlatformProfile.GetPrimaryPad()))
                 ui.RequestErrorMessage(exitReasonTitleId, exitReasonStringId,
                                        uiIDA, 1,
-                                       ProfileManager.GetPrimaryPad());
+                                       PlatformProfile.GetPrimaryPad());
             exitReasonStringId = -1;
 
             // 4J - Force a disconnection, this handles the situation that the
@@ -375,7 +375,7 @@ void IUIScene_PauseMenu::_ExitWorld(void* lpParameter) {
         g_NetworkManager.LeaveGame(false);
     } else {
         if (lpParameter != nullptr &&
-            ProfileManager.IsSignedIn(ProfileManager.GetPrimaryPad())) {
+            PlatformProfile.IsSignedIn(PlatformProfile.GetPrimaryPad())) {
             switch (app.GetDisconnectReason()) {
                 case DisconnectPacket::eDisconnect_Kicked:
                     exitReasonStringId = IDS_DISCONNECTED_KICKED;
@@ -417,7 +417,7 @@ void IUIScene_PauseMenu::_ExitWorld(void* lpParameter) {
             unsigned int uiIDA[1];
             uiIDA[0] = IDS_CONFIRM_OK;
             ui.RequestErrorMessage(exitReasonTitleId, exitReasonStringId, uiIDA,
-                                   1, ProfileManager.GetPrimaryPad());
+                                   1, PlatformProfile.GetPrimaryPad());
             exitReasonStringId = -1;
         }
     }
@@ -452,9 +452,9 @@ void IUIScene_PauseMenu::_ExitWorld(void* lpParameter) {
 }
 
 int IUIScene_PauseMenu::SaveGameDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         // flag a app action of save game
         app.SetAction(iPad, eAppAction_SaveGame);
     }
@@ -462,9 +462,9 @@ int IUIScene_PauseMenu::SaveGameDialogReturned(
 }
 
 int IUIScene_PauseMenu::EnableAutosaveDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         // Set the global flag, so that we don't disable saving again once the
         // save is complete
         app.SetGameHostOption(eGameHostOption_DisableSaving, 0);
@@ -475,7 +475,7 @@ int IUIScene_PauseMenu::EnableAutosaveDialogReturned(
         app.SetGameHostOption(eGameHostOption_DisableSaving, 1);
     }
     // Re-enable saving temporarily
-    StorageManager.SetSaveDisabled(false);
+    PlatformStorage.SetSaveDisabled(false);
 
     // flag a app action of save game
     app.SetAction(iPad, eAppAction_SaveGame);
@@ -483,13 +483,13 @@ int IUIScene_PauseMenu::EnableAutosaveDialogReturned(
 }
 
 int IUIScene_PauseMenu::DisableAutosaveDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // results switched for this dialog
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         // Set the global flag, so that we disable saving again once the save is
         // complete
         app.SetGameHostOption(eGameHostOption_DisableSaving, 1);
-        StorageManager.SetSaveDisabled(false);
+        PlatformStorage.SetSaveDisabled(false);
 
         // flag a app action of save game
         app.SetAction(iPad, eAppAction_SaveGame);

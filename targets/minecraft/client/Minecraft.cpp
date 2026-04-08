@@ -13,10 +13,9 @@
 #include <ctime>
 #include <thread>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/storage/storage.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
@@ -104,7 +103,7 @@
 #if defined(ENABLE_JAVA_GUIS)
 #include "minecraft/client/gui/inventory/CreativeInventoryScreen.h"
 #endif
-#include "platform/sdl2/Input.h"
+#include "platform/input/input.h"
 #include "app/common/Minecraft_Macros.h"
 #include "app/common/Colours/ColourTable.h"
 #include "app/common/ConsoleGameMode.h"
@@ -112,7 +111,6 @@
 #include "app/common/Tutorial/FullTutorialMode.h"
 #include "app/common/UI/All Platforms/IUIScene_CreativeMenu.h"
 #include "app/common/UI/UIFontData.h"
-#include "platform/stubs.h"
 #include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/System.h"
@@ -235,7 +233,7 @@ Minecraft::Minecraft(Component* mouseComponent, Canvas* parent,
     // code that the width is 3/4 what it actually is, to correctly present a
     // 4:3 image. Have added width_phys and height_phys for any code we add that
     // requires to know the real physical dimensions of the frame buffer.
-    if (RenderManager.IsWidescreen()) {
+    if (PlatformRenderer.IsWidescreen()) {
         this->width = width;
     } else {
         this->width = (width * 3) / 4;
@@ -392,7 +390,7 @@ void Minecraft::init() {
     }
     progressRenderer = new ProgressRenderer(this);
 
-    RenderManager.CBuffLockStaticCreations();
+    PlatformRenderer.CBuffLockStaticCreations();
 }
 
 void Minecraft::renderLoadingScreen() {
@@ -402,7 +400,7 @@ void Minecraft::renderLoadingScreen() {
     ScreenSizeCalculator ssc(options, width, height);
 
     // xxx
-    RenderManager.StartFrame();
+    PlatformRenderer.StartFrame();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -443,7 +441,7 @@ void Minecraft::renderLoadingScreen() {
 
     // Display::swapBuffers();
     // xxx
-    RenderManager.Present();
+    PlatformRenderer.Present();
 #endif
 }
 
@@ -560,11 +558,11 @@ void Minecraft::setScreen(Screen* screen) {
 #if defined(ENABLE_JAVA_GUIS)
     if (screen != nullptr && player != nullptr) {
         if (player && player->GetXboxPad() != -1) {
-            InputManager.SetMenuDisplayed(player->GetXboxPad(), true);
+            PlatformInput.SetMenuDisplayed(player->GetXboxPad(), true);
         }
     } else if (player != nullptr) {
         if (player && player->GetXboxPad() != -1) {
-            InputManager.SetMenuDisplayed(player->GetXboxPad(), false);
+            PlatformInput.SetMenuDisplayed(player->GetXboxPad(), false);
         }
     }
 #endif
@@ -634,11 +632,11 @@ void Minecraft::destroy() {
 #if defined(ENABLE_JAVA_GUIS)
     if (screen != nullptr) {
         if (player && player->GetXboxPad() != -1) {
-            InputManager.SetMenuDisplayed(player->GetXboxPad(), true);
+            PlatformInput.SetMenuDisplayed(player->GetXboxPad(), true);
         }
     } else {
         if (player && player->GetXboxPad() != -1) {
-            InputManager.SetMenuDisplayed(player->GetXboxPad(), false);
+            PlatformInput.SetMenuDisplayed(player->GetXboxPad(), false);
         }
     }
 #endif
@@ -708,7 +706,7 @@ void Minecraft::updatePlayerViewportAssignments() {
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (localplayers[i] != nullptr)
                 localplayers[i]->m_iScreenSection =
-                    C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+                    IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
         }
     } else if (viewportsRequired == 2) {
         // Split screen - TODO - option for vertical/horizontal split
@@ -716,13 +714,13 @@ void Minecraft::updatePlayerViewportAssignments() {
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (localplayers[i] != nullptr) {
                 // Primary player settings decide what the mode is
-                if (gameServices().getGameSettings(InputManager.GetPrimaryPad(),
+                if (gameServices().getGameSettings(PlatformInput.GetPrimaryPad(),
                                         eGameSetting_SplitScreenVertical)) {
                     localplayers[i]->m_iScreenSection =
-                        C4JRender::VIEWPORT_TYPE_SPLIT_LEFT + found;
+                        IPlatformRenderer::VIEWPORT_TYPE_SPLIT_LEFT + found;
                 } else {
                     localplayers[i]->m_iScreenSection =
-                        C4JRender::VIEWPORT_TYPE_SPLIT_TOP + found;
+                        IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP + found;
                 }
                 found++;
             }
@@ -741,18 +739,18 @@ void Minecraft::updatePlayerViewportAssignments() {
                 // quadrant, but ending up in the 3rd viewport.
                 if (gameServices().getGameStarted()) {
                     if ((localplayers[i]->m_iScreenSection >=
-                         C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) &&
+                         IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) &&
                         (localplayers[i]->m_iScreenSection <=
-                         C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
+                         IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
                         quadrantsAllocated
                             [localplayers[i]->m_iScreenSection -
-                             C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT] = true;
+                             IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT] = true;
                     }
                 } else {
                     // Reset the viewport so that it can be assigned in the next
                     // loop
                     localplayers[i]->m_iScreenSection =
-                        C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+                        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
                 }
             }
         }
@@ -762,13 +760,13 @@ void Minecraft::updatePlayerViewportAssignments() {
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             if (localplayers[i] != nullptr) {
                 if ((localplayers[i]->m_iScreenSection <
-                     C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) ||
+                     IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT) ||
                     (localplayers[i]->m_iScreenSection >
-                     C4JRender::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
+                     IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_BOTTOM_RIGHT)) {
                     for (int j = 0; j < 4; j++) {
                         if (!quadrantsAllocated[j]) {
                             localplayers[i]->m_iScreenSection =
-                                C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT + j;
+                                IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT + j;
                             quadrantsAllocated[j] = true;
                             break;
                         }
@@ -842,7 +840,7 @@ std::shared_ptr<MultiplayerLocalPlayer> Minecraft::createExtraLocalPlayer(
     if (clientConnection == nullptr) return nullptr;
 
     if (clientConnection == m_pendingLocalConnections[idx]) {
-        int tempScreenSection = C4JRender::VIEWPORT_TYPE_FULLSCREEN;
+        int tempScreenSection = IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN;
         if (localplayers[idx] != nullptr && localgameModes[idx] == nullptr) {
             // A temp player displaying a connecting screen
             tempScreenSection = localplayers[idx]->m_iScreenSection;
@@ -886,13 +884,13 @@ std::shared_ptr<MultiplayerLocalPlayer> Minecraft::createExtraLocalPlayer(
 
         PlayerUID playerXUIDOffline = INVALID_XUID;
         PlayerUID playerXUIDOnline = INVALID_XUID;
-        ProfileManager.GetXUID(idx, &playerXUIDOffline, false);
-        ProfileManager.GetXUID(idx, &playerXUIDOnline, true);
+        PlatformProfile.GetXUID(idx, &playerXUIDOffline, false);
+        PlatformProfile.GetXUID(idx, &playerXUIDOnline, true);
         localplayers[idx]->setXuid(playerXUIDOffline);
         localplayers[idx]->setOnlineXuid(playerXUIDOnline);
-        localplayers[idx]->setIsGuest(ProfileManager.IsGuest(idx));
+        localplayers[idx]->setIsGuest(PlatformProfile.IsGuest(idx));
 
-        localplayers[idx]->m_displayName = ProfileManager.GetDisplayName(idx);
+        localplayers[idx]->m_displayName = PlatformProfile.GetDisplayName(idx);
 
         localplayers[idx]->m_iScreenSection = tempScreenSection;
 
@@ -940,9 +938,9 @@ void Minecraft::storeExtraLocalPlayer(int idx) {
     if (localplayers[idx]->input != nullptr) delete localplayers[idx]->input;
     localplayers[idx]->input = new Input();
 
-    if (ProfileManager.IsSignedIn(idx)) {
+    if (PlatformProfile.IsSignedIn(idx)) {
         localplayers[idx]->name =
-            convStringToWstring(ProfileManager.GetGamertag(idx));
+            convStringToWstring(PlatformProfile.GetGamertag(idx));
     }
 }
 
@@ -983,7 +981,7 @@ void Minecraft::removeLocalPlayerIdx(int idx) {
     }
     localplayers[idx] = nullptr;
 
-    if (idx == InputManager.GetPrimaryPad()) {
+    if (idx == PlatformInput.GetPrimaryPad()) {
         // We should never try to remove the Primary player in this way
         assert(false);
         /*
@@ -1014,9 +1012,9 @@ void Minecraft::createPrimaryLocalPlayer(int iPad) {
     localplayers[iPad] = player;
     // gameRenderer->itemInHandRenderer = localitemInHandRenderers[iPad];
     //  Give them the gamertag if they're signed in
-    if (ProfileManager.IsSignedIn(InputManager.GetPrimaryPad())) {
+    if (PlatformProfile.IsSignedIn(PlatformInput.GetPrimaryPad())) {
         user->name = convStringToWstring(
-            ProfileManager.GetGamertag(InputManager.GetPrimaryPad()));
+            PlatformProfile.GetGamertag(PlatformInput.GetPrimaryPad()));
     }
 }
 
@@ -1075,18 +1073,18 @@ void Minecraft::run_middle() {
                         // autosave If saving isn't disabled, and the main
                         // player has a app action running , or has any crafting
                         // or containers open, don't autosave
-                        if (!StorageManager.GetSaveDisabled() &&
-                            (gameServices().getXuiAction(InputManager.GetPrimaryPad()) ==
+                        if (!PlatformStorage.GetSaveDisabled() &&
+                            (gameServices().getXuiAction(PlatformInput.GetPrimaryPad()) ==
                              eAppAction_Idle)) {
                             if (!ui.IsPauseMenuDisplayed(
-                                    InputManager.GetPrimaryPad()) &&
+                                    PlatformInput.GetPrimaryPad()) &&
                                 !ui.IsIgnoreAutosaveMenuDisplayed(
-                                    InputManager.GetPrimaryPad())) {
+                                    PlatformInput.GetPrimaryPad())) {
                                 // check if the autotimer countdown has reached
                                 // zero
                                 unsigned char ucAutosaveVal =
                                     gameServices().getGameSettings(
-                                        InputManager.GetPrimaryPad(),
+                                        PlatformInput.GetPrimaryPad(),
                                         eGameSetting_Autosave);
                                 bool bTrialTexturepack = false;
                                 if (!Minecraft::GetInstance()
@@ -1123,7 +1121,7 @@ void Minecraft::run_middle() {
                                         Log::info("+++Autosave\n");
                                         Log::info("+++++++++++\n");
                                         gameServices().setAction(
-                                            InputManager.GetPrimaryPad(),
+                                            PlatformInput.GetPrimaryPad(),
                                             eAppAction_AutosaveSaveGame);
                                         // gameServices().setAutosaveTimerTime();
 #if !defined(_CONTENT_PACKAGE)
@@ -1171,11 +1169,11 @@ void Minecraft::run_middle() {
                 for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                     if (localplayers[i] && (gameServices().getBanListCheck(i) == false) &&
                         !Minecraft::GetInstance()->isTutorial() &&
-                        ProfileManager.IsSignedInLive(i) &&
-                        !ProfileManager.IsGuest(i)) {
+                        PlatformProfile.IsSignedInLive(i) &&
+                        !PlatformProfile.IsGuest(i)) {
                         // If there is a sys ui displayed, we can't display the
                         // message box here, so ignore until we can
-                        if (!ProfileManager.IsSystemUIDisplayed()) {
+                        if (!PlatformProfile.IsSystemUIDisplayed()) {
                             gameServices().setBanListCheck(i, true);
                             // 4J-PB - check if the level is in the banned level
                             // list get the unique save name and xuid from
@@ -1199,7 +1197,7 @@ void Minecraft::run_middle() {
                     }
                 }
 
-                if (!ProfileManager.IsSystemUIDisplayed() &&
+                if (!PlatformProfile.IsSystemUIDisplayed() &&
                     gameServices().dlcInstallProcessCompleted() &&
                     !gameServices().dlcInstallPending() &&
                     gameServices().dlcNeedsCorruptCheck()) {
@@ -1219,7 +1217,7 @@ void Minecraft::run_middle() {
                         if (gameServices().isLocalMultiplayerAvailable()) {
                             for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                                 if ((localplayers[i] == nullptr) &&
-                                    InputManager.IsPadConnected(i)) {
+                                    PlatformInput.IsPadConnected(i)) {
                                     if (!ui.PressStartPlaying(i)) {
                                         ui.ShowPressStart(i);
                                     }
@@ -1236,27 +1234,27 @@ void Minecraft::run_middle() {
                 for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                     if (localplayers[i]) {
                         // 4J-PB - add these to check for coming out of idle
-                        if (InputManager.ButtonPressed(i,
+                        if (PlatformInput.ButtonPressed(i,
                                                        MINECRAFT_ACTION_JUMP))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_JUMP;
-                        if (InputManager.ButtonPressed(i, MINECRAFT_ACTION_USE))
+                        if (PlatformInput.ButtonPressed(i, MINECRAFT_ACTION_USE))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_USE;
 
-                        if (InputManager.ButtonPressed(
+                        if (PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_INVENTORY))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_INVENTORY;
-                        if (InputManager.ButtonPressed(i,
+                        if (PlatformInput.ButtonPressed(i,
                                                        MINECRAFT_ACTION_ACTION))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_ACTION;
-                        if (InputManager.ButtonPressed(
+                        if (PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_CRAFTING))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_CRAFTING;
-                        if (InputManager.ButtonPressed(
+                        if (PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_PAUSEMENU)) {
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_PAUSEMENU;
@@ -1267,7 +1265,7 @@ void Minecraft::run_middle() {
                             pauseGame();
 #endif
                         }
-                        if (InputManager.ButtonPressed(i,
+                        if (PlatformInput.ButtonPressed(i,
                                                        MINECRAFT_ACTION_DROP))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_DROP;
@@ -1275,21 +1273,21 @@ void Minecraft::run_middle() {
                         // 4J-PB - If we're flying, the sneak needs to be held
                         // on to go down
                         if (localplayers[i]->abilities.flying) {
-                            if (InputManager.ButtonDown(
+                            if (PlatformInput.ButtonDown(
                                     i, MINECRAFT_ACTION_SNEAK_TOGGLE))
                                 localplayers[i]->ullButtonsPressed |=
                                     1LL << MINECRAFT_ACTION_SNEAK_TOGGLE;
                         } else {
-                            if (InputManager.ButtonPressed(
+                            if (PlatformInput.ButtonPressed(
                                     i, MINECRAFT_ACTION_SNEAK_TOGGLE))
                                 localplayers[i]->ullButtonsPressed |=
                                     1LL << MINECRAFT_ACTION_SNEAK_TOGGLE;
                         }
-                        if (InputManager.ButtonPressed(
+                        if (PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_RENDER_THIRD_PERSON))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_RENDER_THIRD_PERSON;
-                        if (InputManager.ButtonPressed(
+                        if (PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_GAME_INFO))
                             localplayers[i]->ullButtonsPressed |=
                                 1LL << MINECRAFT_ACTION_GAME_INFO;
@@ -1299,19 +1297,19 @@ void Minecraft::run_middle() {
                             localplayers[i]->ullDpad_last = 0;
                             localplayers[i]->ullDpad_this = 0;
                             localplayers[i]->ullDpad_filtered = 0;
-                            if (InputManager.ButtonPressed(
+                            if (PlatformInput.ButtonPressed(
                                     i, MINECRAFT_ACTION_DPAD_RIGHT))
                                 localplayers[i]->ullButtonsPressed |=
                                     1LL << MINECRAFT_ACTION_CHANGE_SKIN;
-                            if (InputManager.ButtonPressed(
+                            if (PlatformInput.ButtonPressed(
                                     i, MINECRAFT_ACTION_DPAD_UP))
                                 localplayers[i]->ullButtonsPressed |=
                                     1LL << MINECRAFT_ACTION_FLY_TOGGLE;
-                            if (InputManager.ButtonPressed(
+                            if (PlatformInput.ButtonPressed(
                                     i, MINECRAFT_ACTION_DPAD_DOWN))
                                 localplayers[i]->ullButtonsPressed |=
                                     1LL << MINECRAFT_ACTION_RENDER_DEBUG;
-                            if (InputManager.ButtonPressed(
+                            if (PlatformInput.ButtonPressed(
                                     i, MINECRAFT_ACTION_DPAD_LEFT))
                                 localplayers[i]->ullButtonsPressed |=
                                     1LL << MINECRAFT_ACTION_SPAWN_CREEPER;
@@ -1328,25 +1326,25 @@ void Minecraft::run_middle() {
                             localplayers[i]->ullDpad_this = 0;
                             int dirCount = 0;
 
-                            if (InputManager.ButtonDown(
+                            if (PlatformInput.ButtonDown(
                                     i, MINECRAFT_ACTION_DPAD_LEFT)) {
                                 localplayers[i]->ullDpad_this |=
                                     1LL << MINECRAFT_ACTION_DPAD_LEFT;
                                 dirCount++;
                             }
-                            if (InputManager.ButtonDown(
+                            if (PlatformInput.ButtonDown(
                                     i, MINECRAFT_ACTION_DPAD_RIGHT)) {
                                 localplayers[i]->ullDpad_this |=
                                     1LL << MINECRAFT_ACTION_DPAD_RIGHT;
                                 dirCount++;
                             }
-                            if (InputManager.ButtonDown(
+                            if (PlatformInput.ButtonDown(
                                     i, MINECRAFT_ACTION_DPAD_UP)) {
                                 localplayers[i]->ullDpad_this |=
                                     1LL << MINECRAFT_ACTION_DPAD_UP;
                                 dirCount++;
                             }
-                            if (InputManager.ButtonDown(
+                            if (PlatformInput.ButtonDown(
                                     i, MINECRAFT_ACTION_DPAD_DOWN)) {
                                 localplayers[i]->ullDpad_this |=
                                     1LL << MINECRAFT_ACTION_DPAD_DOWN;
@@ -1365,12 +1363,12 @@ void Minecraft::run_middle() {
                         }
 
                         // for the opacity timer
-                        if (InputManager.ButtonPressed(
+                        if (PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_LEFT_SCROLL) ||
-                            InputManager.ButtonPressed(
+                            PlatformInput.ButtonPressed(
                                 i, MINECRAFT_ACTION_RIGHT_SCROLL))
-                        // InputManager.ButtonPressed(i, MINECRAFT_ACTION_USE)
-                        // || InputManager.ButtonPressed(i,
+                        // PlatformInput.ButtonPressed(i, MINECRAFT_ACTION_USE)
+                        // || PlatformInput.ButtonPressed(i,
                         // MINECRAFT_ACTION_ACTION))
                         {
                             gameServices().setOpacityTimer(i);
@@ -1382,10 +1380,10 @@ void Minecraft::run_middle() {
                         // exist? They'll be wanting to join the game then
                         bool tryJoin = !pause &&
                                        !ui.IsIgnorePlayerJoinMenuDisplayed(
-                                           InputManager.GetPrimaryPad()) &&
+                                           PlatformInput.GetPrimaryPad()) &&
                                        g_NetworkManager.SessionHasSpace() &&
-                                       RenderManager.IsHiDef() &&
-                                       InputManager.ButtonPressed(i);
+                                       PlatformRenderer.IsHiDef() &&
+                                       PlatformInput.ButtonPressed(i);
                         if (tryJoin) {
                             if (!ui.PressStartPlaying(i)) {
                                 ui.ShowPressStart(i);
@@ -1393,17 +1391,17 @@ void Minecraft::run_middle() {
                                 // did we just get input from a player who
                                 // doesn't exist? They'll be wanting to join the
                                 // game then
-                                if (InputManager.ButtonPressed(
+                                if (PlatformInput.ButtonPressed(
                                         i, MINECRAFT_ACTION_PAUSEMENU)) {
                                     // Let them join
 
                                     // are they signed in?
-                                    if (ProfileManager.IsSignedIn(i)) {
+                                    if (PlatformProfile.IsSignedIn(i)) {
                                         // if this is a local game, then the
                                         // player just needs to be signed in
                                         if (g_NetworkManager.IsLocalGame() ||
-                                            (ProfileManager.IsSignedInLive(i) &&
-                                             ProfileManager
+                                            (PlatformProfile.IsSignedInLive(i) &&
+                                             PlatformProfile
                                                  .AllowedToPlayMultiplayer(
                                                      i))) {
                                             if (level->isClientSide) {
@@ -1415,7 +1413,7 @@ void Minecraft::run_middle() {
                                                         "Bringing up the sign "
                                                         "in "
                                                         "ui\n");
-                                                    ProfileManager.RequestSignInUI(
+                                                    PlatformProfile.RequestSignInUI(
                                                         false,
                                                         g_NetworkManager
                                                             .IsLocalGame(),
@@ -1436,7 +1434,7 @@ void Minecraft::run_middle() {
                                                         createExtraLocalPlayer(
                                                             i,
                                                             (convStringToWstring(
-                                                                 ProfileManager
+                                                                 PlatformProfile
                                                                      .GetGamertag(
                                                                          i)))
                                                                 .c_str(),
@@ -1446,13 +1444,13 @@ void Minecraft::run_middle() {
                                                 }
                                             }
                                         } else {
-                                            if (ProfileManager.IsSignedInLive(
-                                                    ProfileManager
+                                            if (PlatformProfile.IsSignedInLive(
+                                                    PlatformProfile
                                                         .GetPrimaryPad()) &&
-                                                !ProfileManager
+                                                !PlatformProfile
                                                      .AllowedToPlayMultiplayer(
                                                          i)) {
-                                                ProfileManager
+                                                PlatformProfile
                                                     .RequestConvertOfflineToGuestUI(
                                                         [this](bool b, int p) {
                                                             return InGame_SignInReturned(
@@ -1470,7 +1468,7 @@ void Minecraft::run_middle() {
                                                 // signs-in on console which
                                                 // takes part in Xbox LIVE
                                                 // multiplayer session.
-                                                // ProfileManager.RequestConvertOfflineToGuestUI(
+                                                // PlatformProfile.RequestConvertOfflineToGuestUI(
                                                 // &Minecraft::InGame_SignInReturned,
                                                 // this,i);
 
@@ -1491,7 +1489,7 @@ void Minecraft::run_middle() {
                                                 Log::info(
                                                     "Bringing up the sign in "
                                                     "ui\n");
-                                                ProfileManager.RequestSignInUI(
+                                                PlatformProfile.RequestSignInUI(
                                                     false,
                                                     g_NetworkManager
                                                         .IsLocalGame(),
@@ -1507,7 +1505,7 @@ void Minecraft::run_middle() {
                                         // bring up the sign in dialog
                                         Log::info(
                                             "Bringing up the sign in ui\n");
-                                        ProfileManager.RequestSignInUI(
+                                        PlatformProfile.RequestSignInUI(
                                             false,
                                             g_NetworkManager.IsLocalGame(),
                                             true, false, true,
@@ -1539,7 +1537,7 @@ void Minecraft::run_middle() {
                     // twice with the same time - let's tick the inputmanager
                     // again
                     if (i != 0) {
-                        InputManager.Tick();
+                        PlatformInput.Tick();
                         gameServices().handleButtonPresses();
                     }
 
@@ -1559,13 +1557,13 @@ void Minecraft::run_middle() {
                         if (localplayers[idx] != nullptr) {
                             // any input received?
                             if ((localplayers[idx]->ullButtonsPressed != 0) ||
-                                InputManager.GetJoypadStick_LX(idx, false) !=
+                                PlatformInput.GetJoypadStick_LX(idx, false) !=
                                     0.0f ||
-                                InputManager.GetJoypadStick_LY(idx, false) !=
+                                PlatformInput.GetJoypadStick_LY(idx, false) !=
                                     0.0f ||
-                                InputManager.GetJoypadStick_RX(idx, false) !=
+                                PlatformInput.GetJoypadStick_RX(idx, false) !=
                                     0.0f ||
-                                InputManager.GetJoypadStick_RY(idx, false) !=
+                                PlatformInput.GetJoypadStick_RY(idx, false) !=
                                     0.0f) {
                                 localplayers[idx]->ResetInactiveTicks();
                             } else {
@@ -1602,7 +1600,7 @@ void Minecraft::run_middle() {
 
                     ui.HandleGameTick();
 
-                    setLocalPlayerIdx(InputManager.GetPrimaryPad());
+                    setLocalPlayerIdx(PlatformInput.GetPrimaryPad());
 
                     // 4J - added - now do the equivalent of level::animateTick,
                     // but taking into account the positions of all our players
@@ -1648,11 +1646,11 @@ void Minecraft::run_middle() {
 
                 if (!noRender) {
                     bool bFirst = true;
-                    int iPrimaryPad = InputManager.GetPrimaryPad();
+                    int iPrimaryPad = PlatformInput.GetPrimaryPad();
                     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                         if (setLocalPlayerIdx(i)) {
-                            RenderManager.StateSetViewport(
-                                (C4JRender::eViewportType)
+                            PlatformRenderer.StateSetViewport(
+                                (IPlatformRenderer::eViewportType)
                                     player->m_iScreenSection);
                             gameRenderer->render(timer->a, bFirst);
                             bFirst = false;
@@ -1680,8 +1678,8 @@ void Minecraft::run_middle() {
                     // GameRenderer directly so mc->screen draws.
                     if (bFirst) {
                         localPlayerIdx = 0;
-                        RenderManager.StateSetViewport(
-                            C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                        PlatformRenderer.StateSetViewport(
+                            IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
                         gameRenderer->render(timer->a, true);
                     }
 #endif
@@ -1690,21 +1688,21 @@ void Minecraft::run_middle() {
                     // black
                     if (unoccupiedQuadrant > -1) {
                         // render a logo
-                        RenderManager.StateSetViewport((
-                            C4JRender::
-                                eViewportType)(C4JRender::
+                        PlatformRenderer.StateSetViewport((
+                            IPlatformRenderer::
+                                eViewportType)(IPlatformRenderer::
                                                    VIEWPORT_TYPE_QUADRANT_TOP_LEFT +
                                                unoccupiedQuadrant));
                         glClearColor(0, 0, 0, 0);
                         glClear(GL_COLOR_BUFFER_BIT);
 
                         ui.SetEmptyQuadrantLogo(
-                            C4JRender::VIEWPORT_TYPE_QUADRANT_TOP_LEFT +
+                            IPlatformRenderer::VIEWPORT_TYPE_QUADRANT_TOP_LEFT +
                             unoccupiedQuadrant);
                     }
                     setLocalPlayerIdx(iPrimaryPad);
-                    RenderManager.StateSetViewport(
-                        C4JRender::VIEWPORT_TYPE_FULLSCREEN);
+                    PlatformRenderer.StateSetViewport(
+                        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN);
                 }
                 glFlush();
 
@@ -1937,7 +1935,7 @@ void Minecraft::pauseGame() {
 
 bool Minecraft::pollResize() {
     int fbw, fbh;
-    RenderManager.GetFramebufferSize(fbw, fbh);
+    PlatformRenderer.GetFramebufferSize(fbw, fbh);
     if (fbw != width_phys || fbh != height_phys) {
         resize(fbw, fbh);
         return true;
@@ -1952,7 +1950,7 @@ void Minecraft::resize(int width, int height) {
     // for non-widescreen aspect ratio to fix UI scaling.
     this->width_phys = width;
     this->height_phys = height;
-    if (RenderManager.IsWidescreen()) {
+    if (PlatformRenderer.IsWidescreen()) {
         this->width = width;
     } else {
         this->width = (width * 3) / 4;
@@ -2082,14 +2080,14 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
         int* piUse;
         int* piAlt;
 
-        unsigned int uiAction = InputManager.GetGameJoypadMaps(
-            InputManager.GetJoypadMapVal(iPad), MINECRAFT_ACTION_ACTION);
-        unsigned int uiJump = InputManager.GetGameJoypadMaps(
-            InputManager.GetJoypadMapVal(iPad), MINECRAFT_ACTION_JUMP);
-        unsigned int uiUse = InputManager.GetGameJoypadMaps(
-            InputManager.GetJoypadMapVal(iPad), MINECRAFT_ACTION_USE);
-        unsigned int uiAlt = InputManager.GetGameJoypadMaps(
-            InputManager.GetJoypadMapVal(iPad), MINECRAFT_ACTION_SNEAK_TOGGLE);
+        unsigned int uiAction = PlatformInput.GetGameJoypadMaps(
+            PlatformInput.GetJoypadMapVal(iPad), MINECRAFT_ACTION_ACTION);
+        unsigned int uiJump = PlatformInput.GetGameJoypadMaps(
+            PlatformInput.GetJoypadMapVal(iPad), MINECRAFT_ACTION_JUMP);
+        unsigned int uiUse = PlatformInput.GetGameJoypadMaps(
+            PlatformInput.GetJoypadMapVal(iPad), MINECRAFT_ACTION_USE);
+        unsigned int uiAlt = PlatformInput.GetGameJoypadMaps(
+            PlatformInput.GetJoypadMapVal(iPad), MINECRAFT_ACTION_SNEAK_TOGGLE);
 
         // Also need to handle PS3 having swapped triggers/bumpers
         switch (uiAction) {
@@ -3228,9 +3226,9 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
 
         int wheel = 0;
         unsigned int leftTicks =
-            InputManager.GetValue(iPad, MINECRAFT_ACTION_LEFT_SCROLL, true);
+            PlatformInput.GetValue(iPad, MINECRAFT_ACTION_LEFT_SCROLL, true);
         unsigned int rightTicks =
-            InputManager.GetValue(iPad, MINECRAFT_ACTION_RIGHT_SCROLL, true);
+            PlatformInput.GetValue(iPad, MINECRAFT_ACTION_RIGHT_SCROLL, true);
         if (leftTicks > 0 &&
             gameMode->isInputAllowed(MINECRAFT_ACTION_LEFT_SCROLL)) {
             wheel = (int)leftTicks;  // positive = left
@@ -3261,21 +3259,21 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
 
         if (gameMode->isInputAllowed(MINECRAFT_ACTION_ACTION)) {
             if ((player->ullButtonsPressed & (1LL << MINECRAFT_ACTION_ACTION)))
-            // if(InputManager.ButtonPressed(iPad, MINECRAFT_ACTION_ACTION) )
+            // if(PlatformInput.ButtonPressed(iPad, MINECRAFT_ACTION_ACTION) )
             {
                 // printf("MINECRAFT_ACTION_ACTION ButtonPressed");
                 player->handleMouseClick(0);
                 player->lastClickTick[0] = ticks;
             }
 
-            if (InputManager.ButtonDown(iPad, MINECRAFT_ACTION_ACTION) &&
+            if (PlatformInput.ButtonDown(iPad, MINECRAFT_ACTION_ACTION) &&
                 ticks - player->lastClickTick[0] >= timer->ticksPerSecond / 4) {
                 // printf("MINECRAFT_ACTION_ACTION ButtonDown");
                 player->handleMouseClick(0);
                 player->lastClickTick[0] = ticks;
             }
 
-            if (InputManager.ButtonDown(iPad, MINECRAFT_ACTION_ACTION)) {
+            if (PlatformInput.ButtonDown(iPad, MINECRAFT_ACTION_ACTION)) {
                 player->handleMouseDown(0, true);
             } else {
                 player->handleMouseDown(0, false);
@@ -3287,7 +3285,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
         // Java game does it, however we may find that the way we had it
         // previously is more fun to play.
         /*
-        if ((InputManager.GetValue(iPad, MINECRAFT_ACTION_USE,true)>0) &&
+        if ((PlatformInput.GetValue(iPad, MINECRAFT_ACTION_USE,true)>0) &&
         gameMode->isInputAllowed(MINECRAFT_ACTION_USE) )
         {
         handleMouseClick(1);
@@ -3295,14 +3293,14 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
         }
         */
         if (player->isUsingItem()) {
-            if (!InputManager.ButtonDown(iPad, MINECRAFT_ACTION_USE))
+            if (!PlatformInput.ButtonDown(iPad, MINECRAFT_ACTION_USE))
                 gameMode->releaseUsingItem(player);
         } else if (gameMode->isInputAllowed(MINECRAFT_ACTION_USE)) {
             if (player->abilities.instabuild) {
                 // 4J - attempt to handle click in special creative mode fashion
                 // if possible (used for placing blocks at regular intervals)
                 bool didClick = player->creativeModeHandleMouseClick(
-                    1, InputManager.ButtonDown(iPad, MINECRAFT_ACTION_USE));
+                    1, PlatformInput.ButtonDown(iPad, MINECRAFT_ACTION_USE));
                 // If this handler has put us in lastClick_oldRepeat mode then
                 // it is because we aren't placing blocks - behave largely as
                 // the code used to
@@ -3316,7 +3314,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
                     } else {
                         // Otherwise just the original game code for handling
                         // autorepeat
-                        if (InputManager.ButtonDown(iPad,
+                        if (PlatformInput.ButtonDown(iPad,
                                                     MINECRAFT_ACTION_USE) &&
                             ticks - player->lastClickTick[1] >=
                                 timer->ticksPerSecond / 4) {
@@ -3339,7 +3337,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
                 if (player->isRiding() || player->isSprinting() ||
                     player->isSleeping())
                     autoRepeat = false;
-                if (InputManager.ButtonDown(iPad, MINECRAFT_ACTION_USE)) {
+                if (PlatformInput.ButtonDown(iPad, MINECRAFT_ACTION_USE)) {
                     // If the player has just exited a bed, then delay the time
                     // before a repeat key is allowed without releasing
                     if (player->isSleeping())
@@ -3376,7 +3374,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
 #if defined(_DEBUG_MENUS_ENABLED)
         if (gameServices().debugSettingsOn()) {
             // 4J-PB - debugoverlay for primary player only
-            if (iPad == InputManager.GetPrimaryPad()) {
+            if (iPad == PlatformInput.GetPrimaryPad()) {
                 if ((player->ullButtonsPressed &
                      (1LL << MINECRAFT_ACTION_RENDER_DEBUG))) {
 #if !defined(_CONTENT_PACKAGE)
@@ -3498,7 +3496,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
 
         bool selected = false;
         {
-            int hotbarSlot = InputManager.GetHotbarSlotPressed(iPad);
+            int hotbarSlot = PlatformInput.GetHotbarSlotPressed(iPad);
             if (hotbarSlot >= 0 && hotbarSlot <= 9) {
                 player->inventory->selected = hotbarSlot;
                 selected = true;
@@ -3525,7 +3523,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
         }
     } else {
         // 4J-PB
-        // if (InputManager.GetValue(iPad, ACTION_MENU_CANCEL) > 0 &&
+        // if (PlatformInput.GetValue(iPad, ACTION_MENU_CANCEL) > 0 &&
         //     gameMode->isInputAllowed(ACTION_MENU_CANCEL)) {
         //     setScreen(nullptr);
         // }
@@ -3536,7 +3534,7 @@ void Minecraft::tick(bool bFirst, bool bUpdateTextures) {
     // 	if(!(ui.GetMenuDisplayed(iPad)))
     // 	{
     // 		wchar_t wchInput;
-    // 		if(InputManager.InputDetected(iPad,&wchInput))
+    // 		if(PlatformInput.InputDetected(iPad,&wchInput))
     // 		{
     // 			printf("Input Detected!\n");
     //
@@ -3690,11 +3688,11 @@ void Minecraft::forceStatsSave(int idx) {
     stats[idx]->save(idx, true);
 
     // 4J Gordon: If the player is signed in, save the leaderboards
-    if (ProfileManager.IsSignedInLive(idx)) {
-        int tempLockedProfile = ProfileManager.GetLockedProfile();
-        ProfileManager.SetLockedProfile(idx);
+    if (PlatformProfile.IsSignedInLive(idx)) {
+        int tempLockedProfile = PlatformProfile.GetLockedProfile();
+        PlatformProfile.SetLockedProfile(idx);
         stats[idx]->saveLeaderboards();
-        ProfileManager.SetLockedProfile(tempLockedProfile);
+        PlatformProfile.SetLockedProfile(tempLockedProfile);
     }
 }
 
@@ -3839,19 +3837,19 @@ void Minecraft::setLevel(MultiPlayerLevel* level, int message /*=-1*/,
         // If no player has been set, then this is the first level to be set
         // this game, so set up a primary player & initialise some other things
         if (player == nullptr) {
-            int iPrimaryPlayer = InputManager.GetPrimaryPad();
+            int iPrimaryPlayer = PlatformInput.GetPrimaryPad();
 
             player = gameMode->createPlayer(level);
 
             PlayerUID playerXUIDOffline = INVALID_XUID;
             PlayerUID playerXUIDOnline = INVALID_XUID;
-            ProfileManager.GetXUID(iPrimaryPlayer, &playerXUIDOffline, false);
-            ProfileManager.GetXUID(iPrimaryPlayer, &playerXUIDOnline, true);
+            PlatformProfile.GetXUID(iPrimaryPlayer, &playerXUIDOffline, false);
+            PlatformProfile.GetXUID(iPrimaryPlayer, &playerXUIDOnline, true);
             player->setXuid(playerXUIDOffline);
             player->setOnlineXuid(playerXUIDOnline);
 
             player->m_displayName =
-                ProfileManager.GetDisplayName(iPrimaryPlayer);
+                PlatformProfile.GetDisplayName(iPrimaryPlayer);
 
             player->resetPos();
             gameMode->initPlayer(player);
@@ -4012,13 +4010,13 @@ void Minecraft::respawnPlayer(int iPad, int dimension, int newEntityId) {
 
     PlayerUID playerXUIDOffline = INVALID_XUID;
     PlayerUID playerXUIDOnline = INVALID_XUID;
-    ProfileManager.GetXUID(iTempPad, &playerXUIDOffline, false);
-    ProfileManager.GetXUID(iTempPad, &playerXUIDOnline, true);
+    PlatformProfile.GetXUID(iTempPad, &playerXUIDOffline, false);
+    PlatformProfile.GetXUID(iTempPad, &playerXUIDOnline, true);
     player->setXuid(playerXUIDOffline);
     player->setOnlineXuid(playerXUIDOnline);
-    player->setIsGuest(ProfileManager.IsGuest(iTempPad));
+    player->setIsGuest(PlatformProfile.IsGuest(iTempPad));
 
-    player->m_displayName = ProfileManager.GetDisplayName(iPad);
+    player->m_displayName = PlatformProfile.GetDisplayName(iPad);
 
     player->SetXboxPad(iTempPad);
 
@@ -4053,11 +4051,11 @@ void Minecraft::respawnPlayer(int iPad, int dimension, int newEntityId) {
     cameraTargetPlayer = player;
 
     // 4J-PB - are we the primary player or a local player?
-    if (iPad == InputManager.GetPrimaryPad()) {
+    if (iPad == PlatformInput.GetPrimaryPad()) {
         createPrimaryLocalPlayer(iPad);
 
         // update the debugoptions
-        gameServices().setGameSettingsDebugMask(InputManager.GetPrimaryPad(),
+        gameServices().setGameSettingsDebugMask(PlatformInput.GetPrimaryPad(),
                                      gameServices().debugGetMask(-1, true));
     } else {
         storeExtraLocalPlayer(iPad);
@@ -4471,7 +4469,7 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
         pMinecraftClass->localplayers[iPad] == nullptr) {
         // It's possible that the player has not signed in - they can back out
         // or choose no for the converttoguest
-        if (ProfileManager.IsSignedIn(iPad)) {
+        if (PlatformProfile.IsSignedIn(iPad)) {
             if (!g_NetworkManager.SessionHasSpace()) {
                 unsigned int uiIDA[1];
                 uiIDA[0] = IDS_OK;
@@ -4480,8 +4478,8 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
             }
             // if this is a local game then profiles just need to be signed in
             else if (g_NetworkManager.IsLocalGame() ||
-                     (ProfileManager.IsSignedInLive(iPad) &&
-                      ProfileManager.AllowedToPlayMultiplayer(iPad))) {
+                     (PlatformProfile.IsSignedInLive(iPad) &&
+                      PlatformProfile.AllowedToPlayMultiplayer(iPad))) {
                 if (pMinecraftClass->level->isClientSide) {
                     pMinecraftClass->addLocalPlayer(iPad);
                 } else {
@@ -4492,20 +4490,20 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
                         player = pMinecraftClass->createExtraLocalPlayer(
                             iPad,
                             (convStringToWstring(
-                                 ProfileManager.GetGamertag(iPad)))
+                                 PlatformProfile.GetGamertag(iPad)))
                                 .c_str(),
                             iPad, pMinecraftClass->level->dimension->id);
                     }
                 }
-            } else if (ProfileManager.IsSignedInLive(
-                           InputManager.GetPrimaryPad()) &&
-                       !ProfileManager.AllowedToPlayMultiplayer(iPad)) {
+            } else if (PlatformProfile.IsSignedInLive(
+                           PlatformInput.GetPrimaryPad()) &&
+                       !PlatformProfile.AllowedToPlayMultiplayer(iPad)) {
                 // 4J Stu - Don't allow converting to guests as we don't allow
                 // any guest sign-in while in the game Fix for #66516 - TCR
                 // #124: MPS Guest Support ; #001: BAS Game Stability: TU8: The
                 // game crashes when second Guest signs-in on console which
                 // takes part in Xbox LIVE multiplayer session.
-                // ProfileManager.RequestConvertOfflineToGuestUI(
+                // PlatformProfile.RequestConvertOfflineToGuestUI(
                 // &Minecraft::InGame_SignInReturned, pMinecraftClass,iPad);
                 unsigned int uiIDA[1];
                 uiIDA[0] = IDS_CONFIRM_OK;

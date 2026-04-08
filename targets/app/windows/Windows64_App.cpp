@@ -19,7 +19,7 @@ WindowsGame app;
 WindowsGame::WindowsGame() : Game() {}
 
 void WindowsGame::SetRichPresenceContext(int iPad, int contextId) {
-    ProfileManager.SetRichPresenceContextValue(iPad, CONTEXT_GAME_STATE,
+    PlatformProfile.SetRichPresenceContextValue(iPad, CONTEXT_GAME_STATE,
                                                contextId);
 }
 
@@ -45,7 +45,7 @@ void WindowsGame::TemporaryCreateGameStart() {
     // From CScene_Main::RunPlayGame
     Minecraft* pMinecraft = Minecraft::GetInstance();
     app.ReleaseSaveThumbnail();
-    ProfileManager.SetLockedProfile(0);
+    PlatformProfile.SetLockedProfile(0);
     pMinecraft->user->name = L"Windows";
     app.ApplyGameSettingsChanged(0);
 
@@ -63,8 +63,8 @@ void WindowsGame::TemporaryCreateGameStart() {
     app.ClearTerrainFeaturePosition();
     std::wstring wWorldName = L"TestWorld";
 
-    StorageManager.ResetSaveData();
-    StorageManager.SetSaveTitle(wWorldName.c_str());
+    PlatformStorage.ResetSaveData();
+    PlatformStorage.SetSaveTitle(wWorldName.c_str());
 
     bool isFlat = false;
     int64_t seedValue =

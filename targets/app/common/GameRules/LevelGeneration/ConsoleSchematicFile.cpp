@@ -142,7 +142,7 @@ void ConsoleSchematicFile::load(DataInputStream* dis) {
                     app.DebugPrintf(
                         "ConsoleSchematicFile has read a nullptr tile "
                         "entity\n");
-                    __debugbreak();
+                    assert(0);
 #endif
                 } else {
                     m_tileEntities.push_back(te);
@@ -675,7 +675,7 @@ void ConsoleSchematicFile::generateSchematicFile(
     }
 
 #ifndef _CONTENT_PACKAGE
-    if (p != blockCount) __debugbreak();
+    if (p != blockCount) assert(0);
 #endif
 
     // We don't know how this will compress - just make a fixed length buffer to

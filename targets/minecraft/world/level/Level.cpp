@@ -15,7 +15,7 @@
 #include <optional>
 
 #include "Explosion.h"
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "LevelListener.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
@@ -73,7 +73,6 @@
 #include "minecraft/world/phys/HitResult.h"
 #include "minecraft/world/phys/Vec3.h"
 #include "minecraft/world/scores/Scoreboard.h"
-#include "platform/PlatformServices.h"
 
 class CompoundTag;
 class ItemInstance;
@@ -2189,7 +2188,7 @@ void Level::tickEntities() {
                 if (tileEntitiesToUnload.find(*it) !=
                     tileEntitiesToUnload.end()) {
                     if (isClientSide) {
-                        __debugbreak();
+                        assert(0);
                     }
                     it = tileEntityList.erase(it);
                 } else {

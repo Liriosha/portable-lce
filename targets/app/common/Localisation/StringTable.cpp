@@ -115,7 +115,7 @@ void StringTable::ProcessStringTableData(void) {
     } else {
         app.DebugPrintf("Failed to get language\n");
 #ifdef _DEBUG
-        __debugbreak();
+        assert(0);
 #endif
 
         isStatic = false;
@@ -137,7 +137,7 @@ void StringTable::getData(std::uint8_t** ppData, unsigned int* pSize) {
 const wchar_t* StringTable::getString(const std::wstring& id) {
 #ifndef _CONTENT_PACKAGE
     if (isStatic) {
-        __debugbreak();
+        assert(0);
         return L"";
     }
 #endif
@@ -154,7 +154,7 @@ const wchar_t* StringTable::getString(const std::wstring& id) {
 const wchar_t* StringTable::getString(int id) {
 #ifndef _CONTENT_PACKAGE
     if (!isStatic) {
-        __debugbreak();
+        assert(0);
         return L"";
     }
 #endif

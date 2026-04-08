@@ -7,7 +7,7 @@
 #include <cmath>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/BufferedImage.h"
@@ -169,7 +169,7 @@ void TitleScreen::buttonClicked(Button* button) {
     if (button->id == 4) {
         Log::info(
             "TitleScreen::buttonClicked() Exit Game if (button->id == 4)\n");
-        RenderManager.Close();  // minecraft->stop();
+        PlatformRenderer.Close();  // minecraft->stop();
     }
 }
 

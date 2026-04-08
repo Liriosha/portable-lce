@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "java/Random.h"
@@ -20,7 +20,6 @@
 #include "minecraft/world/level/biome/BiomeCache.h"
 #include "minecraft/world/level/newbiome/layer/Layer.h"
 #include "minecraft/world/level/storage/LevelData.h"
-#include "platform/PlatformServices.h"
 #include "strings.h"
 
 // 4J - removal of separate temperature & downfall layers brought forward

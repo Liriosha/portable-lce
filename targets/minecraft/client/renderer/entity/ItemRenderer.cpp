@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 #include "util/StringHelpers.h"
 
@@ -222,7 +222,7 @@ void ItemRenderer::renderItemBillboard(std::shared_ptr<ItemEntity> entity,
             LOD = 2;  // Force LOD level 2 to achieve texture reads from 256x256
                       // map
         }
-        RenderManager.StateSetForceLOD(LOD);
+        PlatformRenderer.StateSetForceLOD(LOD);
 
         glPushMatrix();
         if (m_bItemFrame) {
@@ -311,7 +311,7 @@ void ItemRenderer::renderItemBillboard(std::shared_ptr<ItemEntity> entity,
 
         glPopMatrix();
 
-        RenderManager.StateSetForceLOD(-1);
+        PlatformRenderer.StateSetForceLOD(-1);
     } else {
         for (int i = 0; i < count; i++) {
             glPushMatrix();

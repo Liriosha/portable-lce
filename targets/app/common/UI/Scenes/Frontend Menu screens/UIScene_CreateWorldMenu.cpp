@@ -7,9 +7,8 @@
 #include <utility>
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #include "app/common/App_Defines.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCManager.h"
@@ -112,8 +111,8 @@ UIScene_CreateWorldMenu::UIScene_CreateWorldMenu(int iPad, void* initData,
     m_pDLCPack = nullptr;
     m_bRebuildTouchBoxes = false;
 
-    m_bMultiplayerAllowed = ProfileManager.IsSignedInLive(m_iPad) &&
-                            ProfileManager.AllowedToPlayMultiplayer(m_iPad);
+    m_bMultiplayerAllowed = PlatformProfile.IsSignedInLive(m_iPad) &&
+                            PlatformProfile.AllowedToPlayMultiplayer(m_iPad);
     // 4J-PB - read the settings for the online flag. We'll only save this
     // setting if the user changed it.
     bool bGameSetting_Online =
@@ -125,9 +124,9 @@ UIScene_CreateWorldMenu::UIScene_CreateWorldMenu(int iPad, void* initData,
     // create, but this matches the behaviour of load game, and lets the player
     // know why they can't play online, instead of just greying out the online
     // setting in the More Options #ifdef 0
-    // 	if(ProfileManager.IsSignedInLive( m_iPad ))
+    // 	if(PlatformProfile.IsSignedInLive( m_iPad ))
     // 	{
-    // 		ProfileManager.GetChatAndContentRestrictions(m_iPad,true,&bChatRestricted,&bContentRestricted,nullptr);
+    // 		PlatformProfile.GetChatAndContentRestrictions(m_iPad,true,&bChatRestricted,&bContentRestricted,nullptr);
     // 	}
     // #endif
 
@@ -159,7 +158,7 @@ UIScene_CreateWorldMenu::UIScene_CreateWorldMenu(int iPad, void* initData,
     m_checkboxOnline.SetEnable(true);
 
     // 4J-PB - to stop an offline game being able to select the online flag
-    if (ProfileManager.IsSignedInLive(m_iPad) == false) {
+    if (PlatformProfile.IsSignedInLive(m_iPad) == false) {
         m_checkboxOnline.SetEnable(false);
     }
 
@@ -353,7 +352,7 @@ void UIScene_CreateWorldMenu::handlePress(F64 controlId, F64 childId) {
     switch ((int)controlId) {
         case eControl_EditWorldName: {
             m_bIgnoreInput = true;
-            InputManager.RequestKeyboard(
+            PlatformInput.RequestKeyboard(
                 app.GetString(IDS_CREATE_NEW_WORLD), m_editWorldName.getLabel(),
                 0, 25,
                 [this](bool bRes) -> int {
@@ -361,7 +360,7 @@ void UIScene_CreateWorldMenu::handlePress(F64 controlId, F64 childId) {
                     // 4J HEG - No reason to set value if keyboard was cancelled
                     if (bRes) {
                         std::wstring str =
-                            convStringToWstring(InputManager.GetText());
+                            convStringToWstring(PlatformInput.GetText());
                         if (!str.empty()) {
                             m_editWorldName.setLabel(str);
                             m_worldName = std::move(str);
@@ -370,7 +369,7 @@ void UIScene_CreateWorldMenu::handlePress(F64 controlId, F64 childId) {
                     }
                     return 0;
                 },
-                C_4JInput::EKeyboardMode_Default);
+                IPlatformInput::EKeyboardMode_Default);
         } break;
         case eControl_GameModeToggle:
             switch (m_iGameModeId) {
@@ -438,7 +437,7 @@ void UIScene_CreateWorldMenu::StartSharedLaunchFlow() {
             // Give the player a warning about the texture pack missing
             ui.RequestAlertMessage(IDS_DLC_TEXTUREPACK_NOT_PRESENT_TITLE,
                                    IDS_DLC_TEXTUREPACK_NOT_PRESENT, uiIDA, 2,
-                                   ProfileManager.GetPrimaryPad(),
+                                   PlatformProfile.GetPrimaryPad(),
                                    &TexturePackDialogReturned, this);
             return;
         }
@@ -483,7 +482,7 @@ void UIScene_CreateWorldMenu::StartSharedLaunchFlow() {
             unsigned int uiIDA[1];
             uiIDA[0]=IDS_OK;
 
-            if(!ProfileManager.IsSignedInLive(m_iPad))
+            if(!PlatformProfile.IsSignedInLive(m_iPad))
             {
             // need to be signed in to live
             ui.RequestMessageBox(IDS_PRO_NOTONLINE_TITLE,
@@ -531,8 +530,8 @@ void UIScene_CreateWorldMenu::handleTimerComplete(int id) {
     switch (id) {
         case GAME_CREATE_ONLINE_TIMER_ID: {
             bool bMultiplayerAllowed =
-                ProfileManager.IsSignedInLive(m_iPad) &&
-                ProfileManager.AllowedToPlayMultiplayer(m_iPad);
+                PlatformProfile.IsSignedInLive(m_iPad) &&
+                PlatformProfile.AllowedToPlayMultiplayer(m_iPad);
 
             if (bMultiplayerAllowed != m_bMultiplayerAllowed) {
                 if (bMultiplayerAllowed) {
@@ -574,21 +573,21 @@ void UIScene_CreateWorldMenu::handleGainFocus(bool navBack) {
 
 
 void UIScene_CreateWorldMenu::checkStateAndStartGame() {
-    int primaryPad = ProfileManager.GetPrimaryPad();
+    int primaryPad = PlatformProfile.GetPrimaryPad();
     bool isSignedInLive = true;
     bool isOnlineGame = m_MoreOptionsParams.bOnlineGame;
     int iPadNotSignedInLive = -1;
     bool isLocalMultiplayerAvailable = app.IsLocalMultiplayerAvailable();
 
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; i++) {
-        if (ProfileManager.IsSignedIn(i) &&
+        if (PlatformProfile.IsSignedIn(i) &&
             (i == primaryPad || isLocalMultiplayerAvailable)) {
-            if (isSignedInLive && !ProfileManager.IsSignedInLive(i)) {
+            if (isSignedInLive && !PlatformProfile.IsSignedInLive(i)) {
                 // Record the first non signed in live pad
                 iPadNotSignedInLive = i;
             }
 
-            isSignedInLive = isSignedInLive && ProfileManager.IsSignedInLive(i);
+            isSignedInLive = isSignedInLive && PlatformProfile.IsSignedInLive(i);
         }
     }
 
@@ -599,7 +598,7 @@ void UIScene_CreateWorldMenu::checkStateAndStartGame() {
         unsigned int uiIDA[1];
         uiIDA[0] = IDS_CONFIRM_OK;
         ui.RequestAlertMessage(IDS_PRO_NOTONLINE_TITLE, IDS_PRO_NOTONLINE_TEXT,
-                               uiIDA, 1, ProfileManager.GetPrimaryPad());
+                               uiIDA, 1, PlatformProfile.GetPrimaryPad());
         return;
     }
 
@@ -623,22 +622,22 @@ void UIScene_CreateWorldMenu::checkStateAndStartGame() {
         // the sign-in UI again
         int connectedControllers = 0;
         for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-            if (InputManager.IsPadConnected(i) || ProfileManager.IsSignedIn(i))
+            if (PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))
                 ++connectedControllers;
         }
 
         // Check if user-created content is allowed, as we cannot play
         // multiplayer if it's not
         // bool isClientSide =
-        // ProfileManager.IsSignedInLive(ProfileManager.GetPrimaryPad()) &&
+        // PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
         // m_MoreOptionsParams.bOnlineGame;
         bool noUGC = false;
         bool pccAllowed = true;
         bool pccFriendsAllowed = true;
         bool bContentRestricted = false;
 
-        ProfileManager.AllowedPlayerCreatedContent(
-            ProfileManager.GetPrimaryPad(), false, &pccAllowed,
+        PlatformProfile.AllowedPlayerCreatedContent(
+            PlatformProfile.GetPrimaryPad(), false, &pccAllowed,
             &pccFriendsAllowed);
 
         noUGC = !pccAllowed && !pccFriendsAllowed;
@@ -655,15 +654,15 @@ void UIScene_CreateWorldMenu::checkStateAndStartGame() {
                 m_bIgnoreInput = false;
                 ui.RequestContentRestrictedMessageBox();
             } else {
-                // ProfileManager.RequestSignInUI(false, false, false, true,
+                // PlatformProfile.RequestSignInUI(false, false, false, true,
                 // false,&CScene_MultiGameCreate::StartGame_SignInReturned,
-                // this,ProfileManager.GetPrimaryPad());
+                // this,PlatformProfile.GetPrimaryPad());
                 SignInInfo info;
                 info.Func = [this](bool bContinue, int pad) {
                     return StartGame_SignInReturned(this, bContinue, pad);
                 };
                 info.requireOnline = m_MoreOptionsParams.bOnlineGame;
-                ui.NavigateToScene(ProfileManager.GetPrimaryPad(),
+                ui.NavigateToScene(PlatformProfile.GetPrimaryPad(),
                                    eUIScene_QuadrantSignin, &info);
             }
         } else {
@@ -694,7 +693,7 @@ void UIScene_CreateWorldMenu::CreateGame(UIScene_CreateWorldMenu* pClass,
 #endif
 
     bool isClientSide =
-        ProfileManager.IsSignedInLive(ProfileManager.GetPrimaryPad()) &&
+        PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
         pClass->m_MoreOptionsParams.bOnlineGame;
 
     bool isPrivate = pClass->m_MoreOptionsParams.bInviteOnly ? true : false;
@@ -705,9 +704,9 @@ void UIScene_CreateWorldMenu::CreateGame(UIScene_CreateWorldMenu* pClass,
     // create the world and launch
     std::wstring wWorldName = pClass->m_worldName;
 
-    StorageManager.ResetSaveData();
+    PlatformStorage.ResetSaveData();
     // Make our next save default to the name of the level
-    StorageManager.SetSaveTitle((wchar_t*)wWorldName.c_str());
+    PlatformStorage.SetSaveTitle((wchar_t*)wWorldName.c_str());
 
     std::wstring wSeed;
     if (!pClass->m_MoreOptionsParams.seed.empty()) {
@@ -894,33 +893,33 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
 
     if (bContinue == true) {
         // It's possible that the player has not signed in - they can back out
-        if (ProfileManager.IsSignedIn(pClass->m_iPad)) {
+        if (PlatformProfile.IsSignedIn(pClass->m_iPad)) {
             bool isOnlineGame =
-                ProfileManager.IsSignedInLive(ProfileManager.GetPrimaryPad()) &&
+                PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
                 pClass->m_MoreOptionsParams.bOnlineGame;
             // bool isOnlineGame = pClass->m_MoreOptionsParams.bOnlineGame;
-            int primaryPad = ProfileManager.GetPrimaryPad();
+            int primaryPad = PlatformProfile.GetPrimaryPad();
             bool noPrivileges = false;
             int localUsersMask = 0;
-            bool isSignedInLive = ProfileManager.IsSignedInLive(primaryPad);
+            bool isSignedInLive = PlatformProfile.IsSignedInLive(primaryPad);
             int iPadNotSignedInLive = -1;
             bool isLocalMultiplayerAvailable =
                 app.IsLocalMultiplayerAvailable();
 
             for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-                if (ProfileManager.IsSignedIn(i) &&
+                if (PlatformProfile.IsSignedIn(i) &&
                     ((i == primaryPad) || isLocalMultiplayerAvailable)) {
-                    if (isSignedInLive && !ProfileManager.IsSignedInLive(i)) {
+                    if (isSignedInLive && !PlatformProfile.IsSignedInLive(i)) {
                         // Record the first non signed in live pad
                         iPadNotSignedInLive = i;
                     }
 
-                    if (!ProfileManager.AllowedToPlayMultiplayer(i))
+                    if (!PlatformProfile.AllowedToPlayMultiplayer(i))
                         noPrivileges = true;
                     localUsersMask |=
                         CGameNetworkManager::GetLocalPlayerMask(i);
                     isSignedInLive =
-                        isSignedInLive && ProfileManager.IsSignedInLive(i);
+                        isSignedInLive && PlatformProfile.IsSignedInLive(i);
                 }
             }
 
@@ -932,7 +931,7 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
                 uiIDA[0] = IDS_CONFIRM_OK;
                 ui.RequestAlertMessage(IDS_PRO_NOTONLINE_TITLE,
                                        IDS_PRO_NOTONLINE_TEXT, uiIDA, 1,
-                                       ProfileManager.GetPrimaryPad());
+                                       PlatformProfile.GetPrimaryPad());
                 return 0;
             }
 
@@ -942,8 +941,8 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
             bool pccAllowed = true;
             bool pccFriendsAllowed = true;
 
-            ProfileManager.AllowedPlayerCreatedContent(
-                ProfileManager.GetPrimaryPad(), false, &pccAllowed,
+            PlatformProfile.AllowedPlayerCreatedContent(
+                PlatformProfile.GetPrimaryPad(), false, &pccAllowed,
                 &pccFriendsAllowed);
             if (!pccAllowed && !pccFriendsAllowed) noUGC = true;
 
@@ -955,7 +954,7 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
                     ui.RequestAlertMessage(
                         IDS_FAILED_TO_CREATE_GAME_TITLE,
                         IDS_NO_USER_CREATED_CONTENT_PRIVILEGE_CREATE, uiIDA, 1,
-                        ProfileManager.GetPrimaryPad());
+                        PlatformProfile.GetPrimaryPad());
                 } else {
                     pClass->m_bIgnoreInput = false;
                     unsigned int uiIDA[1];
@@ -963,7 +962,7 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
                     ui.RequestAlertMessage(
                         IDS_NO_MULTIPLAYER_PRIVILEGE_TITLE,
                         IDS_NO_MULTIPLAYER_PRIVILEGE_HOST_TEXT, uiIDA, 1,
-                        ProfileManager.GetPrimaryPad());
+                        PlatformProfile.GetPrimaryPad());
                 }
             } else {
                 // This is NOT called from a storage manager thread, and is in
@@ -978,45 +977,45 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
 }
 
 int UIScene_CreateWorldMenu::ConfirmCreateReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_CreateWorldMenu* pClass = (UIScene_CreateWorldMenu*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
         bool isClientSide =
-            ProfileManager.IsSignedInLive(ProfileManager.GetPrimaryPad()) &&
+            PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
             pClass->m_MoreOptionsParams.bOnlineGame;
 
         // 4J Stu - If we only have one controller connected, then don't show
         // the sign-in UI again
         int connectedControllers = 0;
         for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-            if (InputManager.IsPadConnected(i) || ProfileManager.IsSignedIn(i))
+            if (PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))
                 ++connectedControllers;
         }
 
         if (isClientSide && app.IsLocalMultiplayerAvailable()) {
-            // ProfileManager.RequestSignInUI(false, false, false, true,
+            // PlatformProfile.RequestSignInUI(false, false, false, true,
             // false,&UIScene_CreateWorldMenu::StartGame_SignInReturned,
-            // pClass,ProfileManager.GetPrimaryPad());
+            // pClass,PlatformProfile.GetPrimaryPad());
             SignInInfo info;
             info.Func = [pClass](bool bContinue, int pad) {
                 return StartGame_SignInReturned(pClass, bContinue, pad);
             };
             info.requireOnline = pClass->m_MoreOptionsParams.bOnlineGame;
-            ui.NavigateToScene(ProfileManager.GetPrimaryPad(),
+            ui.NavigateToScene(PlatformProfile.GetPrimaryPad(),
                                eUIScene_QuadrantSignin, &info);
         } else {
             // Check if user-created content is allowed, as we cannot play
             // multiplayer if it's not
             bool isClientSide =
-                ProfileManager.IsSignedInLive(ProfileManager.GetPrimaryPad()) &&
+                PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
                 pClass->m_MoreOptionsParams.bOnlineGame;
             bool noUGC = false;
             bool pccAllowed = true;
             bool pccFriendsAllowed = true;
 
-            ProfileManager.AllowedPlayerCreatedContent(
-                ProfileManager.GetPrimaryPad(), false, &pccAllowed,
+            PlatformProfile.AllowedPlayerCreatedContent(
+                PlatformProfile.GetPrimaryPad(), false, &pccAllowed,
                 &pccFriendsAllowed);
             if (!pccAllowed && !pccFriendsAllowed) noUGC = true;
 
@@ -1027,7 +1026,7 @@ int UIScene_CreateWorldMenu::ConfirmCreateReturned(
                 ui.RequestAlertMessage(
                     IDS_FAILED_TO_CREATE_GAME_TITLE,
                     IDS_NO_USER_CREATED_CONTENT_PRIVILEGE_CREATE, uiIDA, 1,
-                    ProfileManager.GetPrimaryPad());
+                    PlatformProfile.GetPrimaryPad());
             } else {
                 CreateGame(pClass, 0);
             }

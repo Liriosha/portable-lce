@@ -1,6 +1,6 @@
 #include "TileRenderer.h"
 
-#include <GL/gl.h>
+
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
@@ -9,7 +9,7 @@
 #include <cmath>
 #include <numbers>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "EntityTileRenderer.h"
 #include "GameRenderer.h"
 #include "minecraft/GameEnums.h"

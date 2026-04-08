@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "PlatformTypes.h"
+#include "InputConstants.h"
 
 class IPlatformInput {
 public:

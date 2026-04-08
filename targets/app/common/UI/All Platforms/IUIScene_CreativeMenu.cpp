@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "platform/InputActions.h"
 #include "app/common/UI/All Platforms/IUIScene_AbstractContainerMenu.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
@@ -879,7 +878,7 @@ void IUIScene_CreativeMenu::staticCtor() {
 
     // Just use the text LT - the graphic doesn't fit in splitscreen either
     // In 480p there's not enough room for the LT button, so use text instead
-    // if(!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())
+    // if(!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())
     {
         specs[eCreativeInventoryTab_Brewing] =
             new TabSpec(L"Brewing", IDS_GROUPNAME_POTIONS_480, 5, brewingGroup);

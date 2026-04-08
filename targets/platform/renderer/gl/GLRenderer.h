@@ -8,9 +8,11 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include "../IPlatformRenderer.h"
+#include "renderer/IPlatformRenderer.h"
 
-class C4JRender : public IPlatformRenderer {
+extern IPlatformRenderer& PlatformRenderer;
+
+class GLRenderer : public IPlatformRenderer {
 public:
     void Tick();
     void UpdateGamma(unsigned short usGamma);
@@ -150,8 +152,6 @@ public:
     void Close();
     void Shutdown();
 };
-
-extern C4JRender RenderManager;
 
 // OpenGL Interception Macros
 #ifndef GL_MODELVIEW_MATRIX
@@ -388,17 +388,17 @@ extern C4JRender RenderManager;
 
 // glCallList / display list macros
 #undef glNewList
-#define glNewList(_list, _mode) RenderManager.CBuffStart(_list)
+#define glNewList(_list, _mode) PlatformRenderer.CBuffStart(_list)
 #undef glEndList
-#define glEndList() RenderManager.CBuffEnd()
+#define glEndList() PlatformRenderer.CBuffEnd()
 #undef glCallList
-#define glCallList(_list) RenderManager.CBuffCall(_list)
+#define glCallList(_list) PlatformRenderer.CBuffCall(_list)
 
 // glGenLists / glDeleteLists, lists are not supported in core!!!!!
 #undef glGenLists
-#define glGenLists(range) RenderManager.CBuffCreate(range)
+#define glGenLists(range) PlatformRenderer.CBuffCreate(range)
 #undef glDeleteLists
-#define glDeleteLists(list, range) RenderManager.CBuffDelete(list, range)
+#define glDeleteLists(list, range) PlatformRenderer.CBuffDelete(list, range)
 
 #ifndef GL_SHADEMODEL_IS_FUNCTION
 #undef glShadeModel
@@ -410,97 +410,97 @@ extern C4JRender RenderManager;
 #undef glTranslatef
 #define glTranslatef(x, y, z)                   \
     do {                                        \
-        RenderManager.MatrixTranslate(x, y, z); \
+        PlatformRenderer.MatrixTranslate(x, y, z); \
     } while (0)
 
 #undef glRotatef
 #define glRotatef(a, x, y, z)                                               \
     do {                                                                    \
-        RenderManager.MatrixRotate((a) * (3.14159265358979f / 180.f), x, y, \
+        PlatformRenderer.MatrixRotate((a) * (3.14159265358979f / 180.f), x, y, \
                                    z);                                      \
     } while (0)
 
 #undef glScalef
 #define glScalef(x, y, z)                   \
     do {                                    \
-        RenderManager.MatrixScale(x, y, z); \
+        PlatformRenderer.MatrixScale(x, y, z); \
     } while (0)
 
 #undef glScaled
 #define glScaled(x, y, z)                                              \
     do {                                                               \
-        RenderManager.MatrixScale((float)(x), (float)(y), (float)(z)); \
+        PlatformRenderer.MatrixScale((float)(x), (float)(y), (float)(z)); \
     } while (0)
 
 #undef glPushMatrix
 #define glPushMatrix()              \
     do {                            \
-        RenderManager.MatrixPush(); \
+        PlatformRenderer.MatrixPush(); \
     } while (0)
 
 #undef glPopMatrix
 #define glPopMatrix()              \
     do {                           \
-        RenderManager.MatrixPop(); \
+        PlatformRenderer.MatrixPop(); \
     } while (0)
 
 #undef glLoadIdentity
 #define glLoadIdentity()                   \
     do {                                   \
-        RenderManager.MatrixSetIdentity(); \
+        PlatformRenderer.MatrixSetIdentity(); \
     } while (0)
 
 #undef glMatrixMode
 #define glMatrixMode(mode)              \
     do {                                \
-        RenderManager.MatrixMode(mode); \
+        PlatformRenderer.MatrixMode(mode); \
     } while (0)
 
 #undef glMultMatrixf
 #define glMultMatrixf(m)             \
     do {                             \
-        RenderManager.MatrixMult(m); \
+        PlatformRenderer.MatrixMult(m); \
     } while (0)
 
 #undef glColor4f
 #define glColor4f(r, g, b, a)                     \
     do {                                          \
-        RenderManager.StateSetColour(r, g, b, a); \
+        PlatformRenderer.StateSetColour(r, g, b, a); \
     } while (0)
 
 #undef glColor3f
 #define glColor3f(r, g, b)                           \
     do {                                             \
-        RenderManager.StateSetColour(r, g, b, 1.0f); \
+        PlatformRenderer.StateSetColour(r, g, b, 1.0f); \
     } while (0)
 
 #undef glAlphaFunc
 #define glAlphaFunc(func, ref)                      \
     do {                                            \
-        RenderManager.StateSetAlphaFunc(func, ref); \
+        PlatformRenderer.StateSetAlphaFunc(func, ref); \
     } while (0)
 
 #undef glEnable
 #define glEnable(cap)                                                   \
     do {                                                                \
         if ((cap) == 0x0B60 /*GL_FOG*/)                                 \
-            RenderManager.StateSetFogEnable(true);                      \
+            PlatformRenderer.StateSetFogEnable(true);                      \
         else if ((cap) == 0x0B50 /*GL_LIGHTING*/)                       \
-            RenderManager.StateSetLightingEnable(true);                 \
+            PlatformRenderer.StateSetLightingEnable(true);                 \
         else if ((cap) == 0x0BC0 /*GL_ALPHA_TEST*/)                     \
-            RenderManager.StateSetAlphaTestEnable(true);                \
+            PlatformRenderer.StateSetAlphaTestEnable(true);                \
         else if ((cap) == 0x0DE1 /*GL_TEXTURE_2D*/)                     \
-            RenderManager.StateSetTextureEnable(true);                  \
+            PlatformRenderer.StateSetTextureEnable(true);                  \
         else if ((cap) == 0x0BE2 /*GL_BLEND*/)                          \
-            RenderManager.StateSetBlendEnable(true);                    \
+            PlatformRenderer.StateSetBlendEnable(true);                    \
         else if ((cap) == 0x0B44 /*GL_CULL_FACE*/)                      \
-            RenderManager.StateSetFaceCull(true);                       \
+            PlatformRenderer.StateSetFaceCull(true);                       \
         else if ((cap) == 0x0B71 /*GL_DEPTH_TEST*/)                     \
-            RenderManager.StateSetDepthTestEnable(true);                \
+            PlatformRenderer.StateSetDepthTestEnable(true);                \
         else if ((cap) == 0x4000 /*GL_LIGHT0*/)                         \
-            RenderManager.StateSetLightEnable(0, true);                 \
+            PlatformRenderer.StateSetLightEnable(0, true);                 \
         else if ((cap) == 0x4001 /*GL_LIGHT1*/)                         \
-            RenderManager.StateSetLightEnable(1, true);                 \
+            PlatformRenderer.StateSetLightEnable(1, true);                 \
         else if ((cap) == 0x0B57    /*GL_COLOR_MATERIAL*/               \
                  || (cap) == 0x0BA1 /*GL_NORMALIZE*/                    \
                  || (cap) == 0x803A /*GL_RESCALE_NORMAL*/               \
@@ -516,23 +516,23 @@ extern C4JRender RenderManager;
 #define glDisable(cap)                                                  \
     do {                                                                \
         if ((cap) == 0x0B60 /*GL_FOG*/)                                 \
-            RenderManager.StateSetFogEnable(false);                     \
+            PlatformRenderer.StateSetFogEnable(false);                     \
         else if ((cap) == 0x0B50 /*GL_LIGHTING*/)                       \
-            RenderManager.StateSetLightingEnable(false);                \
+            PlatformRenderer.StateSetLightingEnable(false);                \
         else if ((cap) == 0x0BC0 /*GL_ALPHA_TEST*/)                     \
-            RenderManager.StateSetAlphaTestEnable(false);               \
+            PlatformRenderer.StateSetAlphaTestEnable(false);               \
         else if ((cap) == 0x0DE1 /*GL_TEXTURE_2D*/)                     \
-            RenderManager.StateSetTextureEnable(false);                 \
+            PlatformRenderer.StateSetTextureEnable(false);                 \
         else if ((cap) == 0x0BE2 /*GL_BLEND*/)                          \
-            RenderManager.StateSetBlendEnable(false);                   \
+            PlatformRenderer.StateSetBlendEnable(false);                   \
         else if ((cap) == 0x0B44 /*GL_CULL_FACE*/)                      \
-            RenderManager.StateSetFaceCull(false);                      \
+            PlatformRenderer.StateSetFaceCull(false);                      \
         else if ((cap) == 0x0B71 /*GL_DEPTH_TEST*/)                     \
-            RenderManager.StateSetDepthTestEnable(false);               \
+            PlatformRenderer.StateSetDepthTestEnable(false);               \
         else if ((cap) == 0x4000 /*GL_LIGHT0*/)                         \
-            RenderManager.StateSetLightEnable(0, false);                \
+            PlatformRenderer.StateSetLightEnable(0, false);                \
         else if ((cap) == 0x4001 /*GL_LIGHT1*/)                         \
-            RenderManager.StateSetLightEnable(1, false);                \
+            PlatformRenderer.StateSetLightEnable(1, false);                \
         else if ((cap) == 0x0B57    /*GL_COLOR_MATERIAL*/               \
                  || (cap) == 0x0BA1 /*GL_NORMALIZE*/                    \
                  || (cap) == 0x803A /*GL_RESCALE_NORMAL*/               \
@@ -548,50 +548,44 @@ extern C4JRender RenderManager;
 #define glFogi(pname, param)                      \
     do {                                          \
         if ((pname) == 0x0B65 /*GL_FOG_MODE*/)    \
-            RenderManager.StateSetFogMode(param); \
+            PlatformRenderer.StateSetFogMode(param); \
     } while (0)
 
 #undef glFogf
 #define glFogf(pname, param)                              \
     do {                                                  \
         if ((pname) == 0x0B63 /*GL_FOG_START*/)           \
-            RenderManager.StateSetFogNearDistance(param); \
+            PlatformRenderer.StateSetFogNearDistance(param); \
         else if ((pname) == 0x0B64 /*GL_FOG_END*/)        \
-            RenderManager.StateSetFogFarDistance(param);  \
+            PlatformRenderer.StateSetFogFarDistance(param);  \
         else if ((pname) == 0x0B62 /*GL_FOG_DENSITY*/)    \
-            RenderManager.StateSetFogDensity(param);      \
+            PlatformRenderer.StateSetFogDensity(param);      \
     } while (0)
 
 #undef glOrtho
 #define glOrtho(left, right, bottom, top, zNear, zFar)                         \
     do {                                                                       \
-        RenderManager.MatrixOrthogonal(left, right, bottom, top, zNear, zFar); \
-    } while (0)
-
-#undef gluPerspective
-#define gluPerspective(fovy, aspect, zNear, zFar)                   \
-    do {                                                            \
-        RenderManager.MatrixPerspective(fovy, aspect, zNear, zFar); \
+        PlatformRenderer.MatrixOrthogonal(left, right, bottom, top, zNear, zFar); \
     } while (0)
 
 #undef glMultiTexCoord2f
 #define glMultiTexCoord2f(tex, u, v)                     \
     do {                                                 \
         if ((tex) == 0x84C1 /*GL_TEXTURE1*/)             \
-            RenderManager.StateSetVertexTextureUV(u, v); \
+            PlatformRenderer.StateSetVertexTextureUV(u, v); \
     } while (0)
 
 #undef glActiveTexture
 #define glActiveTexture(tex)                      \
     do {                                          \
-        RenderManager.StateSetActiveTexture(tex); \
+        PlatformRenderer.StateSetActiveTexture(tex); \
         ::glActiveTexture(tex);                   \
     } while (0)
 
 #undef glClientActiveTexture
 #define glClientActiveTexture(tex)                \
     do {                                          \
-        RenderManager.StateSetActiveTexture(tex); \
+        PlatformRenderer.StateSetActiveTexture(tex); \
     } while (0)
 
 // declarations
@@ -644,7 +638,7 @@ inline void glCallLists_4J(T* lists) {
     int base = lists->position();
     int count = lists->limit() - base;
     for (int i = 0; i < count; i++) {
-        RenderManager.CBuffCall(lists->get(base + i));
+        PlatformRenderer.CBuffCall(lists->get(base + i));
     }
 }
 template <typename T>
@@ -665,25 +659,25 @@ template <typename T>
 inline void glFog_4J(int pname, T* params) {
     float* p = params->_getDataPointer();
     if (pname == 0x0B66 /* GL_FOG_COLOR */)
-        RenderManager.StateSetFogColour(p[0], p[1], p[2]);
+        PlatformRenderer.StateSetFogColour(p[0], p[1], p[2]);
 }
 template <typename T>
 inline void glLight_4J(int light, int pname, T* params) {
     float* p = params->_getDataPointer();
     if (pname == 0x1203 /* GL_POSITION */)
-        RenderManager.StateSetLightDirection(light == 0x4000 ? 0 : 1, p[0],
+        PlatformRenderer.StateSetLightDirection(light == 0x4000 ? 0 : 1, p[0],
                                              p[1], p[2]);
     else if (pname == 0x1200 /* GL_AMBIENT */)
-        RenderManager.StateSetLightAmbientColour(p[0], p[1], p[2]);
+        PlatformRenderer.StateSetLightAmbientColour(p[0], p[1], p[2]);
     else if (pname == 0x1201 /* GL_DIFFUSE */)
-        RenderManager.StateSetLightColour(light == 0x4000 ? 0 : 1, p[0], p[1],
+        PlatformRenderer.StateSetLightColour(light == 0x4000 ? 0 : 1, p[0], p[1],
                                           p[2]);
 }
 template <typename T>
 inline void glLightModel_4J(int pname, T* params) {
     float* p = params->_getDataPointer();
     if (pname == 0x0B53 /* GL_LIGHT_MODEL_AMBIENT */)
-        RenderManager.StateSetLightAmbientColour(p[0], p[1], p[2]);
+        PlatformRenderer.StateSetLightAmbientColour(p[0], p[1], p[2]);
 }
 template <typename T>
 inline void glTexGen_4J(int coord, int pname, T* params) {}
@@ -709,6 +703,7 @@ void glEndQuery_4J_Helper(unsigned int target);
 void glGenQueries_4J_Helper(unsigned int* id);
 void glGetQueryObjectu_4J_Helper(unsigned int id, unsigned int pname,
                                  unsigned int* val);
+
 // redirect the functions to my own implementation, no more 2.1 funcs
 #define glGenTextures(...) glGenTextures_4J(__VA_ARGS__)
 #define glDeleteTextures(...) glDeleteTextures_4J(__VA_ARGS__)

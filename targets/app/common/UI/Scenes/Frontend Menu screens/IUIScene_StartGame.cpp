@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include "platform/sdl2/Profile.h"
+#include "platform/profile/profile.h"
 #include "app/common/App_structs.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/UI/Controls/UIControl_BitmapIcon.h"
@@ -228,7 +228,7 @@ void IUIScene_StartGame::UpdateCurrentTexturePack(int iSlot) {
         // Give the player a warning about the texture pack missing
         ui.RequestErrorMessage(IDS_DLC_TEXTUREPACK_NOT_PRESENT_TITLE,
                                IDS_DLC_TEXTUREPACK_NOT_PRESENT, uiIDA, 3,
-                               ProfileManager.GetPrimaryPad(),
+                               PlatformProfile.GetPrimaryPad(),
                                & : TexturePackDialogReturned, this);
 
         // do set the texture pack id, and on the user pressing create world,
@@ -242,10 +242,10 @@ void IUIScene_StartGame::UpdateCurrentTexturePack(int iSlot) {
 }
 
 int IUIScene_StartGame::TrialTexturePackWarningReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     IUIScene_StartGame* pScene = (IUIScene_StartGame*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
         pScene->checkStateAndStartGame();
     } else {
         pScene->m_bIgnoreInput = false;
@@ -254,11 +254,11 @@ int IUIScene_StartGame::TrialTexturePackWarningReturned(
 }
 
 int IUIScene_StartGame::UnlockTexturePackReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     IUIScene_StartGame* pScene = (IUIScene_StartGame*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultAccept) {
-        if (ProfileManager.IsSignedIn(iPad)) {
+    if (result == IPlatformStorage::EMessage_ResultAccept) {
+        if (PlatformProfile.IsSignedIn(iPad)) {
             // the license change coming in when the offer has been installed
             // will cause this scene to refresh
         }
@@ -271,7 +271,7 @@ int IUIScene_StartGame::UnlockTexturePackReturned(
 }
 
 int IUIScene_StartGame::TexturePackDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     IUIScene_StartGame* pClass = (IUIScene_StartGame*)pParam;
 
     pClass->m_bIgnoreInput = false;

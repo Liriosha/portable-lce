@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "app/common/DLC/DLCFile.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
@@ -14,7 +14,7 @@
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "PlatformTypes.h"
 #include "util/StringHelpers.h"
-#include "platform/PlatformServices.h"
+#include "platform/fs/fs.h"
 
 BufferedImage::BufferedImage(int width, int height, int type) {
     data[0] = new int[width * height];
@@ -61,7 +61,7 @@ BufferedImage::BufferedImage(const std::wstring& File,
         baseName = baseName.substr(1);
     if (baseName.find(L"res/") == 0) baseName = baseName.substr(4);
 
-    std::wstring exeDir = PlatformFileIO.getBasePath().wstring();
+    std::wstring exeDir = PlatformFilesystem.getBasePath().wstring();
 
     for (int l = 0; l < 10; l++) {
         std::wstring mipSuffix =
@@ -82,7 +82,7 @@ BufferedImage::BufferedImage(const std::wstring& File,
             size_t p;
             while ((p = attempt.find(L"//")) != std::wstring::npos)
                 attempt.replace(p, 2, L"/");
-            if (PlatformFileIO.exists(attempt)) {
+            if (PlatformFilesystem.exists(attempt)) {
                 finalPath = attempt;
                 foundOnDisk = true;
                 break;
@@ -94,13 +94,13 @@ BufferedImage::BufferedImage(const std::wstring& File,
 
         if (foundOnDisk) {
             std::string nativePath = std::filesystem::path(finalPath).string();
-            hr = RenderManager.LoadTextureData(nativePath.c_str(),
+            hr = PlatformRenderer.LoadTextureData(nativePath.c_str(),
                                                &ImageInfo, &data[l]);
         } else {
             std::wstring archiveKey = L"res/" + fileName;
             if (gameServices().hasArchiveFile(archiveKey)) {
                 std::vector<uint8_t> ba = gameServices().getArchiveFile(archiveKey);
-                hr = RenderManager.LoadTextureData(ba.data(), ba.size(),
+                hr = PlatformRenderer.LoadTextureData(ba.data(), ba.size(),
                                                    &ImageInfo, &data[l]);
             }
         }
@@ -152,7 +152,7 @@ BufferedImage::BufferedImage(DLCPack* dlcPack, const std::wstring& File,
         }
 
         D3DXIMAGE_INFO ImageInfo;
-        hr = RenderManager.LoadTextureData(pbData, dataBytes, &ImageInfo,
+        hr = PlatformRenderer.LoadTextureData(pbData, dataBytes, &ImageInfo,
                                            &data[l]);
         if (hr == ERROR_SUCCESS && l == 0) {
             width = ImageInfo.Width;
@@ -169,7 +169,7 @@ BufferedImage::BufferedImage(std::uint8_t* pbData, std::uint32_t dataBytes) {
     D3DXIMAGE_INFO ImageInfo;
     memset(&ImageInfo, 0, sizeof(D3DXIMAGE_INFO));
     int32_t hr =
-        RenderManager.LoadTextureData(pbData, dataBytes, &ImageInfo, &data[0]);
+        PlatformRenderer.LoadTextureData(pbData, dataBytes, &ImageInfo, &data[0]);
 
     if (hr == ERROR_SUCCESS) {
         width = ImageInfo.Width;

@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
-#include "IPlatformRenderer.h"
+#include "platform/renderer/renderer.h"
+#include "platform/renderer/renderer.h"
 
 class Icon;
 class Entity;

@@ -4,9 +4,9 @@
 
 #include <string>
 
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/storage/storage.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
@@ -28,7 +28,7 @@ void LinuxGame::SetRichPresenceContext(int iPad, int contextId) {}
 void LinuxGame::StoreLaunchData() {}
 void LinuxGame::ExitGame() {
     app.DebugPrintf("Linux_App LinuxGame::ExitGame AFTER START\n");
-    RenderManager.Close();
+    PlatformRenderer.Close();
 }
 void LinuxGame::FatalLoadError() {
     app.DebugPrintf(
@@ -54,7 +54,7 @@ void LinuxGame::TemporaryCreateGameStart() {
     // From CScene_Main::RunPlayGame
     Minecraft* pMinecraft = Minecraft::GetInstance();
     app.ReleaseSaveThumbnail();
-    ProfileManager.SetLockedProfile(0);
+    PlatformProfile.SetLockedProfile(0);
     pMinecraft->user->name = L"Windows";
     app.ApplyGameSettingsChanged(0);
 
@@ -72,8 +72,8 @@ void LinuxGame::TemporaryCreateGameStart() {
     app.ClearTerrainFeaturePosition();
     std::wstring wWorldName = L"TestWorld";
 
-    StorageManager.ResetSaveData();
-    StorageManager.SetSaveTitle(wWorldName.c_str());
+    PlatformStorage.ResetSaveData();
+    PlatformStorage.SetSaveTitle(wWorldName.c_str());
 
     bool isFlat = false;
     int64_t seedValue =

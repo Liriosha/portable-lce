@@ -3,8 +3,8 @@
 #include <cmath>
 #include <memory>
 
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
@@ -70,17 +70,17 @@ void IUIScene_HUD::updateFrameTick() {
     int iGuiScale;
 
     if (pMinecraft->localplayers[iPad]->m_iScreenSection ==
-        C4JRender::VIEWPORT_TYPE_FULLSCREEN) {
+        IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN) {
         iGuiScale = app.GetGameSettings(iPad, eGameSetting_UISize);
     } else {
         iGuiScale = app.GetGameSettings(iPad, eGameSetting_UISizeSplitscreen);
     }
     SetHudSize(iGuiScale);
 
-    SetDisplayName(ProfileManager.GetDisplayName(iPad));
+    SetDisplayName(PlatformProfile.GetDisplayName(iPad));
 
-    SetTooltipsEnabled(((ui.GetMenuDisplayed(ProfileManager.GetPrimaryPad())) ||
-                        (app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+    SetTooltipsEnabled(((ui.GetMenuDisplayed(PlatformProfile.GetPrimaryPad())) ||
+                        (app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                                              eGameSetting_Tooltips) != 0)));
 
     SetActiveSlot(pMinecraft->localplayers[iPad]->inventory->selected);
@@ -137,7 +137,7 @@ void IUIScene_HUD::updateFrameTick() {
         }
     }
 
-    unsigned char ucAlpha = app.GetGameSettings(ProfileManager.GetPrimaryPad(),
+    unsigned char ucAlpha = app.GetGameSettings(PlatformProfile.GetPrimaryPad(),
                                                 eGameSetting_InterfaceOpacity);
     float fVal;
 

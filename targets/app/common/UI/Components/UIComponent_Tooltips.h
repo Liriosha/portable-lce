@@ -3,8 +3,7 @@
 #include <string>
 
 #include "platform/PlatformTypes.h"
-#include "platform/InputActions.h"
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/UIScene.h"
@@ -14,6 +13,7 @@
 #include "app/linux/Stubs/iggy_stubs.h"
 #endif
 #include "app/linux/Iggy/include/rrCore.h"
+#include "platform/input/InputConstants.h"
 
 class UILayer;
 
@@ -71,7 +71,7 @@ public:
 
     // RENDERING
     virtual void render(S32 width, S32 height,
-                        C4JRender::eViewportType viewport);
+                        IPlatformRenderer::eViewportType viewport);
 
     virtual void SetTooltipText(unsigned int tooltip, int iTextID);
     virtual void SetEnableTooltips(bool bVal);

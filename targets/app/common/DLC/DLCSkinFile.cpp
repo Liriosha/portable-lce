@@ -3,7 +3,7 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "DLCManager.h"
 #include "app/common/DLC/DLCFile.h"
 #include "app/linux/LinuxGame.h"
@@ -57,7 +57,7 @@ void DLCSkinFile::addParameter(DLCManager::EDLCParameterType type,
                 int maximumChars = 55;
 
                 bool bIsSDMode =
-                    !RenderManager.IsHiDef() && !RenderManager.IsWidescreen();
+                    !PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen();
 
                 if (bIsSDMode) {
                     maximumChars = 45;

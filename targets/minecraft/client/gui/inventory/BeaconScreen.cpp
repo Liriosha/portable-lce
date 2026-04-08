@@ -1,12 +1,12 @@
 #include "BeaconScreen.h"
 
-#include <GL/gl.h>
+
 
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "BeaconCancelButton.h"
 #include "BeaconConfirmButton.h"
 #include "BeaconPowerButton.h"

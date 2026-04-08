@@ -15,6 +15,7 @@
 #include <thread>
 #include <utility>
 
+#include "platform/fs/fs.h"
 #include "platform/PlatformTypes.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/BuildVer/BuildVer.h"
@@ -37,8 +38,7 @@
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSavePath.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
 #include "minecraft/world/level/storage/LevelData.h"
-#include "platform/IPlatformStorage.h"
-#include "platform/PlatformServices.h"
+#include "platform/storage/storage.h"
 
 class ProgressListener;
 
@@ -470,7 +470,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
     // pages committed should always be zero at this point.
     if (pagesCommitted != 0) {
 #if !defined(_CONTENT_PACKAGE)
-        __debugbreak();
+        assert(0);
 #endif
     }
 
@@ -482,7 +482,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
     if (pvRet == nullptr) {
 #if !defined(_CONTENT_PACKAGE)
         // Out of physical memory
-        __debugbreak();
+        assert(0);
 #endif
     }
     pagesCommitted = pagesRequired;
@@ -531,7 +531,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
                                          COMMIT_ALLOCATION, PAGE_READWRITE);
                         if (pvRet == nullptr) {
                             // Out of physical memory
-                            __debugbreak();
+                            assert(0);
                         }
                         pagesCommitted = pagesRequired;
                     }
@@ -542,7 +542,7 @@ void ConsoleSaveFileSplit::_init(const std::wstring& fileName, void* pvSaveData,
                     // actually be ok
                     Log::info("Failed to decompress save data!\n");
 #if !defined(_CONTENT_PACKAGE)
-                    __debugbreak();
+                    assert(0);
 #endif
                     memset(pvSaveMem, 0, fileSize);
                     // Clear the first 8 bytes that reference the header
@@ -1037,7 +1037,7 @@ void ConsoleSaveFileSplit::MoveDataBeyond(FileEntry* file,
                                    COMMIT_ALLOCATION, PAGE_READWRITE);
         if (pvRet == nullptr) {
             // Out of physical memory
-            __debugbreak();
+            assert(0);
         }
         pagesCommitted = pagesRequired;
     }
@@ -1299,7 +1299,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
     // 4J Stu - Added TU-1 interim
 
     // Attempt to allocate the required memory
-    // We do not own this, it belongs to the StorageManager
+    // We do not own this, it belongs to the PlatformStorage
     std::uint8_t* compData =
         (std::uint8_t*)PlatformStorage.AllocateSaveData(compLength);
 
@@ -1464,13 +1464,13 @@ void ConsoleSaveFileSplit::DebugFlushToFile(
     bool writeSucceeded = false;
 
     if (compressedData != nullptr && compressedDataSize > 0) {
-        writeSucceeded = PlatformFileIO.writeFile(
+        writeSucceeded = PlatformFilesystem.writeFile(
             outputPath, compressedData, compressedDataSize);
         numberOfBytesWritten = writeSucceeded ? compressedDataSize : 0;
         assert(numberOfBytesWritten == compressedDataSize);
     } else {
         writeSucceeded =
-            PlatformFileIO.writeFile(outputPath, pvSaveMem, fileSize);
+            PlatformFilesystem.writeFile(outputPath, pvSaveMem, fileSize);
         numberOfBytesWritten = writeSucceeded ? fileSize : 0;
         assert(numberOfBytesWritten == fileSize);
     }

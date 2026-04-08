@@ -1,5 +1,9 @@
 #include "app/common/NetworkController.h"
 
+#include <chrono>
+#include <cstring>
+#include <thread>
+
 #include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/linux/LinuxGame.h"
@@ -13,18 +17,10 @@
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/server/MinecraftServer.h"
-#include "minecraft/stats/StatsCounter.h"
-#include "minecraft/world/entity/player/Player.h"
-#include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Storage.h"
-#include "app/common/Audio/SoundEngine.h"
-
-#include <cstring>
-#include <chrono>
-#include <thread>
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
+#include "platform/storage/storage.h"
 
 unsigned int NetworkController::m_uiLastSignInData = 0;
 
@@ -39,9 +35,8 @@ NetworkController::NetworkController() {
     memset(m_playerGamePrivileges, 0, sizeof(m_playerGamePrivileges));
 
     for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-        if (FAILED(XUserGetSigninInfo(i,
-                                      XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY,
-                                      &m_currentSigninInfo[i]))) {
+        if (XUserGetSigninInfo(i, XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY,
+                               &m_currentSigninInfo[i]) < 0) {
             m_currentSigninInfo[i].xuid = INVALID_XUID;
             m_currentSigninInfo[i].dwGuestNumber = 0;
         }
@@ -97,7 +92,7 @@ void NetworkController::processInvite(std::uint32_t dwUserIndex,
 }
 
 int NetworkController::primaryPlayerSignedOutReturned(
-    void* pParam, int iPad, const C4JStorage::EMessageResult) {
+    void* pParam, int iPad, const IPlatformStorage::EMessageResult) {
     if (g_NetworkManager.IsInSession()) {
         app.SetAction(iPad, eAppAction_PrimaryPlayerSignedOutReturned);
     } else {
@@ -107,7 +102,7 @@ int NetworkController::primaryPlayerSignedOutReturned(
 }
 
 int NetworkController::ethernetDisconnectReturned(
-    void* pParam, int iPad, const C4JStorage::EMessageResult) {
+    void* pParam, int iPad, const IPlatformStorage::EMessageResult) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
     if (Minecraft::GetInstance()->player != nullptr) {
@@ -121,7 +116,7 @@ int NetworkController::ethernetDisconnectReturned(
 
 void NetworkController::profileReadErrorCallback(void* pParam) {
     Game* pApp = (Game*)pParam;
-    int iPrimaryPlayer = ProfileManager.GetPrimaryPad();
+    int iPrimaryPlayer = PlatformProfile.GetPrimaryPad();
     pApp->SetAction(iPrimaryPlayer, eAppAction_ProfileReadError);
 }
 
@@ -219,7 +214,7 @@ int NetworkController::signoutExitWorldThreadProc(void* lpParameter) {
 }
 
 void NetworkController::clearSignInChangeUsersMask() {
-    int iPrimaryPlayer = ProfileManager.GetPrimaryPad();
+    int iPrimaryPlayer = PlatformProfile.GetPrimaryPad();
 
     if (m_uiLastSignInData != 0) {
         if (iPrimaryPlayer >= 0) {
@@ -234,14 +229,14 @@ void NetworkController::signInChangeCallback(void* pParam,
                                              bool bPrimaryPlayerChanged,
                                              unsigned int uiSignInData) {
     Game* pApp = (Game*)pParam;
-    int iPrimaryPlayer = ProfileManager.GetPrimaryPad();
+    int iPrimaryPlayer = PlatformProfile.GetPrimaryPad();
 
-    if ((ProfileManager.GetLockedProfile() != -1) && iPrimaryPlayer != -1) {
+    if ((PlatformProfile.GetLockedProfile() != -1) && iPrimaryPlayer != -1) {
         if (((uiSignInData & (1 << iPrimaryPlayer)) == 0) ||
             bPrimaryPlayerChanged) {
             pApp->SetAction(iPrimaryPlayer, eAppAction_PrimaryPlayerSignedOut);
             pApp->InvalidateBannedList(iPrimaryPlayer);
-            StorageManager.ClearDLCOffers();
+            PlatformStorage.ClearDLCOffers();
             pApp->ClearAndResetDLCDownloadQueue();
             pApp->ClearDLCInstalled();
         } else {
@@ -251,7 +246,7 @@ void NetworkController::signInChangeCallback(void* pParam,
                 bool hasGuestIdChanged = false;
                 for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
                     unsigned int guestNumber = 0;
-                    if (ProfileManager.IsSignedIn(i)) {
+                    if (PlatformProfile.IsSignedIn(i)) {
                         XUSER_SIGNIN_INFO info;
                         XUserGetSigninInfo(
                             i, XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY, &info);
@@ -274,12 +269,12 @@ void NetworkController::signInChangeCallback(void* pParam,
                     uiIDA[0] = IDS_CONFIRM_OK;
                     ui.RequestErrorMessage(IDS_GUEST_ORDER_CHANGED_TITLE,
                                            IDS_GUEST_ORDER_CHANGED_TEXT, uiIDA,
-                                           1, ProfileManager.GetPrimaryPad());
+                                           1, PlatformProfile.GetPrimaryPad());
                 }
 
                 bool switchToOffline = false;
-                if (!ProfileManager.IsSignedInLive(
-                        ProfileManager.GetLockedProfile()) &&
+                if (!PlatformProfile.IsSignedInLive(
+                        PlatformProfile.GetLockedProfile()) &&
                     !g_NetworkManager.IsLocalGame()) {
                     switchToOffline = true;
                 }
@@ -308,12 +303,11 @@ void NetworkController::signInChangeCallback(void* pParam,
 
                         if (bPlayerChanged &&
                             (!bPlayerSignedIn ||
-                             (bPlayerSignedIn &&
-                              !ProfileManager.AreXUIDSEqual(
-                                  pApp->m_networkController
-                                      .m_currentSigninInfo[i]
-                                      .xuid,
-                                  info.xuid)))) {
+                             (bPlayerSignedIn && !PlatformProfile.AreXUIDSEqual(
+                                                     pApp->m_networkController
+                                                         .m_currentSigninInfo[i]
+                                                         .xuid,
+                                                     info.xuid)))) {
                             pApp->DebugPrintf(
                                 "Player at index %d Left - invalidating their "
                                 "banned list\n",
@@ -338,8 +332,8 @@ void NetworkController::signInChangeCallback(void* pParam,
 
                 g_NetworkManager.HandleSignInChange();
             } else if (pApp->GetLiveLinkRequired() &&
-                       !ProfileManager.IsSignedInLive(
-                           ProfileManager.GetLockedProfile())) {
+                       !PlatformProfile.IsSignedInLive(
+                           PlatformProfile.GetLockedProfile())) {
                 {
                     pApp->SetAction(iPrimaryPlayer,
                                     eAppAction_EthernetDisconnected);
@@ -349,15 +343,15 @@ void NetworkController::signInChangeCallback(void* pParam,
         m_uiLastSignInData = uiSignInData;
     } else if (iPrimaryPlayer != -1) {
         pApp->InvalidateBannedList(iPrimaryPlayer);
-        StorageManager.ClearDLCOffers();
+        PlatformStorage.ClearDLCOffers();
         pApp->ClearAndResetDLCDownloadQueue();
         pApp->ClearDLCInstalled();
     }
 
     for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-        if (FAILED(XUserGetSigninInfo(
+        if (XUserGetSigninInfo(
                 i, XUSER_GET_SIGNIN_INFO_OFFLINE_XUID_ONLY,
-                &pApp->m_networkController.m_currentSigninInfo[i]))) {
+                &pApp->m_networkController.m_currentSigninInfo[i]) < 0) {
             pApp->m_networkController.m_currentSigninInfo[i].xuid =
                 INVALID_XUID;
             pApp->m_networkController.m_currentSigninInfo[i].dwGuestNumber = 0;
@@ -384,7 +378,7 @@ void NetworkController::notificationsCallback(void* pParam,
         case XN_SYS_INPUTDEVICESCHANGED:
             if (app.GetGameStarted() && g_NetworkManager.IsInSession()) {
                 for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-                    if (!InputManager.IsPadConnected(i) &&
+                    if (!PlatformInput.IsPadConnected(i) &&
                         Minecraft::GetInstance()->localplayers[i] != nullptr &&
                         !ui.IsPauseMenuDisplayed(i) &&
                         !ui.IsSceneInStack(i, eUIScene_EndPoem)) {
@@ -396,7 +390,7 @@ void NetworkController::notificationsCallback(void* pParam,
             break;
         case XN_LIVE_CONTENT_INSTALLED: {
             app.ClearDLCInstalled();
-            ui.HandleDLCInstalled(ProfileManager.GetPrimaryPad());
+            ui.HandleDLCInstalled(PlatformProfile.GetPrimaryPad());
         } break;
         case XN_SYS_STORAGEDEVICESCHANGED: {
         } break;
@@ -410,10 +404,10 @@ void NetworkController::liveLinkChangeCallback(void* pParam, bool bConnected) {
 }
 
 int NetworkController::exitAndJoinFromInvite(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     Game* pApp = (Game*)pParam;
 
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         pApp->SetAction(iPad, eAppAction_ExitAndJoinFromInviteConfirmed);
     }
 
@@ -421,11 +415,11 @@ int NetworkController::exitAndJoinFromInvite(
 }
 
 int NetworkController::exitAndJoinFromInviteSaveDialogReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     Game* pClass = (Game*)pParam;
-    if (result == C4JStorage::EMessage_ResultDecline ||
-        result == C4JStorage::EMessage_ResultThirdOption) {
-        if (result == C4JStorage::EMessage_ResultDecline) {
+    if (result == IPlatformStorage::EMessage_ResultDecline ||
+        result == IPlatformStorage::EMessage_ResultThirdOption) {
+        if (result == IPlatformStorage::EMessage_ResultDecline) {
             if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
                 TexturePack* tPack =
                     Minecraft::GetInstance()->skins->getSelected();
@@ -446,14 +440,14 @@ int NetworkController::exitAndJoinFromInviteSaveDialogReturned(
                 }
             }
             bool bSaveExists;
-            StorageManager.DoesSaveExist(&bSaveExists);
+            PlatformStorage.DoesSaveExist(&bSaveExists);
             if (bSaveExists) {
                 unsigned int uiIDA[2];
                 uiIDA[0] = IDS_CONFIRM_CANCEL;
                 uiIDA[1] = IDS_CONFIRM_OK;
                 ui.RequestErrorMessage(
                     IDS_TITLE_SAVE_GAME, IDS_CONFIRM_SAVE_GAME, uiIDA, 2,
-                    ProfileManager.GetPrimaryPad(),
+                    PlatformProfile.GetPrimaryPad(),
                     &NetworkController::exitAndJoinFromInviteAndSaveReturned,
                     pClass);
                 return 0;
@@ -466,26 +460,26 @@ int NetworkController::exitAndJoinFromInviteSaveDialogReturned(
             uiIDA[1] = IDS_CONFIRM_OK;
             ui.RequestErrorMessage(
                 IDS_TITLE_DECLINE_SAVE_GAME, IDS_CONFIRM_DECLINE_SAVE_GAME,
-                uiIDA, 2, ProfileManager.GetPrimaryPad(),
+                uiIDA, 2, PlatformProfile.GetPrimaryPad(),
                 &NetworkController::exitAndJoinFromInviteDeclineSaveReturned,
                 pClass);
             return 0;
         }
 
-        app.SetAction(ProfileManager.GetPrimaryPad(),
+        app.SetAction(PlatformProfile.GetPrimaryPad(),
                       eAppAction_ExitAndJoinFromInviteConfirmed);
     }
     return 0;
 }
 
 int NetworkController::warningTrialTexturePackReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     return 0;
 }
 
 int NetworkController::exitAndJoinFromInviteAndSaveReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
             TexturePack* tPack = Minecraft::GetInstance()->skins->getSelected();
             DLCPack* pDLCPack = tPack->getDLCPack();
@@ -509,8 +503,8 @@ int NetworkController::exitAndJoinFromInviteAndSaveReturned(
 }
 
 int NetworkController::exitAndJoinFromInviteDeclineSaveReturned(
-    void* pParam, int iPad, C4JStorage::EMessageResult result) {
-    if (result == C4JStorage::EMessage_ResultDecline) {
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
+    if (result == IPlatformStorage::EMessage_ResultDecline) {
         MinecraftServer::getInstance()->setSaveOnExit(false);
         app.SetAction(iPad, eAppAction_ExitAndJoinFromInviteConfirmed);
     }

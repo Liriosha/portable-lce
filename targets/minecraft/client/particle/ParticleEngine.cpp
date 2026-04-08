@@ -1,12 +1,12 @@
 #include "ParticleEngine.h"
 
-#include <GL/gl.h>
+
 #include <math.h>
 
 #include <algorithm>
 #include <numbers>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "Particle.h"
 #include "TerrainParticle.h"
 #include "util/StringHelpers.h"

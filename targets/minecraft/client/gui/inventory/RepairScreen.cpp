@@ -1,11 +1,11 @@
 #include "RepairScreen.h"
 
-#include <GL/gl.h>
+
 
 #include <memory>
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "minecraft/client/Minecraft.h"

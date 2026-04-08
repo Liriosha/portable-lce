@@ -1,10 +1,10 @@
 #include "ModelPart.h"
 
-#include <GL/gl.h>
+
 
 #include <numbers>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "Cube.h"
 #include "TexOffs.h"
 #include "minecraft/client/MemoryTracker.h"

@@ -7,8 +7,8 @@
 #include <limits>
 #include <vector>
 
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Storage.h"
+#include "platform/input/input.h"
+#include "platform/storage/storage.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/Colours/ColourTable.h"
@@ -29,7 +29,7 @@
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/client/BufferedImage.h"
-#include "platform/PlatformServices.h"
+#include "platform/fs/fs.h"
 #include "java/File.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/skins/AbstractTexturePack.h"
@@ -55,8 +55,8 @@ bool ReadPortableBinaryFile(File& file, std::uint8_t*& data,
     const std::size_t capacity = static_cast<std::size_t>(fileLength);
     std::uint8_t* buffer = new std::uint8_t[capacity == 0 ? 1 : capacity];
     auto readResult =
-        PlatformFileIO.readFile(file.getPath(), buffer, capacity);
-    if (readResult.status != IPlatformFileIO::ReadStatus::Ok ||
+        PlatformFilesystem.readFile(file.getPath(), buffer, capacity);
+    if (readResult.status != IPlatformFilesystem::ReadStatus::Ok ||
         readResult.fileSize > std::numeric_limits<unsigned int>::max()) {
         delete[] buffer;
         data = nullptr;
@@ -150,7 +150,7 @@ void DLCTexturePack::loadDescription() {
 std::wstring DLCTexturePack::getResource(const std::wstring& name) {
     // 4J Stu - We should never call this function
 #if !defined(__CONTENT_PACKAGE)
-    __debugbreak();
+    assert(0);
 #endif
     return L"";
 }
@@ -160,7 +160,7 @@ InputStream* DLCTexturePack::getResourceImplementation(
 {
     // 4J Stu - We should never call this function
 #if !defined(_CONTENT_PACKAGE)
-    __debugbreak();
+    assert(0);
     if (hasFile(name)) return nullptr;
 #endif
     return nullptr;  // resource;
@@ -238,8 +238,8 @@ void DLCTexturePack::loadData() {
     int mountIndex = m_dlcInfoPack->GetDLCMountIndex();
 
     if (mountIndex > -1) {
-        if (StorageManager.MountInstalledDLC(
-                InputManager.GetPrimaryPad(), mountIndex,
+        if (PlatformStorage.MountInstalledDLC(
+                PlatformInput.GetPrimaryPad(), mountIndex,
                 [this](int pad, std::uint32_t err, std::uint32_t lic) {
                     return onPackMounted(pad, err, lic);
                 },
@@ -249,7 +249,7 @@ void DLCTexturePack::loadData() {
             if (gameServices().getLevelGenerationOptions())
                 gameServices().getLevelGenerationOptions()->setLoadedData();
             Log::info("Failed to mount texture pack DLC %d for pad %d\n",
-                            mountIndex, InputManager.GetPrimaryPad());
+                            mountIndex, PlatformInput.GetPrimaryPad());
         } else {
             m_bLoadingData = true;
             Log::info("Attempted to mount DLC data for texture pack %d\n",
@@ -259,7 +259,7 @@ void DLCTexturePack::loadData() {
         m_bHasLoadedData = true;
         if (gameServices().getLevelGenerationOptions())
             gameServices().getLevelGenerationOptions()->setLoadedData();
-        gameServices().setAction(InputManager.GetPrimaryPad(),
+        gameServices().setAction(PlatformInput.GetPrimaryPad(),
                       eAppAction_ReloadTexturePack);
     }
 }
@@ -404,7 +404,7 @@ int DLCTexturePack::onPackMounted(int iPad, std::uint32_t dwErr,
     texturePack->m_bHasLoadedData = true;
     if (gameServices().getLevelGenerationOptions())
         gameServices().getLevelGenerationOptions()->setLoadedData();
-    gameServices().setAction(InputManager.GetPrimaryPad(), eAppAction_ReloadTexturePack);
+    gameServices().setAction(PlatformInput.GetPrimaryPad(), eAppAction_ReloadTexturePack);
 
     return 0;
 }
@@ -420,7 +420,7 @@ void DLCTexturePack::loadUI() {
 
     AbstractTexturePack::loadUI();
     if (hasAudio() == false && !ui.IsReloadingSkin()) {
-        StorageManager.UnmountInstalledDLC("TPACK");
+        PlatformStorage.UnmountInstalledDLC("TPACK");
     }
 }
 

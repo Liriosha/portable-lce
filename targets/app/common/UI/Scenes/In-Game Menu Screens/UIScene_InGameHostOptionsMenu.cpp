@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "platform/InputActions.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/Network/NetworkPlayerInterface.h"

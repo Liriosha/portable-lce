@@ -6,7 +6,7 @@
 #include <numbers>
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/client/model/geom/ModelPart.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/animal/Ocelot.h"

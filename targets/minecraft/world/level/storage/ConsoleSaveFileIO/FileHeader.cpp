@@ -284,7 +284,7 @@ void FileHeader::ReadHeader(
 #if !defined(_CONTENT_PACKAGE)
             Log::info("**********  Invalid save version %d\n",
                             m_saveVersion);
-            __debugbreak();
+            assert(0);
 #endif
             break;
     }

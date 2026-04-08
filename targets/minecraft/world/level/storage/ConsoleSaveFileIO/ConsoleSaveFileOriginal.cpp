@@ -33,8 +33,8 @@
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSavePath.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
 #include "minecraft/world/level/storage/LevelData.h"
-#include "platform/IPlatformStorage.h"
-#include "platform/PlatformServices.h"
+#include "platform/storage/storage.h"
+#include "platform/fs/fs.h"
 
 #define RESERVE_ALLOCATION MEM_RESERVE
 #define COMMIT_ALLOCATION MEM_COMMIT
@@ -91,7 +91,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
     // pages committed should always be zero at this point.
     if (pagesCommitted != 0) {
 #ifndef _CONTENT_PACKAGE
-        __debugbreak();
+        assert(0);
 #endif
     }
 
@@ -103,7 +103,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
     if (pvRet == nullptr) {
 #ifndef _CONTENT_PACKAGE
         // Out of physical memory
-        __debugbreak();
+        assert(0);
 #endif
     }
     pagesCommitted = pagesRequired;
@@ -162,7 +162,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
                                      COMMIT_ALLOCATION, PAGE_READWRITE);
                     if (pvRet == nullptr) {
                         // Out of physical memory
-                        __debugbreak();
+                        assert(0);
                     }
                     pagesCommitted = pagesRequired;
                 }
@@ -438,7 +438,7 @@ void ConsoleSaveFileOriginal::MoveDataBeyond(
                                    COMMIT_ALLOCATION, PAGE_READWRITE);
         if (pvRet == nullptr) {
             // Out of physical memory
-            __debugbreak();
+            assert(0);
         }
         pagesCommitted = pagesRequired;
     }
@@ -587,7 +587,7 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
     // 4J Stu - Added TU-1 interim
 
     // Attempt to allocate the required memory
-    // We do not own this, it belongs to the StorageManager
+    // We do not own this, it belongs to the PlatformStorage
     std::uint8_t* compData =
         (std::uint8_t*)PlatformStorage.AllocateSaveData(compLength);
 
@@ -745,13 +745,13 @@ void ConsoleSaveFileOriginal::DebugFlushToFile(
     bool writeSucceeded = false;
 
     if (compressedData != nullptr && compressedDataSize > 0) {
-        writeSucceeded = PlatformFileIO.writeFile(
+        writeSucceeded = PlatformFilesystem.writeFile(
             outputPath, compressedData, compressedDataSize);
         numberOfBytesWritten = writeSucceeded ? compressedDataSize : 0;
         assert(numberOfBytesWritten == compressedDataSize);
     } else {
         writeSucceeded =
-            PlatformFileIO.writeFile(outputPath, pvSaveMem, fileSize);
+            PlatformFilesystem.writeFile(outputPath, pvSaveMem, fileSize);
         numberOfBytesWritten = writeSucceeded ? fileSize : 0;
         assert(numberOfBytesWritten == fileSize);
     }

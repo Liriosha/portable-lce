@@ -2,7 +2,8 @@
 
 #include <memory>
 
-#include "platform/sdl2/Render.h"
+
+#include "platform/renderer/renderer.h"
 
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/model/EndermanModel.h"

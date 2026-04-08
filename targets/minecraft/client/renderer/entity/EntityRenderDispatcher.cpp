@@ -6,7 +6,7 @@
 #include <cmath>
 #include <utility>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "ArrowRenderer.h"
 #include "BatRenderer.h"
 #include "BlazeRenderer.h"
@@ -198,7 +198,7 @@ EntityRenderer* EntityRenderDispatcher::getRenderer(eINSTANCEOF e) {
     if (it == renderers.end()) {
         Log::info("Couldn't find renderer for entity of type %d\n", e);
         // New renderer mapping required in above table
-        // __debugbreak();
+        // assert(0);
         assert(0);
     }
     /* 4J - not doing this hierarchical search anymore. We need to explicitly

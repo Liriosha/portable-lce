@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <utility>
 
-#include "IPlatformInput.h"
+#include "platform/input/input.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/linux/LinuxGame.h"
 #include "util/Definitions.h"
@@ -33,7 +33,6 @@
 #include "nbt/CompoundTag.h"
 #include "nbt/ListTag.h"
 #include "nbt/NbtIo.h"
-#include "platform/PlatformServices.h"
 
 thread_local OldChunkStorage::ThreadStorage* OldChunkStorage::m_tlsStorage =
     nullptr;

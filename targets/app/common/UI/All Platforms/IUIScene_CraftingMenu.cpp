@@ -7,16 +7,13 @@
 #include <string>
 #include <vector>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Profile.h"
-#include "platform/sdl2/Render.h"
-#include "minecraft/GameEnums.h"
 #include "app/common/Console_Debug_enum.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/linux/LinuxGame.h"
 #include "app/linux/Linux_UIController.h"
 #include "app/linux/Stubs/winapi_stubs.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/player/LocalPlayer.h"
@@ -28,6 +25,8 @@
 #include "minecraft/world/item/crafting/Recipes.h"
 #include "minecraft/world/item/crafting/ShapedRecipy.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
 
 Recipy::_eGroupType IUIScene_CraftingMenu::m_GroupTypeMapping4GridA
@@ -199,7 +198,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
                 // Force a make if the debug is on
                 if (app.DebugSettingsOn() &&
                     app.GetGameSettingsDebugMask(
-                        ProfileManager.GetPrimaryPad()) &
+                        PlatformProfile.GetPrimaryPad()) &
                         (1L << eDebugSetting_CraftAnything)) {
                     if (CanBeMadeA[m_iCurrentSlotHIndex].iCount != 0) {
                         int iSlot = iVSlotIndexA[m_iCurrentSlotVIndex];
@@ -481,7 +480,7 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
     // Vita)
     bool bNoScrollSlots = false;
     if (m_bSplitscreen ||
-        (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+        (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
         bNoScrollSlots = true;
     }
 
@@ -876,7 +875,8 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
                     } else {
                         app.DebugPrintf("Need more H slots - ");
 #if !defined(_CONTENT_PACKAGE)
-                        OutputDebugStringW(
+                        fwprintf(
+                            stderr,
                             app.GetString(pTempItemInst->getDescriptionId()));
 #endif
                         app.DebugPrintf("\n");
@@ -907,7 +907,7 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
         unsigned int uiAlpha;
 
         if (app.DebugSettingsOn() &&
-            app.GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
+            app.GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()) &
                 (1L << eDebugSetting_CraftAnything)) {
             uiAlpha = 31;
         } else {
@@ -1035,7 +1035,7 @@ void IUIScene_CraftingMenu::UpdateVerticalSlots() {
         // splits & Vita)
         bool bNoScrollSlots = false;
         if (m_bSplitscreen ||
-            (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+            (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen())) {
             bNoScrollSlots = true;
         }
 
@@ -1054,7 +1054,7 @@ void IUIScene_CraftingMenu::UpdateVerticalSlots() {
             unsigned int uiAlpha;
 
             if (app.DebugSettingsOn() &&
-                app.GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
+                app.GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()) &
                     (1L << eDebugSetting_CraftAnything)) {
                 uiAlpha = 31;
             } else {
@@ -1171,7 +1171,7 @@ void IUIScene_CraftingMenu::DisplayIngredients() {
         setCraftingOutputSlotItem(getPad(), pTempItemInst);
 
         if (app.DebugSettingsOn() &&
-            app.GetGameSettingsDebugMask(ProfileManager.GetPrimaryPad()) &
+            app.GetGameSettingsDebugMask(PlatformProfile.GetPrimaryPad()) &
                 (1L << eDebugSetting_CraftAnything)) {
             setCraftingOutputSlotRedBox(false);
         } else {
@@ -1212,7 +1212,7 @@ void IUIScene_CraftingMenu::DisplayIngredients() {
                     // recipe
                     if (app.DebugSettingsOn() &&
                         app.GetGameSettingsDebugMask(
-                            ProfileManager.GetPrimaryPad()) &
+                            PlatformProfile.GetPrimaryPad()) &
                             (1L << eDebugSetting_CraftAnything)) {
                         setIngredientSlotRedBox(index, false);
                     } else {
@@ -1314,8 +1314,8 @@ void IUIScene_CraftingMenu::UpdateDescriptionText(bool bCanBeMade) {
 
             // 12 for splitscreen, 14 for normal
             EHTMLFontSize size = eHTMLSize_Normal;
-            if (m_bSplitscreen ||
-                (!RenderManager.IsHiDef() && !RenderManager.IsWidescreen())) {
+            if (m_bSplitscreen || (!PlatformRenderer.IsHiDef() &&
+                                   !PlatformRenderer.IsWidescreen())) {
                 size = eHTMLSize_Splitscreen;
             }
             wchar_t startTags[64];

@@ -4,7 +4,6 @@
 #include "KeyMapping.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/linux/LinuxGame.h"
-#include "platform/stubs.h"
 #include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/InputOutputStream/BufferedReader.h"
@@ -17,6 +16,7 @@
 #include "minecraft/client/renderer/Textures.h"
 #include "minecraft/locale/I18n.h"
 #include "minecraft/locale/Language.h"
+#include "platform/stubs.h"
 
 // 4J - the Option sub-class used to be an java enumerated type, trying to
 // emulate that functionality here

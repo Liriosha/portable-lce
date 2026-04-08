@@ -1,13 +1,13 @@
 #include "Minimap.h"
 
-#include <GL/gl.h>
+
 #include <math.h>
 #include <string.h>
 #include <wchar.h>
 
 #include <string>
 
-#include "platform/sdl2/Render.h"
+#include "platform/renderer/renderer.h"
 #include "Font.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Colours/ColourTable.h"
@@ -29,7 +29,7 @@ Minimap::Minimap(Font* font, Options* options, Textures* textures,
     this->font = font;
     BufferedImage* img = new BufferedImage(w, h, BufferedImage::TYPE_INT_ARGB);
     mapTexture =
-        textures->getTexture(img, C4JRender::TEXTURE_FORMAT_RxGyBzAw,
+        textures->getTexture(img, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw,
                              false);  // 4J - make sure we aren't mipmapping as
                                       // we never set the data for mipmaps
     delete img;

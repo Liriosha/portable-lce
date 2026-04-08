@@ -1,10 +1,9 @@
 #include "GuiComponent.h"
 
-#include <GL/gl.h>
+
 #include <math.h>
 
-#include "platform/sdl2/Render.h"
-#include "platform/stubs.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Font.h"
 #include "minecraft/client/gui/Gui.h"

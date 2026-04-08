@@ -7,9 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "platform/InputActions.h"
-#include "platform/sdl2/Input.h"
-#include "platform/sdl2/Render.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
 #include "minecraft/GameEnums.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
@@ -263,11 +262,11 @@ void IUIScene_AbstractContainerMenu::onMouseTick() {
 
     bool bStickInput = false;
     float fInputX =
-        InputManager.GetJoypadStick_LX(iPad, false) *
+        PlatformInput.GetJoypadStick_LX(iPad, false) *
         ((float)app.GetGameSettings(iPad, eGameSetting_Sensitivity_InMenu) /
          100.0f);  // apply the sensitivity
     float fInputY =
-        InputManager.GetJoypadStick_LY(iPad, false) *
+        PlatformInput.GetJoypadStick_LY(iPad, false) *
         ((float)app.GetGameSettings(iPad, eGameSetting_Sensitivity_InMenu) /
          100.0f);  // apply the sensitivity
 
@@ -329,7 +328,7 @@ void IUIScene_AbstractContainerMenu::onMouseTick() {
         // 4J Stu - The cursor moves too fast in SD mode
         // The SD/splitscreen scenes are approximately 0.6 times the size of
         // the fullscreen on
-        if (!RenderManager.IsHiDef() || app.GetLocalPlayerCount() > 1)
+        if (!PlatformRenderer.IsHiDef() || app.GetLocalPlayerCount() > 1)
             fInputScale *= 0.6f;
 
         fInputX *= fInputScale;

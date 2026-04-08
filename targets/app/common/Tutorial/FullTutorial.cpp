@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include "platform/InputActions.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/LevelRuleset.h"
 #include "app/common/Tutorial/Constraints/AreaConstraint.h"
 #include "app/common/Tutorial/Constraints/ChangeStateConstraint.h"
@@ -32,6 +31,7 @@
 #include "minecraft/world/level/LevelSettings.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/input/InputConstants.h"
 #include "strings.h"
 
 class TutorialConstraint;
