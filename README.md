@@ -15,18 +15,18 @@ This project is a heavily modified version of the Minecraft Console Legacy Editi
 
 |  | **Linux** | **Windows** | **macOS[^1]** |
 | - | - | - | - |
-| app | `desktop` | `desktop` | `desktop` |
-| fs | `std` | `std` | `std` |
-| game | `stub` | `stub` | `stub` |
-| input | `sdl2` | `sdl2` | `sdl2` |
-| leaderboard | `stub` | `stub` | `stub` |
-| network | `stub` | `stub` | `stub` |
-| profile | `stub` | `stub` | `stub` |
-| renderer | `gl` | `gl` | `gl` |
-| sound | `miniaudio` | `miniaudio` | `miniaudio` |
-| storage | `stub` | `stub` | `stub` |
-| thread | `std` | `std` | `std` |
-| ui | `java`, `shiggy`[^2] | `java`, `shiggy`[^2] | `java` |
+| **app** | `desktop` | `desktop` | `desktop` |
+| **ui** | `java`, `shiggy`[^2] | `java`, `shiggy`[^2] | `java` |
+| **fs** | `std` | `std` | `std` |
+| **renderer** | `gl` | `gl` | `gl` |
+| **sound** | `miniaudio` | `miniaudio` | `miniaudio` |
+| **input** | `sdl2` | `sdl2` | `sdl2` |
+| **thread** | `std` | `std` | `std` |
+| **game** | `stub` | `stub` | `stub` |
+| **network** | `stub` | `stub` | `stub` |
+| **storage** | `stub` | `stub` | `stub` |
+| **profile** | `stub` | `stub` | `stub` |
+| **leaderboard** | `stub` | `stub` | `stub` |
 
 [^1]: `platform_renderer_gl` is unstable on this platform and known to segfault. Development is WIP.
 [^2]: `-Dui_backend=shiggy` supports x86-64 architectures only.
