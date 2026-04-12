@@ -13,7 +13,7 @@ This project is a heavily modified version of the Minecraft Console Legacy Editi
 
 ## Status
 
-|  | **Linux** | **Windows64** | **macOS[^1]** |
+|  | **Linux** | **Windows** | **macOS[^1]** |
 | - | - | - | - |
 | app | `desktop` | `desktop` | `desktop` |
 | fs | `std` | `std` | `std` |
