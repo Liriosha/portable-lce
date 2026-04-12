@@ -15,7 +15,7 @@ This project is a heavily modified version of the Minecraft Console Legacy Editi
 
 > [!TIP]
 >
-> This table describes the current backend used for each game component on each platform. If a backend is `stub`, that means that the game uses a [stubbed implementation](https://en.wikipedia.org/wiki/Method_stub) and the feature is unsupported at the moment. In some cases (e.g. leaderboards and profile) it makes sense to use a stubbed implementation, since we don't have access to Xbox live on Linux. In other cases, it is used temporarily while work is done to properly implement the feature (such as world saving and loading).
+> This table describes the current backend used for each game component on each platform. If a backend is `stub`, that means that the game uses a [stubbed implementation](https://en.wikipedia.org/wiki/Method_stub) and the feature is unsupported at the moment. In some cases (e.g. leaderboards and profile) it makes sense to use a stubbed implementation, since we don't have access to console services like Xbox live on desktop operating systems. In other cases, it is used temporarily while work is done to properly implement the feature (such as storage for world/DLC saving and loading).
 
 These platforms are currently work-in-progress:
 - **macOS**: Largely mirrors the Linux implementation. Has not been upstreamed due to supposed rendering issues. `ui-backend=java` only.
