@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 as clang
+FROM ubuntu:24.04 AS clang
 
 ENV DEBIAN_FRONTEND=noninteractive
 ARG LLVM_VERSION=20
