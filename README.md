@@ -26,9 +26,10 @@ This project is a heavily modified version of the Minecraft Console Legacy Editi
 | sound | `miniaudio` | `miniaudio` | `miniaudio` |
 | storage | `stub` | `stub` | `stub` |
 | thread | `std` | `std` | `std` |
-| ui | `java`, `shiggy` (x86-64 only) | `java`, `shiggy` (x86-64 only) | `java` |
+| ui | `java`, `shiggy`[^2] | `java`, `shiggy`[^2] | `java` |
 
 [^1]: `platform_renderer_gl` is unstable on this platform and known to segfault. Development is WIP.
+[^2]: `-Dui_backend=shiggy` supports x86-64 architectures only.
 
 > [!TIP]
 >
