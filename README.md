@@ -8,10 +8,10 @@ This project is a heavily modified version of the Minecraft Console Legacy Editi
 
 ## Status
 
-| Platform | fs | game | input | leaderboard | network | profile | renderer | sound | storage | thread |
-| - | - | - | - | - | - | - | - | - | - | - |
-| **Linux** | `std` | `stub` | `sdl2` | `stub` | `stub` | `stub` | `gl` | `miniaudio` | `stub` | `std` |
-| **Windows64** | `std` | `stub` | `sdl2` | `stub` | `stub` | `stub` | `gl` | `miniaudio` | `stub` | `std` |
+| Platform | app | fs | game | input | leaderboard | network | profile | renderer | sound | storage | thread | ui |
+| - | - | - | - | - | - | - | - | - | - | - | - | - |
+| **Linux** | `desktop` | `std` | `stub` | `sdl2` | `stub` | `stub` | `stub` | `gl` | `miniaudio` | `stub` | `std` | `java`, `shiggy` |
+| **Windows64** | `desktop` | `std` | `stub` | `sdl2` | `stub` | `stub` | `stub` | `gl` | `miniaudio` | `stub` | `std` | `java`, `shiggy` |
 
 > [!TIP]
 >
