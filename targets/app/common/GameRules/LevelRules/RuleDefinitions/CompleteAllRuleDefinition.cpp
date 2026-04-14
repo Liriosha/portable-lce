@@ -4,13 +4,13 @@
 #include <unordered_map>
 #include <utility>
 
+#include "app/common/Game.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/CompoundGameRuleDefinition.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
-#include "app/common/GameRules/LevelRules/Rules/GameRule.h"
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
 #include "minecraft/network/Connection.h"
 #include "minecraft/network/packet/UpdateGameRuleProgressPacket.h"
+#include "minecraft/world/level/GameRules/GameRule.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
+#include "util/StringHelpers.h"
 
 void CompleteAllRuleDefinition::getChildren(
     std::vector<GameRuleDefinition*>* children) {

@@ -1,17 +1,14 @@
-#include "minecraft/IGameServices.h"
 #include "LivingEntityRenderer.h"
 
 #include <cmath>
 #include <numbers>
 #include <vector>
 
-#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
-#include "minecraft/GameEnums.h"
-#include "app/linux/LinuxGame.h"
-
 #include "java/Class.h"
 #include "java/Random.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Font.h"
@@ -27,6 +24,8 @@
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/entity/projectile/Arrow.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation LivingEntityRenderer::ENCHANT_GLINT_LOCATION =
     ResourceLocation(TN__BLUR__MISC_GLINT);
@@ -389,12 +388,14 @@ void LivingEntityRenderer::renderName(std::shared_ptr<LivingEntity> mob,
 
             if (!msg.empty()) {
                 if (mob->isSneaking()) {
-                    if (gameServices().getGameSettings(eGameSetting_DisplayHUD) == 0) {
+                    if (gameServices().getGameSettings(
+                            eGameSetting_DisplayHUD) == 0) {
                         // 4J-PB - turn off gamertag render
                         return;
                     }
 
-                    if (gameServices().getGameHostOption(eGameHostOption_Gamertags) == 0) {
+                    if (gameServices().getGameHostOption(
+                            eGameHostOption_Gamertags) == 0) {
                         // turn off gamertags if the host has set them off
                         return;
                     }

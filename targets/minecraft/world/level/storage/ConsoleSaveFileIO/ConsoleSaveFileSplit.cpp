@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileSplit.h"
 
 #include <assert.h>
@@ -15,38 +13,32 @@
 #include <thread>
 #include <utility>
 
-#include "platform/fs/fs.h"
-#include "platform/PlatformTypes.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/BuildVer/BuildVer.h"
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "util/Timer.h"
-#include "util/StringHelpers.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/File.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "java/System.h"
+#include "minecraft/BuildVer.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/level/ServerLevel.h"
+#include "minecraft/util/Log.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/chunk/storage/RegionFile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileConverter.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSavePath.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/storage/LevelData.h"
+#include "platform/PlatformTypes.h"
+#include "platform/fs/fs.h"
 #include "platform/storage/storage.h"
+#include "util/StringHelpers.h"
+#include "util/Timer.h"
 
 class ProgressListener;
-
-#define RESERVE_ALLOCATION MEM_RESERVE
-#define COMMIT_ALLOCATION MEM_COMMIT
-
-unsigned int ConsoleSaveFileSplit::pagesCommitted = 0;
-void* ConsoleSaveFileSplit::pvHeap = nullptr;
 
 ConsoleSaveFileSplit::RegionFileReference::RegionFileReference(
     int index, unsigned int regionIndex, unsigned int length /*=0*/,
@@ -364,12 +356,14 @@ FileEntry* ConsoleSaveFileSplit::GetRegionFileEntry(unsigned int regionIndex) {
 ConsoleSaveFileSplit::ConsoleSaveFileSplit(
     const std::string& fileName, void* pvSaveData /*= nullptr*/,
     unsigned int initialFileSize /*= 0*/, bool forceCleanSave /*= false*/,
-    ESavePlatform plat /*= SAVE_FILE_PLATFORM_LOCAL*/) {
+    ESavePlatform plat /*= SAVE_FILE_PLATFORM_LOCAL*/)
+    : saveBuffer(MAX_SAVE_SIZE) {
     unsigned int fileSize = initialFileSize;
 
     // Load a save from the game rules
     bool bLevelGenBaseSave = false;
-    LevelGenerationOptions* levelGen = gameServices().getLevelGenerationOptions();
+    LevelGenerationOptions* levelGen =
+        gameServices().getLevelGenerationOptions();
     if (pvSaveData == nullptr && levelGen != nullptr &&
         levelGen->requiresBaseSave()) {
         pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -390,7 +384,8 @@ ConsoleSaveFileSplit::ConsoleSaveFileSplit(
 
 ConsoleSaveFileSplit::ConsoleSaveFileSplit(ConsoleSaveFile* sourceSave,
                                            bool alreadySmallRegions,
-                                           ProgressListener* progress) {
+                                           ProgressListener* progress)
+    : saveBuffer(MAX_SAVE_SIZE) {
     _init(sourceSave->getFilename(), nullptr, 0, sourceSave->getSavePlatform());
 
     header.setOriginalSaveVersion(sourceSave->getOriginalSaveVersion());
@@ -423,17 +418,6 @@ void ConsoleSaveFileSplit::_init(const std::string& fileName, void* pvSaveData,
                                  unsigned int fileSize, ESavePlatform plat) {
     m_lastTickTime = 0;
 
-    // One time initialise of static stuff required for our storage
-    if (pvHeap == nullptr) {
-        // Reserve a chunk of 64MB of virtual address space for our saves, using
-        // 64KB pages. We'll only be committing these as required to grow the
-        // storage we need, which will the storage to grow without having to use
-        // realloc.
-        pvHeap = VirtualAlloc(nullptr, MAX_PAGE_COUNT * CSF_PAGE_SIZE,
-                              RESERVE_ALLOCATION, PAGE_READWRITE);
-    }
-
-    pvSaveMem = pvHeap;
     m_fileName = fileName;
 
     // Get details of region files. From this point on we are responsible for
@@ -459,34 +443,6 @@ void ConsoleSaveFileSplit::_init(const std::string& fileName, void* pvSaveData,
         regionFiles[regionIndex] = regionFileRef;
     }
 
-    unsigned int heapSize = std::max(
-        fileSize,
-        1024u * 1024u * 2u);  // 4J Stu - Our files are going to be bigger than
-                              // 2MB so allocate high to start with
-
-    // Initially committ enough room to store headSize bytes (using
-    // CSF_PAGE_SIZE pages, so rounding up here). We should only ever have one
-    // save file at a time, and the pages should be decommitted in the dtor, so
-    // pages committed should always be zero at this point.
-    if (pagesCommitted != 0) {
-#if !defined(_CONTENT_PACKAGE)
-        assert(0);
-#endif
-    }
-
-    unsigned int pagesRequired =
-        (heapSize + (CSF_PAGE_SIZE - 1)) / CSF_PAGE_SIZE;
-
-    void* pvRet = VirtualAlloc(pvHeap, pagesRequired * CSF_PAGE_SIZE,
-                               COMMIT_ALLOCATION, PAGE_READWRITE);
-    if (pvRet == nullptr) {
-#if !defined(_CONTENT_PACKAGE)
-        // Out of physical memory
-        assert(0);
-#endif
-    }
-    pagesCommitted = pagesRequired;
-
     if (fileSize > 0) {
         if (pvSaveData != nullptr) {
             memcpy(pvSaveMem, pvSaveData, fileSize);
@@ -494,7 +450,7 @@ void ConsoleSaveFileSplit::_init(const std::string& fileName, void* pvSaveData,
             unsigned int storageLength;
             PlatformStorage.GetSaveData(pvSaveMem, &storageLength);
             Log::info("Filesize - %d, Adjusted size - %d\n", fileSize,
-                            storageLength);
+                      storageLength);
             fileSize = storageLength;
         }
 
@@ -516,26 +472,7 @@ void ConsoleSaveFileSplit::_init(const std::string& fileName, void* pvSaveData,
                 if (Compression::getCompression()->Decompress(
                         buf, &decompSize, (unsigned char*)pvSaveMem + 8,
                         fileSize - 8) == 0) {
-                    // Only ReAlloc if we need to (we might already have enough)
-                    // and align to 512 byte boundaries
-                    unsigned int currentHeapSize =
-                        pagesCommitted * CSF_PAGE_SIZE;
-
-                    unsigned int desiredSize = decompSize;
-
-                    if (desiredSize > currentHeapSize) {
-                        unsigned int pagesRequired =
-                            (desiredSize + (CSF_PAGE_SIZE - 1)) / CSF_PAGE_SIZE;
-                        void* pvRet =
-                            VirtualAlloc(pvHeap, pagesRequired * CSF_PAGE_SIZE,
-                                         COMMIT_ALLOCATION, PAGE_READWRITE);
-                        if (pvRet == nullptr) {
-                            // Out of physical memory
-                            assert(0);
-                        }
-                        pagesCommitted = pagesRequired;
-                    }
-
+                    assert(decompSize <= MAX_SAVE_SIZE);
                     memcpy(pvSaveMem, buf, decompSize);
                 } else {
                     // Corrupt save, although most of the terrain should
@@ -562,8 +499,6 @@ void ConsoleSaveFileSplit::_init(const std::string& fileName, void* pvSaveData,
 }
 
 ConsoleSaveFileSplit::~ConsoleSaveFileSplit() {
-    VirtualFree(pvHeap, MAX_PAGE_COUNT * CSF_PAGE_SIZE, MEM_DECOMMIT);
-    pagesCommitted = 0;
     // Make sure we don't have any thumbnail data still waiting round - we can't
     // need it now we've destroyed the save file anyway
 
@@ -997,9 +932,8 @@ void ConsoleSaveFileSplit::tick() {
 #endif
 
     if (writeRequired) {
-        PlatformStorage.SaveSubfiles([this](bool bRes) {
-            return SaveRegionFilesCallback(this, bRes);
-        });
+        PlatformStorage.SaveSubfiles(
+            [this](bool bRes) { return SaveRegionFilesCallback(this, bRes); });
     }
 
     ReleaseSaveAccess();
@@ -1024,23 +958,7 @@ void ConsoleSaveFileSplit::MoveDataBeyond(FileEntry* file,
     unsigned int buffer1Size = 0;
     unsigned int buffer2Size = 0;
 
-    // Only ReAlloc if we need to (we might already have enough) and align to
-    // 512 byte boundaries
-    unsigned int currentHeapSize = pagesCommitted * CSF_PAGE_SIZE;
-
-    unsigned int desiredSize = header.GetFileSize() + nNumberOfBytesToWrite;
-
-    if (desiredSize > currentHeapSize) {
-        unsigned int pagesRequired =
-            (desiredSize + (CSF_PAGE_SIZE - 1)) / CSF_PAGE_SIZE;
-        void* pvRet = VirtualAlloc(pvHeap, pagesRequired * CSF_PAGE_SIZE,
-                                   COMMIT_ALLOCATION, PAGE_READWRITE);
-        if (pvRet == nullptr) {
-            // Out of physical memory
-            assert(0);
-        }
-        pagesCommitted = pagesRequired;
-    }
+    assert(header.GetFileSize() + nNumberOfBytesToWrite <= MAX_SAVE_SIZE);
 
     // This is the start of where we want the space to be, and the start of the
     // data that we need to move
@@ -1232,7 +1150,7 @@ std::string ConsoleSaveFileSplit::GetNameFromNumericIdentifier(
     signed char regionX = (idIn >> 8) & 255;
     signed char regionZ = idIn & 255;
     std::string region = (prefix + std::string("r.") + toWString(regionX) +
-                           "." + toWString(regionZ) + ".mcr");
+                          "." + toWString(regionZ) + ".mcr");
 
     return region;
 }
@@ -1317,7 +1235,7 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
                                                 fileSize);
 
         Log::info("Check buffer size: Elapsed time %f\n",
-                        static_cast<float>(timer.elapsed_seconds()));
+                  static_cast<float>(timer.elapsed_seconds()));
 
         // We add 4 bytes to the start so that we can signal compressed data
         // And another 4 bytes to store the decompressed data size
@@ -1334,15 +1252,14 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
                                                 pvSaveMem, fileSize);
 
         Log::info("Compress: Elapsed time %f\n",
-                        static_cast<float>(timer.elapsed_seconds()));
+                  static_cast<float>(timer.elapsed_seconds()));
 
         memset(compData, 0, 8);
         int saveVer = 0;
         memcpy(compData, &saveVer, sizeof(int));
         memcpy(compData + 4, &fileSize, sizeof(int));
 
-        Log::info("Save data compressed from %d to %d\n", fileSize,
-                        compLength);
+        Log::info("Save data compressed from %d to %d\n", fileSize, compLength);
 
         if (updateThumbnail) {
             std::uint8_t* pbThumbnailData = nullptr;
@@ -1382,9 +1299,8 @@ void ConsoleSaveFileSplit::Flush(bool autosave, bool updateThumbnail) {
             PlatformStorage.GetSaveUniqueNumber(&saveOrCheckpointId);
 
         // save the data
-        PlatformStorage.SaveSaveData([this](bool bRes) {
-            return SaveSaveDataCallback(this, bRes);
-        });
+        PlatformStorage.SaveSaveData(
+            [this](bool bRes) { return SaveSaveDataCallback(this, bRes); });
 #if !defined(_CONTENT_PACKAGE)
         if (gameServices().debugSettingsOn()) {
             if (gameServices().getWriteSavesToFolderEnabled()) {
@@ -1438,14 +1354,11 @@ void ConsoleSaveFileSplit::DebugFlushToFile(
 
     char* fileName = new char[XCONTENT_MAX_FILENAME_LENGTH + 1];
 
-    auto now_tp = std::chrono::system_clock::now();
-    std::time_t now_tt = std::chrono::system_clock::to_time_t(now_tp);
-    std::tm t{};
-#if defined(_WIN32)
-    gmtime_s(&t, &now_tt);
-#else
-    gmtime_r(&now_tt, &t);
-#endif
+    auto now = std::chrono::system_clock::now();
+    auto dp = std::chrono::floor<std::chrono::days>(now);
+    std::chrono::year_month_day ymd{dp};
+    std::chrono::hh_mm_ss hms{
+        std::chrono::floor<std::chrono::seconds>(now - dp)};
 
     // 14 chars for the digits
     // 11 chars for the separators + suffix
@@ -1454,10 +1367,14 @@ void ConsoleSaveFileSplit::DebugFlushToFile(
     if (m_fileName.length() > XCONTENT_MAX_FILENAME_LENGTH - 25) {
         cutFileName = m_fileName.substr(0, XCONTENT_MAX_FILENAME_LENGTH - 25);
     }
-    snprintf(fileName, XCONTENT_MAX_FILENAME_LENGTH + 1,
-             "\\v%04d-%s%02d.%02d.%02d.%02d.%02d.mcs", VER_PRODUCTBUILD,
-             cutFileName.c_str(), t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min,
-             t.tm_sec);
+
+    auto result =
+        std::format("\\v{:04d}-{}{:02d}.{:02d}.{:02d}.{:02d}.{:02d}.mcs",
+                    VER_PRODUCTBUILD, cutFileName, (unsigned)ymd.month(),
+                    (unsigned)ymd.day(), (int)hms.hours().count(),
+                    (int)hms.minutes().count(), (int)hms.seconds().count());
+
+    snprintf(fileName, XCONTENT_MAX_FILENAME_LENGTH + 1, "%s", result.c_str());
 
     const std::string outputPath =
         targetFileDir.getPath() + std::string(fileName);
@@ -1598,8 +1515,7 @@ void ConsoleSaveFileSplit::ConvertToLocalPlatform() {
             Log::info("Processing a region file: %s\n", fName.c_str());
             ConvertRegionFile(File(fe->data.filename));
         } else {
-            Log::info("%s is not a region file, ignoring\n",
-                            fName.c_str());
+            Log::info("%s is not a region file, ignoring\n", fName.c_str());
         }
     }
 

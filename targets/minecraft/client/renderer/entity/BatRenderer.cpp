@@ -3,8 +3,6 @@
 #include <cmath>
 #include <memory>
 
-
-#include "platform/renderer/renderer.h"
 #include "minecraft/client/model/BatModel.h"
 #include "minecraft/client/model/geom/Model.h"
 #include "minecraft/client/renderer/Textures.h"
@@ -12,6 +10,8 @@
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/ambient/Bat.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation BatRenderer::BAT_LOCATION = ResourceLocation(TN_MOB_BAT);
 

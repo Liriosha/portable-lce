@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "Ocelot.h"
 
 #include <stdint.h>
@@ -6,14 +5,12 @@
 #include <memory>
 #include <vector>
 
-#include "platform/input/input.h"
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
@@ -50,6 +47,8 @@
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
 #include "nbt/CompoundTag.h"
+#include "platform/input/input.h"
+#include "util/StringHelpers.h"
 
 const double Ocelot::SNEAK_SPEED_MOD = 0.6;
 const double Ocelot::WALK_SPEED_MOD = 0.8;

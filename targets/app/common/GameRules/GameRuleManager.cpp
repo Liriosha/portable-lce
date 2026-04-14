@@ -12,21 +12,21 @@
 #include "app/common/DLC/DLCLocalisationFile.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
-#include "app/common/GameRules/LevelGeneration/ConsoleSchematicFile.h"
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "app/common/Game.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerators.h"
 #include "app/common/GameRules/LevelRules/LevelRules.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/LevelRuleset.h"
-#include "app/common/Localisation/StringTable.h"
-#include "app/linux/LinuxGame.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/File.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/locale/StringTable.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
+#include "minecraft/world/level/levelgen/ConsoleSchematicFile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "strings.h"
 
 const char* GameRuleManager::wchTagNameA[] = {
@@ -223,8 +223,7 @@ void GameRuleManager::loadGameRules(LevelGenerationOptions* lgo, uint8_t* dIn,
     unsigned int bStringTableSize = dis2.readInt();
     std::vector<uint8_t> bStringTable(bStringTableSize);
     dis2.read(bStringTable);
-    StringTable* strings =
-        new StringTable(bStringTable.data(), bStringTable.size());
+    StringTable* strings = new StringTable(bStringTable, app.getLocale());
 
     // Read RuleFile.
     std::vector<uint8_t> bRuleFile(content.size() - bStringTable.size());
@@ -641,7 +640,7 @@ void GameRuleManager::processSchematicsLighting(LevelChunk* levelChunk) {
 }
 
 void GameRuleManager::loadDefaultGameRules() {
-#if !defined(__linux__)
+#if 0
 #if defined(_WINDOWS64)
     File packedTutorialFile("Windows64Media\\Tutorial\\Tutorial.pck");
     if (!packedTutorialFile.exists())
@@ -657,6 +656,8 @@ void GameRuleManager::loadDefaultGameRules() {
             app.GetString(IDS_TUTORIALSAVENAME));
     }
 #else
+    // 4jcraft: brought over from TU18 so the tutorial world loads from assets
+    // TODO clean this up
     std::string fpTutorial = "Tutorial.pck";
     if (app.getArchiveFileSize(fpTutorial) >= 0) {
         DLCPack* pack = new DLCPack("", 0xffffffff);

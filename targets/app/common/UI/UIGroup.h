@@ -1,10 +1,10 @@
 #pragma once
 #include <stdint.h>
 
-#include "platform/renderer/renderer.h"
-#include "app/common/UI/All Platforms/UIEnums.h"
-#include "app/linux/Iggy/include/rrCore.h"
 #include "UILayer.h"
+#include "app/common/Iggy/include/rrCore.h"
+#include "app/common/UI/All Platforms/UIEnums.h"
+#include "platform/renderer/renderer.h"
 
 class UIComponent_Tooltips;
 class UIComponent_TutorialPopup;

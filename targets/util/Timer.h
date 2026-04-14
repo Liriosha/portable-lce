@@ -3,7 +3,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
-#include <print>
 #include <source_location>
 #include <string_view>
 
@@ -13,7 +12,10 @@ using clock = std::chrono::steady_clock;
 using time_point = clock::time_point;
 
 template <typename T>
-concept Duration = requires { typename T::rep; typename T::period; };
+concept Duration = requires {
+    typename T::rep;
+    typename T::period;
+};
 
 namespace detail {
 
@@ -62,16 +64,13 @@ public:
           line_(where.line()) {}
 
     template <Duration D>
-    ScopedTimer(
-        std::string_view name,
-        D min_duration_to_log,
-        std::source_location where = std::source_location::current())
+    ScopedTimer(std::string_view name, D min_duration_to_log,
+                std::source_location where = std::source_location::current())
         : name_(name),
           file_(detail::base_name(where.file_name())),
           line_(where.line()),
-          min_duration_to_log_(
-              std::chrono::duration_cast<clock::duration>(min_duration_to_log)) {
-    }
+          min_duration_to_log_(std::chrono::duration_cast<clock::duration>(
+              min_duration_to_log)) {}
 
     ~ScopedTimer() noexcept {
         const auto elapsed = timer_.elapsed();
@@ -81,11 +80,12 @@ public:
             std::chrono::duration<double, std::milli>(elapsed).count();
 
         try {
-            name_.empty()
-                ? std::println(stderr, "[TIMER] {:.3f} ms ({}:{})",
-                               ms, file_, line_)
-                : std::println(stderr, "[TIMER] {} - {:.3f} ms ({}:{})",
-                               name_, ms, file_, line_);
+            const auto log =
+                name_.empty() ? std::format("[TIMER] {:.3f} ms ({}:{})\n", ms,
+                                            file_, line_)
+                              : std::format("[TIMER] {} - {:.3f} ms ({}:{})\n",
+                                            name_, ms, file_, line_);
+            std::fputs(log.c_str(), stderr);
         } catch (...) {
             std::fprintf(stderr, "[TIMER] %.3f ms\n", ms);
         }

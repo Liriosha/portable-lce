@@ -1,13 +1,11 @@
-#include "minecraft/util/Log.h"
 #include "SetPlayerTeamPacket.h"
 
 #include <unordered_set>
 
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "PacketListener.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/scores/Objective.h"
 #include "minecraft/world/scores/PlayerTeam.h"

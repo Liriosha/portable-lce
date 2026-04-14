@@ -1,17 +1,15 @@
 
 #include "UIScene_CraftingMenu.h"
 
-#include "platform/profile/profile.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_HTMLLabel.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/client/player/LocalPlayer.h"
@@ -22,6 +20,9 @@
 #include "minecraft/world/item/Item.h"
 #include "minecraft/world/item/ItemInstance.h"
 #include "minecraft/world/item/crafting/Recipy.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 class UILayer;
@@ -118,7 +119,7 @@ UIScene_CraftingMenu::UIScene_CraftingMenu(int iPad, void* _initData,
 
 #endif
 
-    app.SetRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_CRAFTING);
+    PlatformGame.SetRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_CRAFTING);
     setGroupText(GetGroupNameText(m_pGroupA[m_iGroupIndex]));
 
     // Update the tutorial state

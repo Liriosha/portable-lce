@@ -2,9 +2,6 @@
 
 #include <memory>
 
-
-#include "platform/renderer/renderer.h"
-
 #include "minecraft/client/model/QuadrupedModel.h"
 #include "minecraft/client/model/geom/ModelPart.h"
 #include "minecraft/client/renderer/Textures.h"
@@ -16,6 +13,8 @@
 #include "minecraft/world/entity/animal/MushroomCow.h"
 #include "minecraft/world/level/tile/PlantTile.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 class Model;
 

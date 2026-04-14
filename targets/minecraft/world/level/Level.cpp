@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "Level.h"
 
 #include <stdlib.h>
@@ -15,25 +13,23 @@
 #include <optional>
 
 #include "Explosion.h"
-#include "platform/input/input.h"
 #include "LevelListener.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/Colours/ColourTable.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "util/FrameProfiler.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
+#include "minecraft/Console_Debug_enum.h"
 #include "minecraft/Direction.h"
 #include "minecraft/Facing.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/Pos.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/renderer/LevelRenderer.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/Difficulty.h"
 #include "minecraft/world/entity/Entity.h"
@@ -73,6 +69,8 @@
 #include "minecraft/world/phys/HitResult.h"
 #include "minecraft/world/phys/Vec3.h"
 #include "minecraft/world/scores/Scoreboard.h"
+#include "platform/input/input.h"
+#include "util/FrameProfiler.h"
 
 class CompoundTag;
 class ItemInstance;
@@ -99,10 +97,11 @@ void Level::enableLightingCache() {
     // results, plus 128K required for toCheck array. Rounding up to 256 to keep
     // as multiple of alignement - aligning to 128K boundary for possible cache
     // locking.
-    m_tlsLightCache = (lightCache_t*)malloc(256 * 1024);
+    // 4jcraft changed to new instead of malloc
+    m_tlsLightCache = new lightCache_t[256 * 1024 / sizeof(lightCache_t)];
 }
 
-void Level::destroyLightingCache() { delete m_tlsLightCache; }
+void Level::destroyLightingCache() { delete[] m_tlsLightCache; }
 
 inline int GetIndex(int x, int y, int z) {
     return ((x & 15) << 8) | ((y & 15) << 4) | (z & 15);
@@ -683,7 +682,7 @@ Level::~Level() {
     delete dimension;
     delete chunkSource;
     delete levelData;
-    delete toCheckLevel;
+    delete[] toCheckLevel;
     delete scoreboard;
     delete villageSiege;
 
@@ -2114,7 +2113,8 @@ void Level::tickEntities() {
 
             if (!e->removed) {
 #if !defined(_FINAL_BUILD)
-                if (!(gameServices().debugSettingsOn() && gameServices().debugMobsDontTick() &&
+                if (!(gameServices().debugSettingsOn() &&
+                      gameServices().debugMobsDontTick() &&
                       e->instanceof(eTYPE_MOB) && !e->instanceof(eTYPE_PLAYER)))
 #endif
                 {
@@ -2572,7 +2572,7 @@ std::string Level::gatherStats() {
     char buf[64];
     {
         std::lock_guard<std::recursive_mutex> lock(m_entitiesCS);
-        snprintf(buf, 64, "All:%d", entities.size());
+        snprintf(buf, 64, "All:%zu", entities.size());
     }
     return std::string(buf);
 }
@@ -3832,7 +3832,7 @@ void Level::setBlocksAndData(int x, int y, int z, int xs, int ys, int zs,
             // This is quite expensive so only actually do it if we are hosting,
             // online, and the update will actually change something
             bool forceUnshare = false;
-            if (g_NetworkManager.IsHost() && isClientSide) {
+            if (NetworkService.IsHost() && isClientSide) {
                 forceUnshare =
                     lc->testSetBlocksAndData(data, x0, y0, z0, x1, y1, z1, p);
             }
@@ -3846,7 +3846,7 @@ void Level::setBlocksAndData(int x, int y, int z, int xs, int ys, int zs,
             setTilesDirty(xc * 16 + x0, y0, zc * 16 + z0, xc * 16 + x1, y1,
                           zc * 16 + z1);
 
-            if (g_NetworkManager.IsHost() && isClientSide) {
+            if (NetworkService.IsHost() && isClientSide) {
                 lc->startSharingTilesAndData();
             }
         }
@@ -3873,8 +3873,8 @@ void Level::setGameTime(int64_t time) {
             // time passing so ignore (moving dimensions does this)
             Log::info(
                 "Level::setTime: Massive time difference, ignoring for time "
-                "passed stat (%lli)\n",
-                timeDiff);
+                "passed stat (%lld)\n",
+                static_cast<long long>(timeDiff));
             timeDiff = 0;
         }
 

@@ -1,14 +1,14 @@
 
 #include "UIScene_HelpAndOptionsMenu.h"
 
-#include "platform/profile/profile.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "minecraft/client/Minecraft.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 UIScene_HelpAndOptionsMenu::UIScene_HelpAndOptionsMenu(int iPad, void* initData,

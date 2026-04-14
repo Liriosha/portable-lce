@@ -1,24 +1,25 @@
-#include "minecraft/util/Log.h"
 #include "SelectWorldScreen.h"
 
 #include <stdint.h>
+#include <time.h>
 #include <wchar.h>
 
+#include <chrono>
+#include <ctime>
 #include <vector>
 
 #include "Button.h"
 #include "ConfirmScreen.h"
 #include "CreateWorldScreen.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "RenameWorldScreen.h"
-#include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Screen.h"
 #include "minecraft/client/gui/ScrolledSelectionList.h"
 #include "minecraft/locale/Language.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/level/storage/LevelStorageSource.h"
 #include "minecraft/world/level/storage/LevelSummary.h"
+#include "util/StringHelpers.h"
 
 SelectWorldScreen::SelectWorldScreen(Screen* lastScreen) {
     // 4J - added initialisers
@@ -109,8 +110,7 @@ void SelectWorldScreen::buttonClicked(Button* button) {
             std::string warning =
                 "'" + worldName + "' " +
                 language->getElement("selectWorld.deleteWarning");
-            std::string yes =
-                language->getElement("selectWorld.deleteButton");
+            std::string yes = language->getElement("selectWorld.deleteButton");
             std::string no = language->getElement("gui.cancel");
 
             ConfirmScreen* confirmScreen =
@@ -259,22 +259,25 @@ void SelectWorldScreen::WorldSelectionList::renderItem(int i, int x, int y,
 
     std::string id = levelSummary->getLevelId();
 
-    ULARGE_INTEGER rawtime;
-    rawtime.QuadPart = levelSummary->getLastPlayed() *
-                       10000;  // Convert it from milliseconds back to FileTime
+    // levelSummary->getLastPlayed() is milliseconds since the FILETIME
+    // epoch (1601-01-01 UTC). Convert to chrono::system_clock (1970
+    // epoch) by subtracting the constant offset, then break down with
+    // gmtime_r for display.
+    constexpr int64_t kFileTimeEpochToUnixEpochMs = 11644473600000LL;
+    const int64_t lastPlayedUnixMs =
+        levelSummary->getLastPlayed() - kFileTimeEpochToUnixEpochMs;
+    const auto tp = std::chrono::system_clock::time_point{
+        std::chrono::milliseconds{lastPlayedUnixMs}};
+    auto dp = std::chrono::floor<std::chrono::days>(tp);
+    std::chrono::year_month_day ymd{dp};
+    std::chrono::hh_mm_ss hms{
+        std::chrono::floor<std::chrono::minutes>(tp - dp)};
 
-    FILETIME timeasfiletime;
-    timeasfiletime.dwHighDateTime = rawtime.HighPart;
-    timeasfiletime.dwLowDateTime = rawtime.LowPart;
-
-    SYSTEMTIME time;
-    FileTimeToSystemTime(&timeasfiletime, &time);
-
-    char buffer[20];
     // 4J Stu - Currently shows years as 4 digits, where java only showed 2
-    snprintf(buffer, 20, "%d/%d/%d %d:%02d", time.wDay, time.wMonth,
-             time.wYear, time.wHour, time.wMinute);  // 4J - TODO Localise this
-    id = id + " (" + buffer;
+    // 4J - TODO Localise this
+    id += std::format(" ({}/{}/{} {}:{:02d}", (unsigned)ymd.day(),
+                      (unsigned)ymd.month(), (int)ymd.year(),
+                      (int)hms.hours().count(), (int)hms.minutes().count());
 
     int64_t size = levelSummary->getSizeOnDisk();
     id = id + ", " + toWString<float>(size / 1024 * 100 / 1024 / 100.0f) +

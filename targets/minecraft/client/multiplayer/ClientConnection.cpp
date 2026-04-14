@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "ClientConnection.h"
 
 #include <assert.h>
@@ -12,43 +10,27 @@
 #include <limits>
 #include <unordered_set>
 
-#include "platform/PlatformTypes.h"
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/App_structs.h"
-#include "app/common/ConsoleGameMode.h"
-#include "app/common/DLC/DLCManager.h"
-#include "app/common/DLC/DLCPack.h"
-#include "app/common/DLC/DLCSkinFile.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/common/Network/Socket.h"
-#include "app/common/Tutorial/FullTutorialMode.h"
-#include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
-#include "app/common/Tutorial/TutorialMode.h"
-#include "app/common/UI/All Platforms/UIEnums.h"
-#include "app/common/UI/All Platforms/UIStructs.h"
-#include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_TradingMenu.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "MultiPlayerLevel.h"
 #include "ReceivingLevelScreen.h"
-#include "util/Timer.h"
-#include "util/StringHelpers.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/ConsoleGameMode.h"
+#include "app/common/Tutorial/FullTutorialMode.h"
+#include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
+#include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_TradingMenu.h"
 #include "java/Class.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/Random.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/Pos.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/ProgressRenderer.h"
 #include "minecraft/client/User.h"
 #include "minecraft/client/gui/Gui.h"
+#include "minecraft/client/gui/inventory/MerchantScreen.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/client/particle/CritParticle.h"
@@ -57,10 +39,12 @@
 #include "minecraft/client/player/LocalPlayer.h"
 #include "minecraft/client/player/RemotePlayer.h"
 #include "minecraft/client/renderer/LevelRenderer.h"
-#include "minecraft/client/skins/DLCTexturePack.h"
+#include "minecraft/client/skins/ISkinAssetData.h"
+#include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "minecraft/client/gui/inventory/MerchantScreen.h"
 #include "minecraft/core/particles/ParticleTypes.h"
+#include "minecraft/network/INetworkService.h"
+#include "minecraft/network/Socket.h"
 #include "minecraft/network/packet/AddEntityPacket.h"
 #include "minecraft/network/packet/AddExperienceOrbPacket.h"
 #include "minecraft/network/packet/AddGlobalEntityPacket.h"
@@ -129,8 +113,8 @@
 #include "minecraft/network/packet/UpdateProgressPacket.h"
 #include "minecraft/network/packet/XZPacket.h"
 #include "minecraft/server/MinecraftServer.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/SimpleContainer.h"
 #include "minecraft/world/effect/MobEffectInstance.h"
 #include "minecraft/world/entity/EntityIO.h"
@@ -182,6 +166,7 @@
 #include "minecraft/world/item/trading/Merchant.h"
 #include "minecraft/world/item/trading/MerchantRecipeList.h"
 #include "minecraft/world/level/Explosion.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/LevelSettings.h"
 #include "minecraft/world/level/chunk/LevelChunk.h"
@@ -203,7 +188,14 @@
 #include "minecraft/world/level/tile/entity/SkullTileEntity.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
 #include "minecraft/world/phys/AABB.h"
+#include "minecraft/world/tutorial/ITutorial.h"
+#include "platform/PlatformTypes.h"
+#include "platform/input/input.h"
+#include "platform/network/network.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
+#include "util/Timer.h"
 
 class Packet;
 class TexturePack;
@@ -275,11 +267,11 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
     PlatformProfile.GetXUID(m_userIndex, &OnlineXuid, true);  // online xuid
     MOJANG_DATA* pMojangData = nullptr;
 
-    if (!g_NetworkManager.IsLocalGame()) {
+    if (!NetworkService.IsLocalGame()) {
         pMojangData = gameServices().getMojangDataForXuid(OnlineXuid);
     }
 
-    if (!g_NetworkManager.IsHost()) {
+    if (!NetworkService.IsHost()) {
         Minecraft::GetInstance()->progressRenderer->progressStagePercentage(
             (eCCLoginReceived * 100) / (eCCConnected));
     }
@@ -297,7 +289,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
             // find the pad number of this local player
             for (int i = 0; i < XUSER_MAX_COUNT; i++) {
                 INetworkPlayer* networkLocalPlayer =
-                    g_NetworkManager.GetLocalPlayerByUserIndex(i);
+                    NetworkService.GetLocalPlayerByUserIndex(i);
                 if (networkLocalPlayer == networkPlayer) {
                     iUserID = i;
                 }
@@ -377,15 +369,17 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
             }
 
             Log::info("ClientConnection - DIFFICULTY --- %d\n",
-                            packet->difficulty);
+                      packet->difficulty);
             level->difficulty = packet->difficulty;  // 4J Added
             level->isClientSide = true;
             minecraft->setLevel(level);
         }
 
         minecraft->player->setPlayerIndex(packet->m_playerIndex);
-        minecraft->player->setCustomSkin(gameServices().getPlayerSkinId(m_userIndex));
-        minecraft->player->setCustomCape(gameServices().getPlayerCapeId(m_userIndex));
+        minecraft->player->setCustomSkin(
+            gameServices().getPlayerSkinId(m_userIndex));
+        minecraft->player->setCustomCape(
+            gameServices().getPlayerCapeId(m_userIndex));
 
         minecraft->createPrimaryLocalPlayer(PlatformInput.GetPrimaryPad());
 
@@ -395,7 +389,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
 
         std::uint8_t networkSmallId = getSocket()->getSmallId();
         gameServices().updatePlayerInfo(networkSmallId, packet->m_playerIndex,
-                             packet->m_uiGamePrivileges);
+                                        packet->m_uiGamePrivileges);
         minecraft->player->setPlayerGamePrivilege(
             Player::ePlayerGamePrivilege_All, packet->m_uiGamePrivileges);
 
@@ -412,8 +406,9 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
         displayPrivilegeChanges(minecraft->player, startingPrivileges);
 
         // update the debugoptions
-        gameServices().setGameSettingsDebugMask(PlatformInput.GetPrimaryPad(),
-                                     gameServices().debugGetMask(-1, true));
+        gameServices().setGameSettingsDebugMask(
+            PlatformInput.GetPrimaryPad(),
+            gameServices().debugGetMask(-1, true));
     } else {
         // 4J-PB - this isn't the level we want
         // level = (MultiPlayerLevel *)minecraft->level;
@@ -445,10 +440,10 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
             dimensionLevel->difficulty = packet->difficulty;  // 4J Added
             dimensionLevel->isClientSide = true;
             level = dimensionLevel;
-            // 4J Stu - At time of writing PlatformProfile.GetGamertag() does not
-            // always return the correct name, if sign-ins are turned off while
-            // the player signed in. Using the qnetPlayer instead. need to have
-            // a level before create extra local player
+            // 4J Stu - At time of writing PlatformProfile.GetGamertag() does
+            // not always return the correct name, if sign-ins are turned off
+            // while the player signed in. Using the qnetPlayer instead. need to
+            // have a level before create extra local player
             MultiPlayerLevel* levelpassedin = (MultiPlayerLevel*)level;
             player = minecraft->createExtraLocalPlayer(
                 m_userIndex, networkPlayer->GetOnlineName(), m_userIndex,
@@ -476,7 +471,7 @@ void ClientConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
 
         std::uint8_t networkSmallId = getSocket()->getSmallId();
         gameServices().updatePlayerInfo(networkSmallId, packet->m_playerIndex,
-                             packet->m_uiGamePrivileges);
+                                        packet->m_uiGamePrivileges);
         player->setPlayerGamePrivilege(Player::ePlayerGamePrivilege_All,
                                        packet->m_uiGamePrivileges);
 
@@ -558,8 +553,7 @@ void ClientConnection::handleAddEntity(
             int ix = (int)x;
             int iy = (int)y;
             int iz = (int)z;
-            Log::info("ClientConnection ITEM_FRAME xyz %d,%d,%d\n", ix,
-                            iy, iz);
+            Log::info("ClientConnection ITEM_FRAME xyz %d,%d,%d\n", ix, iy, iz);
         }
             e = std::shared_ptr<Entity>(
                 new ItemFrame(level, (int)x, (int)y, (int)z, packet->data));
@@ -875,8 +869,7 @@ void ClientConnection::handleAddPlayer(
              PlatformProfile.AreXUIDSEqual(playerXUIDOnline, packet->xuid)) ||
             (playerXUIDOffline != INVALID_XUID &&
              PlatformProfile.AreXUIDSEqual(playerXUIDOffline, packet->xuid))) {
-            Log::info(
-                "AddPlayerPacket received with XUID of local player\n");
+            Log::info("AddPlayerPacket received with XUID of local player\n");
             return;
         }
     }
@@ -933,13 +926,15 @@ void ClientConnection::handleAddPlayer(
                                              0)));
         }
     } else if (!player->customTextureUrl.empty() &&
-               gameServices().isFileInMemoryTextures(player->customTextureUrl)) {
+               gameServices().isFileInMemoryTextures(
+                   player->customTextureUrl)) {
         // Update the ref count on the memory texture data
-        gameServices().addMemoryTextureFile(player->customTextureUrl, nullptr, 0);
+        gameServices().addMemoryTextureFile(player->customTextureUrl, nullptr,
+                                            0);
     }
 
     Log::info("Custom skin for player %s is %s\n", player->name.c_str(),
-                    player->customTextureUrl.c_str());
+              player->customTextureUrl.c_str());
 
     if (!player->customTextureUrl2.empty() &&
         player->customTextureUrl2.substr(0, 3).compare("def") != 0 &&
@@ -954,13 +949,15 @@ void ClientConnection::handleAddPlayer(
                 new TexturePacket(player->customTextureUrl2, nullptr, 0)));
         }
     } else if (!player->customTextureUrl2.empty() &&
-               gameServices().isFileInMemoryTextures(player->customTextureUrl2)) {
+               gameServices().isFileInMemoryTextures(
+                   player->customTextureUrl2)) {
         // Update the ref count on the memory texture data
-        gameServices().addMemoryTextureFile(player->customTextureUrl2, nullptr, 0);
+        gameServices().addMemoryTextureFile(player->customTextureUrl2, nullptr,
+                                            0);
     }
 
     Log::info("Custom cape for player %s is %s\n", player->name.c_str(),
-                    player->customTextureUrl2.c_str());
+              player->customTextureUrl2.c_str());
 
     level->putEntity(packet->id, player);
 
@@ -1093,7 +1090,7 @@ void ClientConnection::handleMovePlayer(
     packet->yView = player->y;
     connection->send(packet);
     if (!started) {
-        if (!g_NetworkManager.IsHost()) {
+        if (!NetworkService.IsHost()) {
             Minecraft::GetInstance()->progressRenderer->progressStagePercentage(
                 (eCCConnected * 100) / (eCCConnected));
         }
@@ -1276,7 +1273,7 @@ void ClientConnection::handleTileUpdate(
     MultiPlayerLevel* dimensionLevel =
         (MultiPlayerLevel*)minecraft->levels[packet->levelIdx];
     if (dimensionLevel) {
-        if (g_NetworkManager.IsHost()) {
+        if (NetworkService.IsHost()) {
             // 4J Stu - Unshare before we make any changes incase the server is
             // already another step ahead of us Fix for #7904 - Gameplay:
             // Players can dupe torches by throwing them repeatedly into water.
@@ -1320,20 +1317,6 @@ void ClientConnection::handleTileUpdate(
 
 void ClientConnection::handleDisconnect(
     std::shared_ptr<DisconnectPacket> packet) {
-#if defined(__linux__)
-    // Linux fix: On local host connections, ignore DisconnectPacket. The
-    // singleplayer internal server should never disconnect itself. If we see
-    // this, it's likely stream desync reading garbage data as a
-    // DisconnectPacket.
-    if (connection && connection->getSocket() &&
-        connection->getSocket()->isLocal()) {
-        fprintf(stderr,
-                "[CONN] Ignoring DisconnectPacket on local connection "
-                "(reason=%d)\n",
-                packet->reason);
-        return;
-    }
-#endif
     connection->close(DisconnectPacket::eDisconnect_Kicked);
     done = true;
 
@@ -1359,7 +1342,7 @@ void ClientConnection::onDisconnect(DisconnectPacket::eDisconnectReason reason,
     // Fix for #13191 - The host of a game can get a message informing them that
     // the connection to the server has been lost In the (now unlikely) event
     // that the host connections times out, allow the player to save their game
-    if (g_NetworkManager.IsHost() &&
+    if (NetworkService.IsHost() &&
         (reason == DisconnectPacket::eDisconnect_TimeOut ||
          reason == DisconnectPacket::eDisconnect_Overflow) &&
         m_userIndex == PlatformInput.GetPrimaryPad() &&
@@ -1371,7 +1354,8 @@ void ClientConnection::onDisconnect(DisconnectPacket::eDisconnectReason reason,
                                &ClientConnection::HostDisconnectReturned,
                                nullptr);
     } else {
-        gameServices().setAction(m_userIndex, eAppAction_ExitWorld, (void*)true);
+        gameServices().setAction(m_userIndex, eAppAction_ExitWorld,
+                                 (void*)true);
     }
 
     // minecraft->setLevel(nullptr);
@@ -1763,7 +1747,8 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
             message = gameServices().getString(IDS_MAX_VILLAGERS_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxPigsSheepCows:
-            message = gameServices().getString(IDS_MAX_PIGS_SHEEP_COWS_CATS_SPAWNED);
+            message =
+                gameServices().getString(IDS_MAX_PIGS_SHEEP_COWS_CATS_SPAWNED);
             break;
         case ChatPacket::e_ChatPlayerMaxChickens:
             message = gameServices().getString(IDS_MAX_CHICKENS_SPAWNED);
@@ -1783,7 +1768,8 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
 
             // Breeding
         case ChatPacket::e_ChatPlayerMaxBredPigsSheepCows:
-            message = gameServices().getString(IDS_MAX_PIGS_SHEEP_COWS_CATS_BRED);
+            message =
+                gameServices().getString(IDS_MAX_PIGS_SHEEP_COWS_CATS_BRED);
             break;
         case ChatPacket::e_ChatPlayerMaxBredChickens:
             message = gameServices().getString(IDS_MAX_CHICKENS_BRED);
@@ -1822,9 +1808,9 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
                 message =
                     replaceAll(message, "{*DESTINATION*}", sourceDisplayName);
             } else {
-                message = replaceAll(
-                    message, "{*DESTINATION*}",
-                    gameServices().getEntityName((EntityTypeId)packet->m_intArgs[0]));
+                message = replaceAll(message, "{*DESTINATION*}",
+                                     gameServices().getEntityName(
+                                         (EntityTypeId)packet->m_intArgs[0]));
             }
             break;
         case ChatPacket::e_ChatCommandTeleportMe:
@@ -1856,8 +1842,8 @@ void ClientConnection::handleChat(std::shared_ptr<ChatPacket> packet) {
                 !packet->m_stringArgs[1].empty()) {
                 entityName = packet->m_stringArgs[1];
             } else {
-                entityName =
-                    gameServices().getEntityName((EntityTypeId)packet->m_intArgs[0]);
+                entityName = gameServices().getEntityName(
+                    (EntityTypeId)packet->m_intArgs[0]);
             }
 
             message = replaceAll(message, "{*SOURCE*}", entityName);
@@ -1920,24 +1906,26 @@ void ClientConnection::handleEntityActionAtPosition(
 void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
     fprintf(stderr,
             "[LOGIN-CLI] handlePreLogin entered, isHost=%d, userIdx=%d\n",
-            (int)g_NetworkManager.IsHost(), m_userIndex);
+            (int)NetworkService.IsHost(), m_userIndex);
     // 4J - Check that we can play with all the players already in the game who
     // have Friends-Only UGC set
     bool canPlay = true;
     bool canPlayLocal = true;
-    bool isAtLeastOneFriend = g_NetworkManager.IsHost();
+    bool isAtLeastOneFriend = NetworkService.IsHost();
     bool isFriendsWithHost = true;
     bool cantPlayContentRestricted = false;
 
-    if (!g_NetworkManager.IsHost()) {
+    if (!NetworkService.IsHost()) {
         // set the game host settings
-        gameServices().setGameHostOption(eGameHostOption_All, packet->m_serverSettings);
+        gameServices().setGameHostOption(eGameHostOption_All,
+                                         packet->m_serverSettings);
 
         // 4J-PB - if we go straight in from the menus via an invite, we won't
         // have the DLC info
         if (gameServices().getTMSGlobalFileListRead() == false) {
-            gameServices().setTMSAction(PlatformInput.GetPrimaryPad(),
-                             eTMSAction_TMSPP_RetrieveFiles_RunPlayGame);
+            gameServices().setTMSAction(
+                PlatformInput.GetPrimaryPad(),
+                eTMSAction_TMSPP_RetrieveFiles_RunPlayGame);
         }
     }
 
@@ -1967,8 +1955,8 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
                 "privileges: %d\n",
                 reason);
             gameServices().setDisconnectReason(reason);
-            gameServices().setAction(PlatformInput.GetPrimaryPad(), eAppAction_ExitWorld,
-                          (void*)true);
+            gameServices().setAction(PlatformInput.GetPrimaryPad(),
+                                     eAppAction_ExitWorld, (void*)true);
         } else {
             if (!isFriendsWithHost)
                 reason = DisconnectPacket::eDisconnect_NotFriendsWithHost;
@@ -2005,7 +1993,8 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
             //			gameServices().setAction(m_userIndex,eAppAction_ExitPlayer);
 
             // 4J-PB - doing this instead
-            gameServices().setAction(m_userIndex, eAppAction_ExitPlayerPreLogin);
+            gameServices().setAction(m_userIndex,
+                                     eAppAction_ExitPlayerPreLogin);
         }
     } else {
         // Texture pack handling
@@ -2018,9 +2007,8 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
             Minecraft* pMinecraft = Minecraft::GetInstance();
             if (pMinecraft->skins->selectTexturePackById(
                     packet->m_texturePackId)) {
-                Log::info(
-                    "Selected texture pack %d from Pre-Login packet\n",
-                    packet->m_texturePackId);
+                Log::info("Selected texture pack %d from Pre-Login packet\n",
+                          packet->m_texturePackId);
             } else {
                 Log::info(
                     "Could not select texture pack %d from Pre-Login packet, "
@@ -2033,7 +2021,7 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
             }
         }
 
-        if (!g_NetworkManager.IsHost()) {
+        if (!NetworkService.IsHost()) {
             Minecraft::GetInstance()->progressRenderer->progressStagePercentage(
                 (eCCPreLoginReceived * 100) / (eCCConnected));
         }
@@ -2062,16 +2050,17 @@ void ClientConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
                 "isHost=%d\n",
                 minecraft->user->name.c_str(),
                 SharedConstants::NETWORK_PROTOCOL_VERSION, m_userIndex,
-                (int)g_NetworkManager.IsHost());
+                (int)NetworkService.IsHost());
         send(std::make_shared<LoginPacket>(
             minecraft->user->name, SharedConstants::NETWORK_PROTOCOL_VERSION,
             offlineXUID, onlineXUID, (!allAllowed && friendsAllowed),
-            packet->m_ugcPlayersVersion, gameServices().getPlayerSkinId(m_userIndex),
+            packet->m_ugcPlayersVersion,
+            gameServices().getPlayerSkinId(m_userIndex),
             gameServices().getPlayerCapeId(m_userIndex),
             PlatformProfile.IsGuest(m_userIndex)));
         fprintf(stderr, "[LOGIN] LoginPacket sent successfully\n");
 
-        if (!g_NetworkManager.IsHost()) {
+        if (!NetworkService.IsHost()) {
             Minecraft::GetInstance()->progressRenderer->progressStagePercentage(
                 (eCCLoginSent * 100) / (eCCConnected));
         }
@@ -2264,11 +2253,12 @@ void ClientConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
         // Request for texture
 #if !defined(_CONTENT_PACKAGE)
         printf("Client received request for custom texture %s\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(packet->textureName, &pbData,
+                                         &dwBytes);
 
         if (dwBytes != 0) {
             send(std::shared_ptr<TexturePacket>(
@@ -2278,10 +2268,10 @@ void ClientConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
         // Response with texture data
 #if !defined(_CONTENT_PACKAGE)
         printf("Client received custom texture %s\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
-                                 packet->dataBytes);
+                                            packet->dataBytes);
         Minecraft::GetInstance()->handleClientTextureReceived(
             packet->textureName);
     }
@@ -2297,23 +2287,22 @@ void ClientConnection::handleTextureAndGeometry(
     if (packet->dwTextureBytes == 0) {
         // Request for texture
 #if !defined(_CONTENT_PACKAGE)
-        printf(
-            "Client received request for custom texture and geometry %s\n",
-            packet->textureName.c_str());
+        printf("Client received request for custom texture and geometry %s\n",
+               packet->textureName.c_str());
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwBytes);
-        DLCSkinFile* pDLCSkinFile =
-            gameServices().getDLCSkinFile(packet->textureName);
+        gameServices().getMemFileDetails(packet->textureName, &pbData,
+                                         &dwBytes);
+        ISkinAssetData* pSkinAsset =
+            gameServices().getSkinAssetData(packet->textureName);
 
         if (dwBytes != 0) {
-            if (pDLCSkinFile) {
-                if (pDLCSkinFile->getAdditionalBoxesCount() != 0) {
+            if (pSkinAsset) {
+                if (pSkinAsset->getAdditionalBoxesCount() != 0) {
                     send(std::shared_ptr<TextureAndGeometryPacket>(
-                        new TextureAndGeometryPacket(packet->textureName,
-                                                     pbData, dwBytes,
-                                                     pDLCSkinFile)));
+                        new TextureAndGeometryPacket(
+                            packet->textureName, pbData, dwBytes, pSkinAsset)));
                 } else {
                     send(std::shared_ptr<TextureAndGeometryPacket>(
                         new TextureAndGeometryPacket(packet->textureName,
@@ -2334,19 +2323,19 @@ void ClientConnection::handleTextureAndGeometry(
         // Response with texture data
 #if !defined(_CONTENT_PACKAGE)
         printf("Client received custom TextureAndGeometry %s\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         // Add the texture data
         gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
-                                 packet->dwTextureBytes);
+                                            packet->dwTextureBytes);
         // Add the geometry data
         if (packet->dwBoxC != 0) {
-            gameServices().setAdditionalSkinBoxes(packet->dwSkinID, packet->BoxDataA,
-                                       packet->dwBoxC);
+            gameServices().setAdditionalSkinBoxes(
+                packet->dwSkinID, packet->BoxDataA, packet->dwBoxC);
         }
         // Add the anim override
         gameServices().setAnimOverrideBitmask(packet->dwSkinID,
-                                   packet->uiAnimOverrideBitmask);
+                                              packet->uiAnimOverrideBitmask);
 
         // clear out the pending texture request
         Minecraft::GetInstance()->handleClientTextureReceived(
@@ -2373,11 +2362,12 @@ void ClientConnection::handleTextureChange(
 
     switch (packet->action) {
         case TextureChangePacket::e_TextureChange_Skin:
-            player->setCustomSkin(gameServices().getSkinIdFromPath(packet->path));
+            player->setCustomSkin(
+                gameServices().getSkinIdFromPath(packet->path));
 #if !defined(_CONTENT_PACKAGE)
             printf("Skin for remote player %s has changed to %s (%d)\n",
-                    player->name.c_str(), player->customTextureUrl.c_str(),
-                    player->getPlayerDefaultSkin());
+                   player->name.c_str(), player->customTextureUrl.c_str(),
+                   static_cast<int>(player->getPlayerDefaultSkin()));
 #endif
             break;
         case TextureChangePacket::e_TextureChange_Cape:
@@ -2385,7 +2375,7 @@ void ClientConnection::handleTextureChange(
             // player->customTextureUrl2 = packet->path;
 #if !defined(_CONTENT_PACKAGE)
             printf("Cape for remote player %s has changed to %s\n",
-                    player->name.c_str(), player->customTextureUrl2.c_str());
+                   player->name.c_str(), player->customTextureUrl2.c_str());
 #endif
             break;
     }
@@ -2432,8 +2422,8 @@ void ClientConnection::handleTextureAndGeometryChange(
 
 #if !defined(_CONTENT_PACKAGE)
     printf("Skin for remote player %s has changed to %s (%d)\n",
-            player->name.c_str(), player->customTextureUrl.c_str(),
-            player->getPlayerDefaultSkin());
+           player->name.c_str(), player->customTextureUrl.c_str(),
+           static_cast<int>(player->getPlayerDefaultSkin()));
 #endif
 
     if (!packet->path.empty() &&
@@ -2492,7 +2482,7 @@ void ClientConnection::handleRespawn(std::shared_ptr<RespawnPacket> packet) {
 
             dimensionLevel->difficulty = packet->difficulty;  // 4J Added
             Log::info("dimensionLevel->difficulty - Difficulty = %d\n",
-                            packet->difficulty);
+                      packet->difficulty);
 
             dimensionLevel->isClientSide = true;
         } else {
@@ -2518,9 +2508,11 @@ void ClientConnection::handleRespawn(std::shared_ptr<RespawnPacket> packet) {
         //		minecraft->addPendingLocalConnection(m_userIndex, this);
 
         if (minecraft->localgameModes[m_userIndex] != nullptr) {
-            TutorialMode* gameMode =
-                (TutorialMode*)minecraft->localgameModes[m_userIndex];
-            gameMode->getTutorial()->showTutorialPopup(false);
+            ITutorial* tutorial =
+                minecraft->localgameModes[m_userIndex]->getTutorial();
+            if (tutorial != nullptr) {
+                tutorial->showTutorialPopup(false);
+            }
         }
 
         // 4J-JEV: Fix for Durango #156334 - Content: UI: Rich Presence 'In the
@@ -2551,7 +2543,8 @@ void ClientConnection::handleRespawn(std::shared_ptr<RespawnPacket> packet) {
             ui.NavigateToScene(m_userIndex, eUIScene_ConnectingProgress, param);
         }
 
-        gameServices().setAction(m_userIndex, eAppAction_WaitForDimensionChangeComplete);
+        gameServices().setAction(m_userIndex,
+                                 eAppAction_WaitForDimensionChangeComplete);
     }
 
     // minecraft->respawnPlayer(minecraft->player->GetXboxPad(),true,
@@ -2890,8 +2883,8 @@ void ClientConnection::handleSignUpdate(
                 ste->SetMessage(i, packet->lines[i]);
             }
 
-            Log::info("verified = %d\tCensored = %d\n",
-                            packet->m_bVerified, packet->m_bCensored);
+            Log::info("verified = %d\tCensored = %d\n", packet->m_bVerified,
+                      packet->m_bCensored);
             ste->SetVerified(packet->m_bVerified);
             ste->SetCensored(packet->m_bCensored);
 
@@ -3006,8 +2999,7 @@ void ClientConnection::handleGameEvent(
     } else if (event == GameEventPacket::WIN_GAME) {
         ui.SetWinUserIndex(static_cast<unsigned int>(gameEventPacket->param));
 
-        Log::info("handleGameEvent packet for WIN_GAME - %d\n",
-                        m_userIndex);
+        Log::info("handleGameEvent packet for WIN_GAME - %d\n", m_userIndex);
         // This just allows it to be shown
         if (minecraft->localgameModes[PlatformInput.GetPrimaryPad()] != nullptr)
             minecraft->localgameModes[PlatformInput.GetPrimaryPad()]
@@ -3016,16 +3008,16 @@ void ClientConnection::handleGameEvent(
         ui.NavigateToScene(PlatformInput.GetPrimaryPad(), eUIScene_EndPoem,
                            nullptr, eUILayer_Scene, eUIGroup_Fullscreen);
     } else if (event == GameEventPacket::START_SAVING) {
-        if (!g_NetworkManager.IsHost()) {
+        if (!NetworkService.IsHost()) {
             // Move app started to here so that it happens immediately otherwise
             // back-to-back START/STOP packets leave the client stuck in the
             // loading screen
             gameServices().setGameStarted(false);
             gameServices().setAction(PlatformInput.GetPrimaryPad(),
-                          eAppAction_RemoteServerSave);
+                                     eAppAction_RemoteServerSave);
         }
     } else if (event == GameEventPacket::STOP_SAVING) {
-        if (!g_NetworkManager.IsHost()) gameServices().setGameStarted(true);
+        if (!NetworkService.IsHost()) gameServices().setGameStarted(true);
     } else if (event == GameEventPacket::SUCCESSFUL_BOW_HIT) {
         std::shared_ptr<MultiplayerLocalPlayer> player =
             minecraft->localplayers[m_userIndex];
@@ -3111,7 +3103,7 @@ void ClientConnection::handlePlayerInfo(
         gameServices().getPlayerPrivileges(packet->m_networkSmallId);
 
     INetworkPlayer* networkPlayer =
-        g_NetworkManager.GetPlayerBySmallId(packet->m_networkSmallId);
+        NetworkService.GetPlayerBySmallId(packet->m_networkSmallId);
 
     if (networkPlayer != nullptr && networkPlayer->IsHost()) {
         // Some settings should always be considered on for the host player
@@ -3121,8 +3113,9 @@ void ClientConnection::handlePlayerInfo(
     }
 
     // 4J Stu - Repurposed this packet for player info that we want
-    gameServices().updatePlayerInfo(packet->m_networkSmallId, packet->m_playerColourIndex,
-                         packet->m_playerPrivileges);
+    gameServices().updatePlayerInfo(packet->m_networkSmallId,
+                                    packet->m_playerColourIndex,
+                                    packet->m_playerPrivileges);
 
     std::shared_ptr<Entity> entity = getEntity(packet->m_entityId);
     if (entity != nullptr && entity->instanceof(eTYPE_PLAYER)) {
@@ -3163,27 +3156,32 @@ void ClientConnection::displayPrivilegeChanges(
             Player::getPlayerGamePrivilege(oldPrivileges, priv)) {
             privOn = Player::getPlayerGamePrivilege(newPrivileges, priv);
             std::string message = "";
-            if (gameServices().getGameHostOption(eGameHostOption_TrustPlayers) == 0) {
+            if (gameServices().getGameHostOption(
+                    eGameHostOption_TrustPlayers) == 0) {
                 switch (priv) {
                     case Player::ePlayerGamePrivilege_CannotMine:
                         if (privOn)
-                            message = gameServices().getString(IDS_PRIV_MINE_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_MINE_TOGGLE_ON);
                         else
-                            message = gameServices().getString(IDS_PRIV_MINE_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_MINE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotBuild:
                         if (privOn)
-                            message = gameServices().getString(IDS_PRIV_BUILD_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_BUILD_TOGGLE_ON);
                         else
-                            message = gameServices().getString(IDS_PRIV_BUILD_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_BUILD_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanUseDoorsAndSwitches:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_USE_DOORS_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_USE_DOORS_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_USE_DOORS_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_USE_DOORS_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanUseContainers:
                         if (privOn)
@@ -3195,24 +3193,24 @@ void ClientConnection::displayPrivilegeChanges(
                         break;
                     case Player::ePlayerGamePrivilege_CannotAttackAnimals:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_ATTACK_ANIMAL_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_ATTACK_ANIMAL_TOGGLE_ON);
                         else
                             message = gameServices().getString(
                                 IDS_PRIV_ATTACK_ANIMAL_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotAttackMobs:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_ATTACK_MOB_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_ATTACK_MOB_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_ATTACK_MOB_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_ATTACK_MOB_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CannotAttackPlayers:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_ATTACK_PLAYER_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_ATTACK_PLAYER_TOGGLE_ON);
                         else
                             message = gameServices().getString(
                                 IDS_PRIV_ATTACK_PLAYER_TOGGLE_OFF);
@@ -3224,59 +3222,65 @@ void ClientConnection::displayPrivilegeChanges(
             switch (priv) {
                 case Player::ePlayerGamePrivilege_Op:
                     if (privOn)
-                        message = gameServices().getString(IDS_PRIV_MODERATOR_TOGGLE_ON);
+                        message = gameServices().getString(
+                            IDS_PRIV_MODERATOR_TOGGLE_ON);
                     else
-                        message = gameServices().getString(IDS_PRIV_MODERATOR_TOGGLE_OFF);
+                        message = gameServices().getString(
+                            IDS_PRIV_MODERATOR_TOGGLE_OFF);
                     break;
                 default:
                     break;
             };
-            if (gameServices().getGameHostOption(eGameHostOption_CheatsEnabled) != 0) {
+            if (gameServices().getGameHostOption(
+                    eGameHostOption_CheatsEnabled) != 0) {
                 switch (priv) {
                     case Player::ePlayerGamePrivilege_CanFly:
                         if (privOn)
-                            message = gameServices().getString(IDS_PRIV_FLY_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_FLY_TOGGLE_ON);
                         else
-                            message = gameServices().getString(IDS_PRIV_FLY_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_FLY_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_ClassicHunger:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_EXHAUSTION_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_EXHAUSTION_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_EXHAUSTION_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_EXHAUSTION_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_Invisible:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_INVISIBLE_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_INVISIBLE_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_INVISIBLE_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_INVISIBLE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_Invulnerable:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_INVULNERABLE_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_INVULNERABLE_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_INVULNERABLE_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_INVULNERABLE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanToggleInvisible:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_CAN_INVISIBLE_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_CAN_INVISIBLE_TOGGLE_ON);
                         else
                             message = gameServices().getString(
                                 IDS_PRIV_CAN_INVISIBLE_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanToggleFly:
                         if (privOn)
-                            message = gameServices().getString(IDS_PRIV_CAN_FLY_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_CAN_FLY_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_CAN_FLY_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_CAN_FLY_TOGGLE_OFF);
                         break;
                     case Player::ePlayerGamePrivilege_CanToggleClassicHunger:
                         if (privOn)
@@ -3288,11 +3292,11 @@ void ClientConnection::displayPrivilegeChanges(
                         break;
                     case Player::ePlayerGamePrivilege_CanTeleport:
                         if (privOn)
-                            message =
-                                gameServices().getString(IDS_PRIV_CAN_TELEPORT_TOGGLE_ON);
+                            message = gameServices().getString(
+                                IDS_PRIV_CAN_TELEPORT_TOGGLE_ON);
                         else
-                            message =
-                                gameServices().getString(IDS_PRIV_CAN_TELEPORT_TOGGLE_OFF);
+                            message = gameServices().getString(
+                                IDS_PRIV_CAN_TELEPORT_TOGGLE_OFF);
                         break;
                     default:
                         break;
@@ -3381,7 +3385,8 @@ void ClientConnection::handleServerSettingsChanged(
     } else {
         // options
         // minecraft->options->SetGamertagSetting((packet->data==0)?false:true);
-        gameServices().setGameHostOption(eGameHostOption_Gamertags, packet->data);
+        gameServices().setGameHostOption(eGameHostOption_Gamertags,
+                                         packet->data);
     }
 }
 
@@ -3395,7 +3400,7 @@ void ClientConnection::handleXZ(std::shared_ptr<XZPacket> packet) {
 
 void ClientConnection::handleUpdateProgress(
     std::shared_ptr<UpdateProgressPacket> packet) {
-    if (!g_NetworkManager.IsHost())
+    if (!NetworkService.IsHost())
         Minecraft::GetInstance()->progressRenderer->progressStagePercentage(
             packet->m_percentage);
 }
@@ -3420,7 +3425,7 @@ void ClientConnection::handleUpdateGameRuleProgressPacket(
             "handleUpdateGameRuleProgressPacket: Data tag is in range, so "
             "updating profile data\n");
         gameServices().setSpecialTutorialCompletionFlag(m_userIndex,
-                                             packet->m_dataTag - 1);
+                                                        packet->m_dataTag - 1);
     }
 }
 
@@ -3433,11 +3438,7 @@ int ClientConnection::HostDisconnectReturned(
     // world
     if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
         TexturePack* tPack = Minecraft::GetInstance()->skins->getSelected();
-        DLCTexturePack* pDLCTexPack = (DLCTexturePack*)tPack;
-
-        DLCPack* pDLCPack =
-            pDLCTexPack->getDLCInfoParentPack();  // tPack->getDLCPack();
-        if (!pDLCPack->hasPurchasedFile(DLCManager::e_DLCType_Texture, "")) {
+        if (tPack->needsPurchase()) {
             // no upsell, we're about to quit
             MinecraftServer::getInstance()->setSaveOnExit(false);
             // flag a app action of exit game
@@ -3578,7 +3579,9 @@ void ClientConnection::checkDeferredEntityLinkPackets(int newEntityId) {
 
         // Only consider recently deferred packets
         auto tickInterval =
-            std::chrono::duration_cast<std::chrono::milliseconds>(time_util::clock::now() - deferred->m_recievedTick).count();
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                time_util::clock::now() - deferred->m_recievedTick)
+                .count();
         if (tickInterval < MAX_ENTITY_LINK_DEFERRAL_INTERVAL) {
             // Note: we assume it's the destination entity
             if (deferred->m_packet->destId == newEntityId) {

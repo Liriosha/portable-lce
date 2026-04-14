@@ -4,11 +4,9 @@
 
 #include <utility>
 
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "platform/renderer/renderer.h"
-#include "app/common/App_Defines.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
 #include "app/common/UI/Controls/UIControl_HTMLLabel.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
@@ -16,11 +14,14 @@
 #include "app/common/UI/Controls/UIControl_TextInput.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "util/StringHelpers.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/GameTypes.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 #define GAME_CREATE_ONLINE_TIMER_ID 0
 #define GAME_CREATE_ONLINE_TIMER_TIME 100

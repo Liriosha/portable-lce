@@ -6,7 +6,6 @@
 #include <sstream>
 #include <utility>
 
-#include "platform/profile/profile.h"
 #include "DLCAudioFile.h"
 #include "DLCCapeFile.h"
 #include "DLCColourTableFile.h"
@@ -15,13 +14,13 @@
 #include "DLCLocalisationFile.h"
 #include "DLCTextureFile.h"
 #include "DLCUIDataFile.h"
-#include "app/common/Console_Debug_enum.h"
 #include "app/common/DLC/DLCFile.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCSkinFile.h"
-#include "app/common/Localisation/StringTable.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
+#include "app/common/Game.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/locale/StringTable.h"
+#include "platform/profile/profile.h"
 #include "util/StringHelpers.h"
 
 DLCPack::DLCPack(const std::string& name, std::uint32_t dwLicenseMask) {
@@ -352,6 +351,6 @@ void DLCPack::UpdateLanguage() {
         DLCLocalisationFile* localisationFile = (DLCLocalisationFile*)getFile(
             DLCManager::e_DLCType_LocalisationData, "languages.loc");
         StringTable* strTable = localisationFile->getStringTable();
-        strTable->ReloadStringTable();
+        strTable->ReloadStringTable(app.getLocale());
     }
 }

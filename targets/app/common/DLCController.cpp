@@ -1,21 +1,19 @@
 #include "app/common/DLCController.h"
 
-#include "app/common/Game.h"
-#include "app/common/DLC/DLCPack.h"
+#include <cstring>
+#include <mutex>
+
 #include "app/common/DLC/DLCManager.h"
+#include "app/common/DLC/DLCPack.h"
 #include "app/common/DLC/DLCSkinFile.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "platform/storage/storage.h"
-#include "platform/profile/profile.h"
 #include "platform/XboxStubs.h"
-
-#include <cstring>
-#include <mutex>
+#include "platform/profile/profile.h"
+#include "platform/storage/storage.h"
 
 DLCController::DLCController() {
     m_pDLCFileBuffer = nullptr;
@@ -76,10 +74,9 @@ bool DLCController::startInstallDLCProcess(int iPad) {
             "--- DLCController::startInstallDLCProcess - "
             "PlatformStorage.GetInstalledDLC\n");
 
-        PlatformStorage.GetInstalledDLC(
-            iPad, [this](int iInstalledC, int pad) {
-                return dlcInstalledCallback(iInstalledC, pad);
-            });
+        PlatformStorage.GetInstalledDLC(iPad, [this](int iInstalledC, int pad) {
+            return dlcInstalledCallback(iInstalledC, pad);
+        });
         return true;
     } else {
         app.DebugPrintf(
@@ -105,7 +102,7 @@ void DLCController::mountNextDLC(int iPad) {
                 [this](int pad, std::uint32_t dwErr,
                        std::uint32_t dwLicenceMask) {
                     return dlcMountedCallback(pad, dwErr, dwLicenceMask);
-                }) != ERROR_IO_PENDING) {
+                }) != 997 /* ERROR_IO_PENDING */) {
             app.DebugPrintf("Failed to mount DLC %d for pad %d\n",
                             m_iTotalDLCInstalled, iPad);
             ++m_iTotalDLCInstalled;
@@ -131,7 +128,7 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
 #if defined(_WINDOWS64)
     app.DebugPrintf("--- DLCController::dlcMountedCallback\n");
 
-    if (dwErr != ERROR_SUCCESS) {
+    if (dwErr != 0 /* ERROR_SUCCESS */) {
         app.DebugPrintf("Failed to mount DLC for pad %d: %u\n", iPad, dwErr);
         app.m_dlcManager.incrementUnnamedCorruptCount();
     } else {
@@ -188,13 +185,11 @@ int DLCController::dlcMountedCallback(int iPad, std::uint32_t dwErr,
 
 void DLCController::handleDLC(DLCPack* pack) {
     unsigned int dwFilesProcessed = 0;
-#if defined(_WINDOWS64) || defined(__linux__)
     std::vector<std::string> dlcFilenames;
-#endif
     PlatformStorage.GetMountedDLCFileList("DLCDrive", dlcFilenames);
     for (int i = 0; i < dlcFilenames.size(); i++) {
         app.m_dlcManager.readDLCDataFile(dwFilesProcessed, dlcFilenames[i],
-                                          pack);
+                                         pack);
     }
     if (dwFilesProcessed == 0) app.m_dlcManager.removePack(pack);
 }
@@ -229,7 +224,6 @@ SCreditTextItemDef* DLCController::getDLCCredits(int iIndex) {
     return vDLCCredits.at(iIndex);
 }
 
-#if defined(_WINDOWS64)
 int32_t DLCController::registerDLCData(char* pType, char* pBannerName,
                                        int iGender, uint64_t ullOfferID_Full,
                                        uint64_t ullOfferID_Trial,
@@ -246,11 +240,11 @@ int32_t DLCController::registerDLCData(char* pType, char* pBannerName,
     pDLCData->uiSortIndex = uiSortIndex;
     pDLCData->iConfig = iConfig;
 
-    if (pBannerName != "") {
-        wcsncpy_s(pDLCData->wchBanner, pBannerName, MAX_BANNERNAME_SIZE);
+    if (strcmp(pBannerName, "") != 0) {
+        strncpy(pDLCData->wchBanner, pBannerName, MAX_BANNERNAME_SIZE);
     }
     if (pDataFile[0] != 0) {
-        wcsncpy_s(pDLCData->wchDataFile, pDataFile, MAX_BANNERNAME_SIZE);
+        strncpy(pDLCData->wchDataFile, pDataFile, MAX_BANNERNAME_SIZE);
     }
 
     if (pType != nullptr) {
@@ -277,19 +271,6 @@ int32_t DLCController::registerDLCData(char* pType, char* pBannerName,
 
     return hr;
 }
-#elif defined(__linux__)
-int32_t DLCController::registerDLCData(char* pType, char* pBannerName,
-                                       int iGender, uint64_t ullOfferID_Full,
-                                       uint64_t ullOfferID_Trial,
-                                       char* pFirstSkin,
-                                       unsigned int uiSortIndex, int iConfig,
-                                       char* pDataFile) {
-    fprintf(stderr,
-            "warning: DLCController::registerDLCData unimplemented for "
-            "platform `__linux__`\n");
-    return 0;
-}
-#endif
 
 bool DLCController::getDLCFullOfferIDForSkinID(const std::string& FirstSkin,
                                                uint64_t* pullVal) {
@@ -314,8 +295,7 @@ bool DLCController::getDLCFullOfferIDForPackID(const int iPackID,
     }
 }
 
-DLC_INFO* DLCController::getDLCInfoForTrialOfferID(
-    uint64_t ullOfferID_Trial) {
+DLC_INFO* DLCController::getDLCInfoForTrialOfferID(uint64_t ullOfferID_Trial) {
     if (DLCInfo_Trial.size() > 0) {
         auto it = DLCInfo_Trial.find(ullOfferID_Trial);
         if (it == DLCInfo_Trial.end()) {
@@ -437,12 +417,13 @@ bool DLCController::retrieveNextDLCContent() {
                 app.DebugPrintf("RetrieveNextDLCContent - type = %d\n",
                                 pCurrent->dwType);
 #endif
-                IPlatformStorage::EDLCStatus status = PlatformStorage.GetDLCOffers(
-                    PlatformProfile.GetPrimaryPad(),
-                    [this](int iOfferC, std::uint32_t dwType, int pad) {
-                        return dlcOffersReturned(iOfferC, dwType, pad);
-                    },
-                    pCurrent->dwType);
+                IPlatformStorage::EDLCStatus status =
+                    PlatformStorage.GetDLCOffers(
+                        PlatformProfile.GetPrimaryPad(),
+                        [this](int iOfferC, std::uint32_t dwType, int pad) {
+                            return dlcOffersReturned(iOfferC, dwType, pad);
+                        },
+                        pCurrent->dwType);
                 if (status == IPlatformStorage::EDLC_Pending) {
                     pCurrent->eState = e_DLC_ContentState_Retrieving;
                 } else {
@@ -670,9 +651,9 @@ unsigned int DLCController::addTMSPPFileTypeRequest(eDLCContentType eType,
     return 1;
 }
 
-int DLCController::tmsPPFileReturned(void* pParam, int iPad, int iUserData,
-                                     IPlatformStorage::PTMSPP_FILEDATA pFileData,
-                                     const char* szFilename) {
+int DLCController::tmsPPFileReturned(
+    void* pParam, int iPad, int iUserData,
+    IPlatformStorage::PTMSPP_FILEDATA pFileData, const char* szFilename) {
     DLCController* pClass = (DLCController*)pParam;
 
     {

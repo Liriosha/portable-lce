@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "MultiPlayerLocalPlayer.h"
 
 #include <wchar.h>
@@ -7,10 +5,7 @@
 #include <cmath>
 
 #include "ClientConnection.h"
-#include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
-#include "app/common/Tutorial/TutorialMode.h"
-#include "app/linux/LinuxGame.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/player/Input.h"
@@ -27,6 +22,7 @@
 #include "minecraft/network/packet/TextureAndGeometryChangePacket.h"
 #include "minecraft/network/packet/TextureChangePacket.h"
 #include "minecraft/stats/Stat.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/effect/MobEffect.h"
 #include "minecraft/world/effect/MobEffectInstance.h"
 #include "minecraft/world/entity/player/Abilities.h"
@@ -36,6 +32,7 @@
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/dimension/Dimension.h"
 #include "minecraft/world/phys/AABB.h"
+#include "minecraft/world/tutorial/ITutorial.h"
 
 class User;
 class ItemEntity;
@@ -71,16 +68,17 @@ void MultiplayerLocalPlayer::heal(float heal) {}
 void MultiplayerLocalPlayer::tick() {
     // 4J Added
     // 4J-PB - changing this to a game host option ot hide gamertags
-    // bool bIsisPrimaryHost=g_NetworkManager.IsHost() &&
+    // bool bIsisPrimaryHost=NetworkService.IsHost() &&
     // (PlatformInput.GetPrimaryPad()==m_iPad);
 
-    /*if((gameServices().getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0) !=
-    m_bShownOnMaps)
+    /*if((gameServices().getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0)
+    != m_bShownOnMaps)
     {
             m_bShownOnMaps =
-    (gameServices().getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0); if
-    (m_bShownOnMaps) connection->send( std::shared_ptr<PlayerCommandPacket>( new
-    PlayerCommandPacket(shared_from_this(), PlayerCommandPacket::SHOW_ON_MAPS) )
+    (gameServices().getGameSettings(m_iPad,eGameSetting_PlayerVisibleInMap)!=0);
+    if (m_bShownOnMaps) connection->send( std::shared_ptr<PlayerCommandPacket>(
+    new PlayerCommandPacket(shared_from_this(),
+    PlayerCommandPacket::SHOW_ON_MAPS) )
     ); else connection->send( std::shared_ptr<PlayerCommandPacket>( new
     PlayerCommandPacket(shared_from_this(), PlayerCommandPacket::HIDE_ON_MAPS) )
     );
@@ -235,10 +233,10 @@ void MultiplayerLocalPlayer::actuallyHurt(DamageSource* source, float dmg) {
 void MultiplayerLocalPlayer::completeUsingItem() {
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (useItem != nullptr && pMinecraft->localgameModes[m_iPad] != nullptr) {
-        TutorialMode* gameMode =
-            (TutorialMode*)pMinecraft->localgameModes[m_iPad];
-        Tutorial* tutorial = gameMode->getTutorial();
-        tutorial->completeUsingItem(useItem);
+        ITutorial* tutorial = pMinecraft->localgameModes[m_iPad]->getTutorial();
+        if (tutorial != nullptr) {
+            tutorial->completeUsingItem(useItem);
+        }
     }
     Player::completeUsingItem();
 }
@@ -246,10 +244,10 @@ void MultiplayerLocalPlayer::completeUsingItem() {
 void MultiplayerLocalPlayer::onEffectAdded(MobEffectInstance* effect) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localgameModes[m_iPad] != nullptr) {
-        TutorialMode* gameMode =
-            (TutorialMode*)pMinecraft->localgameModes[m_iPad];
-        Tutorial* tutorial = gameMode->getTutorial();
-        tutorial->onEffectChanged(MobEffect::effects[effect->getId()]);
+        ITutorial* tutorial = pMinecraft->localgameModes[m_iPad]->getTutorial();
+        if (tutorial != nullptr) {
+            tutorial->onEffectChanged(MobEffect::effects[effect->getId()]);
+        }
     }
     Player::onEffectAdded(effect);
 }
@@ -258,10 +256,10 @@ void MultiplayerLocalPlayer::onEffectUpdated(MobEffectInstance* effect,
                                              bool doRefreshAttributes) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localgameModes[m_iPad] != nullptr) {
-        TutorialMode* gameMode =
-            (TutorialMode*)pMinecraft->localgameModes[m_iPad];
-        Tutorial* tutorial = gameMode->getTutorial();
-        tutorial->onEffectChanged(MobEffect::effects[effect->getId()]);
+        ITutorial* tutorial = pMinecraft->localgameModes[m_iPad]->getTutorial();
+        if (tutorial != nullptr) {
+            tutorial->onEffectChanged(MobEffect::effects[effect->getId()]);
+        }
     }
     Player::onEffectUpdated(effect, doRefreshAttributes);
 }
@@ -269,10 +267,11 @@ void MultiplayerLocalPlayer::onEffectUpdated(MobEffectInstance* effect,
 void MultiplayerLocalPlayer::onEffectRemoved(MobEffectInstance* effect) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localgameModes[m_iPad] != nullptr) {
-        TutorialMode* gameMode =
-            (TutorialMode*)pMinecraft->localgameModes[m_iPad];
-        Tutorial* tutorial = gameMode->getTutorial();
-        tutorial->onEffectChanged(MobEffect::effects[effect->getId()], true);
+        ITutorial* tutorial = pMinecraft->localgameModes[m_iPad]->getTutorial();
+        if (tutorial != nullptr) {
+            tutorial->onEffectChanged(MobEffect::effects[effect->getId()],
+                                      true);
+        }
     }
     Player::onEffectRemoved(effect);
 }
@@ -352,13 +351,13 @@ void MultiplayerLocalPlayer::ride(std::shared_ptr<Entity> e) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
     if (pMinecraft->localgameModes[m_iPad] != nullptr) {
-        TutorialMode* gameMode =
-            (TutorialMode*)pMinecraft->localgameModes[m_iPad];
-        if (wasRiding && !isRiding) {
-            gameMode->getTutorial()->changeTutorialState(
-                e_Tutorial_State_Gameplay);
-        } else if (!wasRiding && isRiding) {
-            gameMode->getTutorial()->onRideEntity(e);
+        ITutorial* tutorial = pMinecraft->localgameModes[m_iPad]->getTutorial();
+        if (tutorial != nullptr) {
+            if (wasRiding && !isRiding) {
+                tutorial->changeTutorialState(e_Tutorial_State_Gameplay);
+            } else if (!wasRiding && isRiding) {
+                tutorial->onRideEntity(e);
+            }
         }
     }
 }
@@ -373,13 +372,14 @@ void MultiplayerLocalPlayer::setAndBroadcastCustomSkin(std::uint32_t skinId) {
     std::uint32_t oldSkinIndex = getCustomSkin();
     LocalPlayer::setCustomSkin(skinId);
 #if !defined(_CONTENT_PACKAGE)
-    printf("Skin for local player %s has changed to %s (%d)\n",
-            name.c_str(), customTextureUrl.c_str(), getPlayerDefaultSkin());
+    printf("Skin for local player %s has changed to %s (%d)\n", name.c_str(),
+           customTextureUrl.c_str(), static_cast<int>(getPlayerDefaultSkin()));
 #endif
     if (getCustomSkin() != oldSkinIndex)
         connection->send(std::shared_ptr<TextureAndGeometryChangePacket>(
             new TextureAndGeometryChangePacket(
-                shared_from_this(), gameServices().getPlayerSkinName(GetXboxPad()))));
+                shared_from_this(),
+                gameServices().getPlayerSkinName(GetXboxPad()))));
 }
 
 void MultiplayerLocalPlayer::setAndBroadcastCustomCape(std::uint32_t capeId) {
@@ -387,7 +387,7 @@ void MultiplayerLocalPlayer::setAndBroadcastCustomCape(std::uint32_t capeId) {
     LocalPlayer::setCustomCape(capeId);
 #if !defined(_CONTENT_PACKAGE)
     printf("Cape for local player %s has changed to %s\n", name.c_str(),
-            customTextureUrl2.c_str());
+           customTextureUrl2.c_str());
 #endif
     if (getCustomCape() != oldCapeIndex)
         connection->send(std::make_shared<TextureChangePacket>(

@@ -3,13 +3,13 @@
 #include <cstdint>
 #include <string>
 
+#include "app/common/Iggy/include/rrCore.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_PlayerList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
-#include "platform/NetTypes.h"
+#include "platform/network/NetTypes.h"
 
 class INetworkPlayer;
 class UILayer;

@@ -2,21 +2,22 @@
 
 #include <assert.h>
 
-#include "platform/profile/profile.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_Progress.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/LinuxGame.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/world/inventory/BrewingStandMenu.h"
 #include "minecraft/world/item/alchemy/PotionBrewing.h"
 #include "minecraft/world/level/tile/entity/BrewingStandTileEntity.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
+#include "platform/profile/profile.h"
 
 class UILayer;
 
@@ -61,7 +62,7 @@ UIScene_BrewingStandMenu::UIScene_BrewingStandMenu(int iPad, void* _initData,
 
     if (initData) delete initData;
 
-    app.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_BREWING);
+    PlatformGame.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_BREWING);
 }
 
 std::string UIScene_BrewingStandMenu::getMoviePath() {

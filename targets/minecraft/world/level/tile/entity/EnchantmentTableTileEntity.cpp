@@ -1,12 +1,11 @@
-#include "minecraft/IGameServices.h"
 #include "EnchantmentTableTileEntity.h"
 
 #include <cmath>
 #include <memory>
 #include <numbers>
 
-#include "app/linux/LinuxGame.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"

@@ -1,23 +1,20 @@
-#include "minecraft/util/Log.h"
 #include "BiomeOverrideLayer.h"
 
 #include <string.h>
 
 #include "minecraft/IGameServices.h"
-#include "platform/fs/fs.h"
-#include "minecraft/world/level/newbiome/layer/Layer.h"
-#if defined(__linux__)
-#include "app/linux/Stubs/winapi_stubs.h"
-#endif
+#include "minecraft/util/Log.h"
 #include "minecraft/world/level/biome/Biome.h"
+#include "minecraft/world/level/newbiome/layer/Layer.h"
+#include "platform/fs/fs.h"
 
 BiomeOverrideLayer::BiomeOverrideLayer(int seedMixup) : Layer(seedMixup) {
     m_biomeOverride = std::vector<uint8_t>(width * height);
 
     {
         const char* path = "GameRules/biomemap.bin";
-        auto result = PlatformFilesystem.readFile(
-            path, m_biomeOverride.data(), m_biomeOverride.size());
+        auto result = PlatformFilesystem.readFile(path, m_biomeOverride.data(),
+                                                  m_biomeOverride.size());
         if (result.status == IPlatformFilesystem::ReadStatus::NotFound) {
             Log::info("Biome override not found, using plains as default\n");
             memset(m_biomeOverride.data(), Biome::plains->id,

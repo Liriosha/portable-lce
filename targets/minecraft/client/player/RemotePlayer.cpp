@@ -1,12 +1,11 @@
-#include "minecraft/util/Log.h"
 #include "RemotePlayer.h"
 
 #include <cmath>
 #include <memory>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
 #include "Pos.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/item/Item.h"

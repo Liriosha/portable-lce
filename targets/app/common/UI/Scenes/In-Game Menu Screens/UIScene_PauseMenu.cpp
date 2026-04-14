@@ -5,24 +5,26 @@
 
 #include <memory>
 
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
+#include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/IUIScene_PauseMenu.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/client/skins/DLCTexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/server/MinecraftServer.h"
+#include "minecraft/server/ServerAction.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 class TexturePack;
@@ -64,8 +66,8 @@ UIScene_PauseMenu::UIScene_PauseMenu(int iPad, void* initData,
     // IsLocalGame() issues on Iggy
     if (/*g_NetworkManager.IsLocalGame() &&*/ g_NetworkManager
             .GetPlayerCount() == 1) {
-        app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                               eXuiServerAction_PauseServer, (void*)true);
+        MinecraftServer::getInstance()->queueServerAction(
+            minecraft::server::PauseServer{true});
     }
 
     Minecraft* pMinecraft = Minecraft::GetInstance();
@@ -194,9 +196,8 @@ void UIScene_PauseMenu::handleInput(int iPad, int key, bool repeat,
                 if (iPad == PlatformProfile.GetPrimaryPad() &&
                     /*g_NetworkManager.IsLocalGame()*/ g_NetworkManager
                             .GetPlayerCount() == 1) {
-                    app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                           eXuiServerAction_PauseServer,
-                                           (void*)false);
+                    MinecraftServer::getInstance()->queueServerAction(
+                        minecraft::server::PauseServer{false});
                 }
 
                 ui.PlayUISFX(eSFX_Back);
@@ -263,9 +264,8 @@ void UIScene_PauseMenu::handlePress(F64 controlId, F64 childId) {
             if (m_iPad == PlatformProfile.GetPrimaryPad() &&
                 /*g_NetworkManager.IsLocalGame()*/ g_NetworkManager
                         .GetPlayerCount() == 1) {
-                app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                       eXuiServerAction_PauseServer,
-                                       (void*)false);
+                MinecraftServer::getInstance()->queueServerAction(
+                    minecraft::server::PauseServer{false});
             }
             navigateBack();
             break;

@@ -7,19 +7,17 @@
 #include <string>
 #include <vector>
 
-#include "platform/input/input.h"
-#include "platform/renderer/renderer.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/UI/ConsoleUIController.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/client/player/LocalPlayer.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/util/HtmlString.h"
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/inventory/AbstractContainerMenu.h"
@@ -32,6 +30,8 @@
 #include "minecraft/world/item/crafting/FurnaceRecipes.h"
 #include "minecraft/world/level/tile/entity/FurnaceTileEntity.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
 
 IUIScene_AbstractContainerMenu::IUIScene_AbstractContainerMenu() {
@@ -234,8 +234,8 @@ void IUIScene_AbstractContainerMenu::UpdateTooltips() {
 void IUIScene_AbstractContainerMenu::onMouseTick() {
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localgameModes[getPad()] != nullptr) {
-        Tutorial* tutorial =
-            pMinecraft->localgameModes[getPad()]->getTutorial();
+        Tutorial* tutorial = static_cast<Tutorial*>(
+            pMinecraft->localgameModes[getPad()]->getTutorial());
         if (tutorial != nullptr) {
             if (ui.IsTutorialVisible(getPad()) &&
                 !tutorial->isInputAllowed(ACTION_MENU_UP)) {
@@ -1098,8 +1098,8 @@ bool IUIScene_AbstractContainerMenu::handleKeyDown(int iPad, int iAction,
 
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft->localgameModes[getPad()] != nullptr) {
-        Tutorial* tutorial =
-            pMinecraft->localgameModes[getPad()]->getTutorial();
+        Tutorial* tutorial = static_cast<Tutorial*>(
+            pMinecraft->localgameModes[getPad()]->getTutorial());
         if (tutorial != nullptr) {
             tutorial->handleUIInput(iAction);
             if (ui.IsTutorialVisible(getPad()) &&

@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileOriginal.h"
 
 #include <assert.h>
@@ -14,61 +12,41 @@
 #include <format>
 #include <vector>
 
-#include "platform/PlatformTypes.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/BuildVer/BuildVer.h"
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/File.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "java/System.h"
+#include "minecraft/BuildVer.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/level/ServerLevel.h"
+#include "minecraft/util/Log.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/chunk/storage/RegionFile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSavePath.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/storage/LevelData.h"
-#include "platform/storage/storage.h"
+#include "platform/PlatformTypes.h"
 #include "platform/fs/fs.h"
-
-#define RESERVE_ALLOCATION MEM_RESERVE
-#define COMMIT_ALLOCATION MEM_COMMIT
-
-unsigned int ConsoleSaveFileOriginal::pagesCommitted = 0;
-void* ConsoleSaveFileOriginal::pvHeap = nullptr;
+#include "platform/storage/storage.h"
 
 ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
     const std::string& fileName, void* pvSaveData /*= nullptr*/,
     unsigned int initialFileSize /*= 0*/, bool forceCleanSave /*= false*/,
-    ESavePlatform plat /*= SAVE_FILE_PLATFORM_LOCAL*/) {
-    // One time initialise of static stuff required for our storage
-    if (pvHeap == nullptr) {
-        // Reserve a chunk of 64MB of virtual address space for our saves, using
-        // 64KB pages. We'll only be committing these as required to grow the
-        // storage we need, which will the storage to grow without having to use
-        // realloc.
-
-        // AP - The Vita doesn't have virtual memory so a pretend system has
-        // been implemented in PSVitaStubs.cpp. All access to the memory must be
-        // done via the access function as the pointer returned from
-        // VirtualAlloc can't be used directly.
-        pvHeap = VirtualAlloc(nullptr, MAX_PAGE_COUNT * CSF_PAGE_SIZE,
-                              RESERVE_ALLOCATION, PAGE_READWRITE);
-    }
-
-    pvSaveMem = pvHeap;
+    ESavePlatform plat /*= SAVE_FILE_PLATFORM_LOCAL*/)
+    : saveBuffer(MAX_SAVE_SIZE) {
     m_fileName = fileName;
 
     unsigned int fileSize = initialFileSize;
 
     // Load a save from the game rules
     bool bLevelGenBaseSave = false;
-    LevelGenerationOptions* levelGen = gameServices().getLevelGenerationOptions();
+    LevelGenerationOptions* levelGen =
+        gameServices().getLevelGenerationOptions();
     if (pvSaveData == nullptr && levelGen != nullptr &&
         levelGen->requiresBaseSave()) {
         pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -80,34 +58,6 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
 
     if (forceCleanSave) fileSize = 0;
 
-    unsigned int heapSize = std::max(
-        fileSize,
-        1024u * 1024u * 2u);  // 4J Stu - Our files are going to be bigger than
-                              // 2MB so allocate high to start with
-
-    // Initially committ enough room to store headSize bytes (using
-    // CSF_PAGE_SIZE pages, so rounding up here). We should only ever have one
-    // save file at a time, and the pages should be decommitted in the dtor, so
-    // pages committed should always be zero at this point.
-    if (pagesCommitted != 0) {
-#ifndef _CONTENT_PACKAGE
-        assert(0);
-#endif
-    }
-
-    unsigned int pagesRequired =
-        (heapSize + (CSF_PAGE_SIZE - 1)) / CSF_PAGE_SIZE;
-
-    void* pvRet = VirtualAlloc(pvHeap, pagesRequired * CSF_PAGE_SIZE,
-                               COMMIT_ALLOCATION, PAGE_READWRITE);
-    if (pvRet == nullptr) {
-#ifndef _CONTENT_PACKAGE
-        // Out of physical memory
-        assert(0);
-#endif
-    }
-    pagesCommitted = pagesRequired;
-
     if (fileSize > 0) {
         if (pvSaveData != nullptr) {
             memcpy(pvSaveMem, pvSaveData, fileSize);
@@ -118,7 +68,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
             unsigned int storageLength;
             PlatformStorage.GetSaveData(pvSaveMem, &storageLength);
             Log::info("Filesize - %d, Adjusted size - %d\n", fileSize,
-                            storageLength);
+                      storageLength);
             fileSize = storageLength;
         }
         void* pvSourceData = pvSaveMem;
@@ -136,6 +86,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
                 // Clear the first 8 bytes that reference the header
                 header.WriteHeader(pvSourceData);
             } else {
+                assert(decompSize <= MAX_SAVE_SIZE);
                 unsigned char* buf = new unsigned char[decompSize];
                 Compression::getCompression()->SetDecompressionType(
                     plat);  // if this save is from another platform, set the
@@ -147,25 +98,6 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
                     SAVE_FILE_PLATFORM_LOCAL);  // and then set the
                                                 // decompression back to the
                                                 // local machine's standard type
-
-                // Only ReAlloc if we need to (we might already have enough)
-                // and align to 512 byte boundaries
-                unsigned int currentHeapSize = pagesCommitted * CSF_PAGE_SIZE;
-
-                unsigned int desiredSize = decompSize;
-
-                if (desiredSize > currentHeapSize) {
-                    unsigned int pagesRequired =
-                        (desiredSize + (CSF_PAGE_SIZE - 1)) / CSF_PAGE_SIZE;
-                    void* pvRet =
-                        VirtualAlloc(pvHeap, pagesRequired * CSF_PAGE_SIZE,
-                                     COMMIT_ALLOCATION, PAGE_READWRITE);
-                    if (pvRet == nullptr) {
-                        // Out of physical memory
-                        assert(0);
-                    }
-                    pagesCommitted = pagesRequired;
-                }
                 memcpy(pvSaveMem, buf, decompSize);
                 delete[] buf;
             }
@@ -179,10 +111,7 @@ ConsoleSaveFileOriginal::ConsoleSaveFileOriginal(
     }
 }
 
-ConsoleSaveFileOriginal::~ConsoleSaveFileOriginal() {
-    VirtualFree(pvHeap, MAX_PAGE_COUNT * CSF_PAGE_SIZE, MEM_DECOMMIT);
-    pagesCommitted = 0;
-}
+ConsoleSaveFileOriginal::~ConsoleSaveFileOriginal() = default;
 
 // Add the file to our table of internal files if not already there
 // Open our actual save file ready for reading/writing, and the set the file
@@ -425,23 +354,7 @@ void ConsoleSaveFileOriginal::MoveDataBeyond(
     unsigned int buffer1Size = 0;
     unsigned int buffer2Size = 0;
 
-    // Only ReAlloc if we need to (we might already have enough) and align to
-    // 512 byte boundaries
-    unsigned int currentHeapSize = pagesCommitted * CSF_PAGE_SIZE;
-
-    unsigned int desiredSize = header.GetFileSize() + nNumberOfBytesToWrite;
-
-    if (desiredSize > currentHeapSize) {
-        unsigned int pagesRequired =
-            (desiredSize + (CSF_PAGE_SIZE - 1)) / CSF_PAGE_SIZE;
-        void* pvRet = VirtualAlloc(pvHeap, pagesRequired * CSF_PAGE_SIZE,
-                                   COMMIT_ALLOCATION, PAGE_READWRITE);
-        if (pvRet == nullptr) {
-            // Out of physical memory
-            assert(0);
-        }
-        pagesCommitted = pagesRequired;
-    }
+    assert(header.GetFileSize() + nNumberOfBytesToWrite <= MAX_SAVE_SIZE);
 
     // This is the start of where we want the space to be, and the start of the
     // data that we need to move
@@ -635,8 +548,7 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
         memcpy(compData, &saveVer, sizeof(int));
         memcpy(compData + 4, &fileSize, sizeof(int));
 
-        Log::info("Save data compressed from %d to %d\n", fileSize,
-                        compLength);
+        Log::info("Save data compressed from %d to %d\n", fileSize, compLength);
 
         std::uint8_t* pbThumbnailData = nullptr;
         unsigned int dwThumbnailDataSize = 0;
@@ -646,7 +558,7 @@ void ConsoleSaveFileOriginal::Flush(bool autosave, bool updateThumbnail) {
 
 #ifdef _WINDOWS64
         gameServices().getSaveThumbnail(&pbThumbnailData, &dwThumbnailDataSize,
-                             &pbDataSaveImage, &dwDataSizeSaveImage);
+                                        &pbDataSaveImage, &dwDataSizeSaveImage);
 #endif
 
         std::uint8_t bTextMetadata[88] = {};
@@ -872,8 +784,7 @@ void ConsoleSaveFileOriginal::ConvertToLocalPlatform() {
             Log::info("Processing a region file: %s\n", fName.c_str());
             ConvertRegionFile(File(fe->data.filename));
         } else {
-            Log::info("%s is not a region file, ignoring\n",
-                            fName.c_str());
+            Log::info("%s is not a region file, ignoring\n", fName.c_str());
         }
     }
 

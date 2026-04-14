@@ -6,15 +6,13 @@
 #include <cstdint>
 #include <utility>
 
-#include "platform/PlatformTypes.h"
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "app/common/App_Defines.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
+#include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
@@ -22,27 +20,23 @@
 #include "app/common/UI/Controls/UIControl_TextInput.h"
 #include "app/common/UI/Scenes/Frontend Menu screens/IUIScene_StartGame.h"
 #include "app/common/UI/UILayer.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "platform/NetTypes.h"
-#include "util/StringHelpers.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/GameTypes.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/client/skins/DLCTexturePack.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/server/MinecraftServer.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/world/level/LevelSettings.h"
 #include "minecraft/world/level/chunk/ChunkSource.h"
+#include "platform/PlatformTypes.h"
+#include "platform/input/input.h"
+#include "platform/network/NetTypes.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
-
-#if defined(_WINDOWS64)
-
-#include <windows.h>
-
-#include "../../../../../Windows64/Resource.h"
-#endif
+#include "util/StringHelpers.h"
 
 #define GAME_CREATE_ONLINE_TIMER_ID 0
 #define GAME_CREATE_ONLINE_TIMER_TIME 100
@@ -197,8 +191,7 @@ UIScene_CreateWorldMenu::UIScene_CreateWorldMenu(int iPad, void* initData,
                 snprintf(imageName, 64, "tpack%08x", tp->getId());
                 registerSubstitutionTexture(imageName, imageData, imageBytes);
                 m_texturePackList.addPack(i, imageName);
-                app.DebugPrintf("Adding texture pack %s at %d\n", imageName,
-                                i);
+                app.DebugPrintf("Adding texture pack %s at %d\n", imageName, i);
             }
         }
 
@@ -570,7 +563,6 @@ void UIScene_CreateWorldMenu::handleGainFocus(bool navBack) {
     }
 }
 
-
 void UIScene_CreateWorldMenu::checkStateAndStartGame() {
     int primaryPad = PlatformProfile.GetPrimaryPad();
     bool isSignedInLive = true;
@@ -586,7 +578,8 @@ void UIScene_CreateWorldMenu::checkStateAndStartGame() {
                 iPadNotSignedInLive = i;
             }
 
-            isSignedInLive = isSignedInLive && PlatformProfile.IsSignedInLive(i);
+            isSignedInLive =
+                isSignedInLive && PlatformProfile.IsSignedInLive(i);
         }
     }
 
@@ -621,7 +614,8 @@ void UIScene_CreateWorldMenu::checkStateAndStartGame() {
         // the sign-in UI again
         int connectedControllers = 0;
         for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-            if (PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))
+            if (PlatformInput.IsPadConnected(i) ||
+                PlatformProfile.IsSignedIn(i))
                 ++connectedControllers;
         }
 
@@ -893,9 +887,9 @@ int UIScene_CreateWorldMenu::StartGame_SignInReturned(void* pParam,
     if (bContinue == true) {
         // It's possible that the player has not signed in - they can back out
         if (PlatformProfile.IsSignedIn(pClass->m_iPad)) {
-            bool isOnlineGame =
-                PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
-                pClass->m_MoreOptionsParams.bOnlineGame;
+            bool isOnlineGame = PlatformProfile.IsSignedInLive(
+                                    PlatformProfile.GetPrimaryPad()) &&
+                                pClass->m_MoreOptionsParams.bOnlineGame;
             // bool isOnlineGame = pClass->m_MoreOptionsParams.bOnlineGame;
             int primaryPad = PlatformProfile.GetPrimaryPad();
             bool noPrivileges = false;
@@ -988,7 +982,8 @@ int UIScene_CreateWorldMenu::ConfirmCreateReturned(
         // the sign-in UI again
         int connectedControllers = 0;
         for (unsigned int i = 0; i < XUSER_MAX_COUNT; ++i) {
-            if (PlatformInput.IsPadConnected(i) || PlatformProfile.IsSignedIn(i))
+            if (PlatformInput.IsPadConnected(i) ||
+                PlatformProfile.IsSignedIn(i))
                 ++connectedControllers;
         }
 
@@ -1006,9 +1001,9 @@ int UIScene_CreateWorldMenu::ConfirmCreateReturned(
         } else {
             // Check if user-created content is allowed, as we cannot play
             // multiplayer if it's not
-            bool isClientSide =
-                PlatformProfile.IsSignedInLive(PlatformProfile.GetPrimaryPad()) &&
-                pClass->m_MoreOptionsParams.bOnlineGame;
+            bool isClientSide = PlatformProfile.IsSignedInLive(
+                                    PlatformProfile.GetPrimaryPad()) &&
+                                pClass->m_MoreOptionsParams.bOnlineGame;
             bool noUGC = false;
             bool pccAllowed = true;
             bool pccFriendsAllowed = true;

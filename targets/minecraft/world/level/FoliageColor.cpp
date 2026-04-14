@@ -1,8 +1,8 @@
 #include "FoliageColor.h"
 
 #include "minecraft/GameEnums.h"
-#include "app/common/Colours/ColourTable.h"
 #include "minecraft/client/Minecraft.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 
 // 4J Stu - Don't use this any more
 // std::vector<int> FoliageColor::pixels;

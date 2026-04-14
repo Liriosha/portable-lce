@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "DirectoryLevelStorage.h"
 
 #include <assert.h>
@@ -12,13 +10,7 @@
 #include <memory>
 #include <utility>
 
-#include "platform/input/input.h"
 #include "LevelData.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/GameRules/GameRuleManager.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "util/StringHelpers.h"
 #include "java/File.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"
@@ -26,7 +18,11 @@
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "java/InputOutputStream/FileOutputStream.h"
 #include "java/System.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/player/Player.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
 #include "minecraft/world/level/chunk/storage/OldChunkStorage.h"
 #include "minecraft/world/level/dimension/Dimension.h"
 #include "minecraft/world/level/dimension/HellDimension.h"
@@ -42,7 +38,9 @@
 #include "nbt/DoubleTag.h"
 #include "nbt/ListTag.h"
 #include "nbt/NbtIo.h"
+#include "platform/input/input.h"
 #include "platform/storage/storage.h"
+#include "util/StringHelpers.h"
 
 const std::string DirectoryLevelStorage::sc_szPlayerDir("players/");
 
@@ -166,8 +164,9 @@ void DirectoryLevelStorage::PlayerMappings::writeMappings(
     DataOutputStream* dos) {
     dos->writeInt(m_mappings.size());
     for (auto it = m_mappings.begin(); it != m_mappings.end(); ++it) {
-        Log::info("    -- %lld (0x%016llx) = %d\n", it->first, it->first,
-                        it->second);
+        Log::info("    -- %lld (0x%016llx) = %d\n",
+                  static_cast<long long>(it->first),
+                  static_cast<unsigned long long>(it->first), it->second);
         dos->writeLong(it->first);
         dos->writeInt(it->second);
     }
@@ -179,7 +178,9 @@ void DirectoryLevelStorage::PlayerMappings::readMappings(DataInputStream* dis) {
         int64_t index = dis->readLong();
         int id = dis->readInt();
         m_mappings[index] = id;
-        Log::info("    -- %lld (0x%016llx) = %d\n", index, index, id);
+        Log::info("    -- %lld (0x%016llx) = %d\n",
+                  static_cast<long long>(index),
+                  static_cast<unsigned long long>(index), id);
     }
 }
 #endif
@@ -279,15 +280,8 @@ LevelData* DirectoryLevelStorage::prepareLevel() {
             Log::info("Loading %d mappings\n", count);
             for (unsigned int i = 0; i < count; ++i) {
                 PlayerUID playerUid = dis.readPlayerUID();
-#if defined(_WINDOWS64) || defined(__linux__)
-                Log::info("  -- %d\n", playerUid);
-#else
-#if defined(__linux__)
-                Log::info("  -- %d\n", playerUid);
-#else
-                Log::info("  -- %s\n", playerUid.toWString().c_str());
-#endif
-#endif
+                Log::info("  -- %llu\n",
+                          static_cast<unsigned long long>(playerUid));
                 m_playerMappings[playerUid].readMappings(&dis);
             }
             dis.readFully(m_usedMappings);
@@ -403,9 +397,8 @@ void DirectoryLevelStorage::save(std::shared_ptr<Player> player) {
                 delete it->second;
             }
             m_cachedSaveData[realFile.getName()] = bos;
-            Log::info(
-                "Cached saving of file %s due to saves being disabled\n",
-                realFile.getName().c_str());
+            Log::info("Cached saving of file %s due to saves being disabled\n",
+                      realFile.getName().c_str());
         } else {
             ConsoleSaveFileOutputStream fos =
                 ConsoleSaveFileOutputStream(m_saveFile, realFile);
@@ -438,7 +431,7 @@ CompoundTag* DirectoryLevelStorage::loadPlayerDataTag(PlayerUID xuid) {
         CompoundTag* tag = NbtIo::readCompressed(&bis);
         bis.reset();
         Log::info("Loaded player data from cached file %s\n",
-                        realFile.getName().c_str());
+                  realFile.getName().c_str());
         return tag;
     } else if (m_saveFile->doesFileExist(realFile)) {
         ConsoleSaveFileInputStream fis =
@@ -636,18 +629,11 @@ void DirectoryLevelStorage::saveMapIdLookup() {
         ByteArrayOutputStream baos;
         DataOutputStream dos(&baos);
         dos.writeInt(m_playerMappings.size());
-        Log::info("Saving %d mappings\n", m_playerMappings.size());
+        Log::info("Saving %zu mappings\n", m_playerMappings.size());
         for (auto it = m_playerMappings.begin(); it != m_playerMappings.end();
              ++it) {
-#if defined(_WINDOWS64) || defined(__linux__)
-            Log::info("  -- %d\n", it->first);
-#else
-#if defined(__linux__)
-            Log::info("  -- %d\n", it->first);
-#else
-            Log::info("  -- %s\n", it->first.toWString().c_str());
-#endif
-#endif
+            Log::info("  -- %llu\n",
+                      static_cast<unsigned long long>(it->first));
             dos.writePlayerUID(it->first);
             it->second.writeMappings(&dos);
         }
@@ -757,8 +743,7 @@ void DirectoryLevelStorage::saveAllCachedData() {
         ConsoleSaveFileOutputStream fos =
             ConsoleSaveFileOutputStream(m_saveFile, realFile);
 
-        Log::info("Actually writing cached file %s\n",
-                        it->first.c_str());
+        Log::info("Actually writing cached file %s\n", it->first.c_str());
         fos.write(bos->buf, 0, bos->size());
         delete bos;
     }

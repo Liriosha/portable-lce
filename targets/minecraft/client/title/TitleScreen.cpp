@@ -1,21 +1,20 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "TitleScreen.h"
 
 #include <stdint.h>
+#include <time.h>
 
+#include <chrono>
 #include <cmath>
+#include <ctime>
 #include <vector>
+#include <numbers>
 
-#include "platform/renderer/renderer.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "minecraft/client/BufferedImage.h"
-#include "util/StringHelpers.h"
 #include "java/InputOutputStream/BufferedReader.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/InputStreamReader.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
+#include "minecraft/client/BufferedImage.h"
 #include "minecraft/client/ClientConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Button.h"
@@ -27,6 +26,10 @@
 #include "minecraft/client/renderer/Textures.h"
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/locale/Language.h"
+#include "minecraft/util/Log.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
+#include "util/StringHelpers.h"
 
 Random* TitleScreen::random = new Random();
 
@@ -44,7 +47,8 @@ TitleScreen::TitleScreen() {
 
     std::string filename = "splashes.txt";
     if (gameServices().hasArchiveFile(filename)) {
-        std::vector<uint8_t> splashesArray = gameServices().getArchiveFile(filename);
+        std::vector<uint8_t> splashesArray =
+            gameServices().getArchiveFile(filename);
         ByteArrayInputStream bais(splashesArray);
         InputStreamReader isr(&bais);
         BufferedReader br(&isr);
@@ -65,18 +69,20 @@ TitleScreen::TitleScreen() {
         random->nextInt((int)splashes.size() - (eSplashRandomStart + 1));
 
     // Override splash text on certain dates
-    SYSTEMTIME LocalSysTime;
-    GetLocalTime(&LocalSysTime);
-    if (LocalSysTime.wMonth == 11 && LocalSysTime.wDay == 9) {
+    auto now = std::chrono::system_clock::now();
+    auto dp = std::chrono::floor<std::chrono::days>(now);
+    std::chrono::year_month_day ymd{dp};
+    const auto month = ymd.month();
+    const uint32_t day = static_cast<uint32_t>(ymd.day());
+
+    if (month == std::chrono::November && day == 9) {
         splashIndex = eSplashHappyBirthdayEx;
-    } else if (LocalSysTime.wMonth == 6 && LocalSysTime.wDay == 1) {
+    } else if (month == std::chrono::June && day == 1) {
         splashIndex = eSplashHappyBirthdayNotch;
-    } else if (LocalSysTime.wMonth == 12 &&
-               LocalSysTime.wDay == 24)  // the Java game shows this on
-                                         // Christmas Eve, so we will too
-    {
+    } else if (month == std::chrono::December && day == 24) {
+        // the Java game shows this on Christmas Eve, so we will too
         splashIndex = eSplashMerryXmas;
-    } else if (LocalSysTime.wMonth == 1 && LocalSysTime.wDay == 1) {
+    } else if (month == std::chrono::January && day == 1) {
         splashIndex = eSplashHappyNewYear;
     }
 
@@ -118,9 +124,9 @@ if (c.get(Calendar.MONTH) + 1 == 11 && c.get(Calendar.DAY_OF_MONTH) == 9) {
 
     buttons.push_back(new Button(1, width / 2 - 100, topPos,
                                  language->getElement("menu.singleplayer")));
-    buttons.push_back(multiplayerButton = new Button(
-                          2, width / 2 - 100, topPos + spacing * 1,
-                          language->getElement("menu.multiplayer")));
+    buttons.push_back(multiplayerButton =
+                          new Button(2, width / 2 - 100, topPos + spacing * 1,
+                                     language->getElement("menu.multiplayer")));
     buttons.push_back(new Button(3, width / 2 - 100, topPos + spacing * 2,
                                  language->getElement("menu.mods")));
 

@@ -2,8 +2,8 @@
 
 #include <optional>
 
+#include "app/common/Audio/SoundTypes.h"
 #include "minecraft/Facing.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/level/Level.h"

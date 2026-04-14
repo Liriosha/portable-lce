@@ -8,9 +8,8 @@
 #include <vector>
 
 #include "GenericStats.h"
-#include "minecraft/IGameServices.h"
-#include "app/linux/LinuxGame.h"
 #include "StatFormatter.h"
+#include "minecraft/IGameServices.h"
 
 class DecimalFormat;
 class LocalPlayer;

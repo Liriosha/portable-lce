@@ -1,21 +1,15 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "ItemInHandRenderer.h"
-
-
 
 #include <cmath>
 #include <numbers>
 #include <vector>
 
-#include "platform/renderer/renderer.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/Colours/ColourTable.h"
-#include "app/linux/LinuxGame.h"
 #include "Tesselator.h"
 #include "Textures.h"
 #include "TileRenderer.h"
 #include "java/System.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/MemoryTracker.h"
@@ -27,7 +21,9 @@
 #include "minecraft/client/renderer/entity/EntityRenderDispatcher.h"
 #include "minecraft/client/renderer/entity/PlayerRenderer.h"
 #include "minecraft/client/renderer/texture/TextureAtlas.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/client/resources/ResourceLocation.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/Icon.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/player/Inventory.h"
@@ -40,6 +36,8 @@
 #include "minecraft/world/level/material/Material.h"
 #include "minecraft/world/level/tile/FireTile.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 class EntityRenderer;
 class MapItemSavedData;
@@ -462,15 +460,15 @@ void ItemInHandRenderer::render(float a) {
                                                   std::floor(player->z), 0);
         int u = col % 65536;
         int v = col / 65536;
-#if defined(__linux__)
+
+        // 4jcraft
         static int lightmapLogCount = 0;
         if (lightmapLogCount < 8) {
             ++lightmapLogCount;
-            Log::info(
-                "[linux-lightmap] item-hand raw=0x%08x uv=(%d,%d)\n", col, u,
-                v);
+            Log::info("[4jcraft-lightmap] item-hand raw=0x%08x uv=(%d,%d)\n",
+                      col, u, v);
         }
-#endif
+
         glMultiTexCoord2f(GL_TEXTURE1, u / 1.0f, v / 1.0f);
         glColor4f(1, 1, 1, 1);
     }
@@ -550,7 +548,8 @@ void ItemInHandRenderer::render(float a) {
                 if ((itemInstance &&
                      (itemInstance->getItem()->id == Item::map_Id)) ||
                     gameServices().getGameSettings(localPlayer->GetXboxPad(),
-                                        eGameSetting_DisplayHand) != 0) {
+                                                   eGameSetting_DisplayHand) !=
+                        0) {
                     playerRenderer->renderHand();
                 }
                 glPopMatrix();
@@ -767,7 +766,7 @@ void ItemInHandRenderer::render(float a) {
 
         if ((itemInstance && (itemInstance->getItem()->id == Item::map_Id)) ||
             gameServices().getGameSettings(localPlayer->GetXboxPad(),
-                                eGameSetting_DisplayHand) != 0) {
+                                           eGameSetting_DisplayHand) != 0) {
             playerRenderer->renderHand();
         }
         glPopMatrix();

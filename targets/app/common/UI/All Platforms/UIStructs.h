@@ -6,10 +6,10 @@
 #include <cstring>
 #include <functional>
 
-#include "platform/storage/storage.h"
-#include "app/common/App_Defines.h"
 #include "UIEnums.h"
-#include "platform/C4JThread.h"
+#include "minecraft/GameHostOptions.h"
+#include "platform/storage/storage.h"
+#include "platform/thread/C4JThread.h"
 
 class Container;
 class Inventory;
@@ -384,7 +384,7 @@ typedef struct _SignInInfo {
 // Credits
 struct SCreditTextItemDef {
     const char* m_Text;  // Should contain string, optionally with %s to add
-                            // in translated string ... e.g. "Andy West - %s"
+                         // in translated string ... e.g. "Andy West - %s"
     int m_iStringID[2];  // May be NO_TRANSLATED_STRING if we do not require to
                          // add any translated string.
     ECreditTextTypes m_eType;
@@ -416,11 +416,6 @@ typedef struct _InGamePlayerOptionsInitData {
     std::uint8_t networkSmallId;
     unsigned int playerPrivileges;
 } InGamePlayerOptionsInitData;
-
-typedef struct _DebugSetCameraPosition {
-    int player;
-    double m_camX, m_camY, m_camZ, m_yRot, m_elev;
-} DebugSetCameraPosition;
 
 typedef struct _TeleportMenuInitData {
     int iPad;

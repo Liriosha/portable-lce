@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "Arrow.h"
 
 #include <math.h>
@@ -9,14 +8,14 @@
 #include <string>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
 #include "minecraft/core/particles/ParticleTypes.h"
 #include "minecraft/network/packet/GameEventPacket.h"
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/server/network/PlayerConnection.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"
@@ -183,7 +182,7 @@ void Arrow::lerpMotion(double xd, double yd, double zd) {
         xRotO = xRot = (float)(atan2(yd, sd) * 180 / std::numbers::pi);
         xRotO = xRot;
         yRotO = yRot;
-        Log::info("%f %f : 0x%x\n", xRot, yRot, &yRot);
+        Log::info("%f %f : %p\n", xRot, yRot, static_cast<void*>(&yRot));
         moveTo(x, y, z, yRot, xRot);
         life = 0;
     }
@@ -481,8 +480,7 @@ void Arrow::readAdditionalSaveData(CompoundTag* tag) {
     if (tag->contains("pickup")) {
         pickup = tag->getByte("pickup");
     } else if (tag->contains("player")) {
-        pickup =
-            tag->getBoolean("player") ? PICKUP_ALLOWED : PICKUP_DISALLOWED;
+        pickup = tag->getBoolean("player") ? PICKUP_ALLOWED : PICKUP_DISALLOWED;
     }
 }
 

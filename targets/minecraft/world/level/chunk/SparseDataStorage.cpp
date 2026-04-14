@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <atomic>
 #include <vector>
 
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "platform/NetTypes.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "platform/network/NetTypes.h"
 
 // Note: See header for an overview of this class
 
@@ -422,14 +422,12 @@ void SparseDataStorage::addNewPlane(int y) {
 
         newDataAndCount |= ((int64_t)linesUsed) << 48;
 
-        // Attempt to update the data & count atomically. This command will Only
-        // succeed if the data stored at dataAndCount is equal to
-        // lastDataAndCount, and will return the value present just before the
-        // write took place
-        int64_t lastDataAndCount2 = InterlockedCompareExchangeRelease64(
-            (int64_t*)&dataAndCount, newDataAndCount, lastDataAndCount);
-
-        if (lastDataAndCount2 == lastDataAndCount) {
+        // Attempt to update the data & count atomically. CAS only
+        // succeeds if dataAndCount currently equals lastDataAndCount.
+        int64_t expected = lastDataAndCount;
+        if (std::atomic_ref<int64_t>(dataAndCount)
+                .compare_exchange_strong(expected, newDataAndCount,
+                                         std::memory_order_release)) {
             success = true;
             // Queue old data to be deleted
             queueForDelete(lastDataPointer);
@@ -496,14 +494,12 @@ void SparseDataStorage::updateDataAndCount(int64_t newDataAndCount) {
         unsigned char* lastDataPointer =
             (unsigned char*)(lastDataAndCount & 0x0000ffffffffffff);
 
-        // Attempt to update the data & count atomically. This command will Only
-        // succeed if the data stored at dataAndCount is equal to
-        // lastDataAndCount, and will return the value present just before the
-        // write took place
-        int64_t lastDataAndCount2 = InterlockedCompareExchangeRelease64(
-            (int64_t*)&dataAndCount, newDataAndCount, lastDataAndCount);
-
-        if (lastDataAndCount2 == lastDataAndCount) {
+        // Attempt to update the data & count atomically. CAS only
+        // succeeds if dataAndCount currently equals lastDataAndCount.
+        int64_t expected = lastDataAndCount;
+        if (std::atomic_ref<int64_t>(dataAndCount)
+                .compare_exchange_strong(expected, newDataAndCount,
+                                         std::memory_order_release)) {
             success = true;
             // Queue old data to be deleted
             //			printf("Marking for delete 0x%x (full
@@ -571,14 +567,12 @@ int SparseDataStorage::compress() {
 
         newDataAndCount |= ((int64_t)planesToAlloc) << 48;
 
-        // Attempt to update the data & count atomically. This command will Only
-        // succeed if the data stored at dataAndCount is equal to
-        // lastDataAndCount, and will return the value present just before the
-        // write took place
-        int64_t lastDataAndCount2 = InterlockedCompareExchangeRelease64(
-            (int64_t*)&dataAndCount, newDataAndCount, lastDataAndCount);
-
-        if (lastDataAndCount2 != lastDataAndCount) {
+        // Attempt to update the data & count atomically. CAS only
+        // succeeds if dataAndCount currently equals lastDataAndCount.
+        int64_t expected = lastDataAndCount;
+        if (!std::atomic_ref<int64_t>(dataAndCount)
+                 .compare_exchange_strong(expected, newDataAndCount,
+                                          std::memory_order_release)) {
             // Failed to write. Don't bother trying again... being very
             // conservative here.
             //			printf("Marking for delete 0x%x (compress

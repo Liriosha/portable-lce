@@ -10,11 +10,9 @@
 #include <memory>
 #include <utility>
 
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
 #include "app/common/Audio/SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
@@ -29,21 +27,17 @@
 #include "app/common/UI/UIScene.h"
 #include "app/common/UI/UIString.h"
 #include "app/common/UI/UITTFFont.h"
-#include "app/linux/Iggy/include/iggy.h"
+#include "minecraft/GameEnums.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "minecraft/client/BufferedImage.h"
 #include "UIFontData.h"
-#include "platform/XboxStubs.h"
-#include "platform/C4JThread.h"
-#include "util/Timer.h"
-
-#include "util/StringHelpers.h"
-
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "java/System.h"
+#include "minecraft/client/BufferedImage.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/client/renderer/Textures.h"
@@ -51,7 +45,11 @@
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/client/title/TitleScreen.h"
+#include "platform/XboxStubs.h"
+#include "platform/thread/C4JThread.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
+#include "util/Timer.h"
 
 class Tutorial;
 
@@ -60,19 +58,12 @@ class Tutorial;
 // #define EXCLUDE_IGGY_ALLOCATIONS_FROM_HEAP_INSPECTOR
 
 // #define ENABLE_IGGY_EXPLORER
-#if defined(ENABLE_IGGY_EXPLORER)
-#include "app/windows/Iggy/include/iggyexpruntime.h"
-#endif
 
 // #define ENABLE_IGGY_PERFMON
 #if defined(ENABLE_IGGY_PERFMON)
 
 #define PM_ORIGIN_X 24
-#define PM_ORIGIN_Y 34
-
-#if defined(__WINDOWS64)
-#include "app/windows/Iggy/include/iggyperfmon.h"
-#endif
+#define PM_ORIGIN_
 
 #endif
 
@@ -215,7 +206,7 @@ UIController::UIController() {
 
     // 4J Stu - This is a bit of a hack until we change the Minecraft
     // initialisation to store the proper screen size for other platforms
-#if defined(_WINDOWS64) || defined(__linux__)
+#if 1
     m_fScreenWidth = 1920.0f;
     m_fScreenHeight = 1080.0f;
     m_bScreenWidthSetup = true;
@@ -355,15 +346,13 @@ UITTFFont* UIController::createFont(EFont fontLanguage) {
                 "app/common/Media/font/JPN/DFGMaruGothic-Md.ttf",
                 0x2022);  // JPN
         case eFont_TradChinese:
-            return new UITTFFont(
-                "Mojangles_TTF_cnTD",
-                "app/common/Media/font/CHT/DFHeiMedium-B5.ttf",
-                0x2022);  // CHT
+            return new UITTFFont("Mojangles_TTF_cnTD",
+                                 "app/common/Media/font/CHT/DFHeiMedium-B5.ttf",
+                                 0x2022);  // CHT
         case eFont_Korean:
-            return new UITTFFont(
-                "Mojangles_TTF_koKR",
-                "app/common/Media/font/KOR/BOKMSD.ttf",
-                0x2022);  // KOR
+            return new UITTFFont("Mojangles_TTF_koKR",
+                                 "app/common/Media/font/KOR/BOKMSD.ttf",
+                                 0x2022);  // KOR
         // 4J-JEV, Cyrillic characters have been added to this font now,
         // (4/July/14) XC_LANGUAGE_RUSSIAN and XC_LANGUAGE_GREEK:
         default:
@@ -502,7 +491,7 @@ void UIController::tick() {
 void UIController::loadSkins() {
     std::string platformSkinPath = "";
 
-#if defined(_WINDOWS64) || defined(__linux__)
+#if 1
     if (m_fScreenHeight == 1080.0f) {
         platformSkinPath = "skinHDWin.swf";
     } else {
@@ -518,7 +507,7 @@ void UIController::loadSkins() {
             loadSkin(platformSkinPath, "platformskin.swf");
     }
 
-#if defined(_WINDOWS64) || defined(__linux__)
+#if 1
 
 #if defined(_WINDOWS64)
     // 4J Stu - Load the 720/480 skins so that we have something to fallback on
@@ -561,8 +550,7 @@ void UIController::loadSkins() {
         loadSkin("skinHDLabels.swf", "skinHDLabels.swf");
     m_iggyLibraries[eLibrary_InGame] =
         loadSkin("skinHDInGame.swf", "skinHDInGame.swf");
-    m_iggyLibraries[eLibrary_HUD] =
-        loadSkin("skinHDHud.swf", "skinHDHud.swf");
+    m_iggyLibraries[eLibrary_HUD] = loadSkin("skinHDHud.swf", "skinHDHud.swf");
     m_iggyLibraries[eLibrary_Tooltips] =
         loadSkin("skinHDTooltips.swf", "skinHDTooltips.swf");
     m_iggyLibraries[eLibrary_Default] = loadSkin("skinHD.swf", "skinHD.swf");
@@ -621,7 +609,7 @@ void UIController::ReloadSkin() {
         m_iggyLibraries[i] = IGGY_INVALID_LIBRARY;
     }
 
-#if defined(_WINDOWS64) || defined(__linux__)
+#if 1
     // 4J Stu - Don't load on a thread on windows. I haven't investigated this
     // in detail, so a quick fix
     reloadSkinThreadProc(this);
@@ -673,7 +661,7 @@ int UIController::reloadSkinThreadProc(void* lpParam) {
 
         // 4J Stu - Don't do this on windows, as we never navigated forwards to
         // start with
-#if !(defined(_WINDOWS64) || defined(__linux__))
+#if 0
         controller->NavigateBack(0, false, eUIScene_COUNT, eUILayer_Tooltips);
 #endif
     }
@@ -740,7 +728,7 @@ void UIController::tickInput() {
 #if defined(ENABLE_IGGY_PERFMON)
         if (m_iggyPerfmonEnabled) {
             if (PlatformInput.ButtonPressed(PlatformProfile.GetPrimaryPad(),
-                                           ACTION_MENU_STICK_PRESS))
+                                            ACTION_MENU_STICK_PRESS))
                 m_iggyPerfmonEnabled = !m_iggyPerfmonEnabled;
         } else
 #endif
@@ -777,7 +765,8 @@ void UIController::handleKeyPress(unsigned int iPad, unsigned int key) {
     if (pressed) {
         // Start repeat timer
         m_actionRepeatTimer[iPad][key] =
-            time_util::clock::now() + std::chrono::milliseconds(UI_REPEAT_KEY_DELAY_MS);
+            time_util::clock::now() +
+            std::chrono::milliseconds(UI_REPEAT_KEY_DELAY_MS);
     } else if (released) {
         // Stop repeat timer
         m_actionRepeatTimer[iPad][key] = {};
@@ -887,8 +876,8 @@ void UIController::renderScenes() {
 #endif
 }
 
-void UIController::getRenderDimensions(IPlatformRenderer::eViewportType viewport,
-                                       S32& width, S32& height) {
+void UIController::getRenderDimensions(
+    IPlatformRenderer::eViewportType viewport, S32& width, S32& height) {
     switch (viewport) {
         case IPlatformRenderer::VIEWPORT_TYPE_FULLSCREEN:
             width = (S32)(getScreenWidth());
@@ -916,7 +905,8 @@ void UIController::getRenderDimensions(IPlatformRenderer::eViewportType viewport
     }
 }
 
-void UIController::setupRenderPosition(IPlatformRenderer::eViewportType viewport) {
+void UIController::setupRenderPosition(
+    IPlatformRenderer::eViewportType viewport) {
     if (m_bCustomRenderPosition || m_currentRenderViewport != viewport) {
         m_currentRenderViewport = viewport;
         m_bCustomRenderPosition = false;
@@ -972,13 +962,7 @@ void UIController::setupCustomDrawGameState() {
     m_customRenderingClearRect.top = LONG_MAX;
     m_customRenderingClearRect.bottom = LONG_MIN;
 
-#if defined(_WINDOWS64)
     PlatformRenderer.StartFrame();
-
-    gdraw_D3D11_setViewport_4J();
-#elif defined(__linux__)
-    PlatformRenderer.StartFrame();
-#endif
     PlatformRenderer.Set_matrixDirty();
 
     // 4J Stu - We don't need to clear this here as iggy hasn't written anything
@@ -1062,11 +1046,7 @@ void UIController::setupCustomDrawGameStateAndMatrices(
 }
 
 void UIController::endCustomDrawGameState() {
-#if defined(__linux__)
     PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT);
-#else
-    PlatformRenderer.Clear(GL_DEPTH_BUFFER_BIT, &m_customRenderingClearRect);
-#endif
     // glClear(GL_DEPTH_BUFFER_BIT);
     glDepthMask(false);
     glDisable(GL_ALPHA_TEST);
@@ -1128,8 +1108,8 @@ GDrawTexture* RADLINK UIController::TextureSubstitutionCreateCallback(
         if (image.getData() != nullptr) {
             image.preMultiplyAlpha();
             Textures* t = Minecraft::GetInstance()->textures;
-            int id = t->getTexture(&image, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw,
-                                   false);
+            int id = t->getTexture(
+                &image, IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw, false);
 
             // 4J Stu - All our flash controls that allow replacing textures use
             // a special 64x64 symbol Force this size here so that our images
@@ -1179,8 +1159,8 @@ void UIController::registerSubstitutionTexture(const std::string& textureName,
         std::vector<uint8_t>(pbData, pbData + dwLength);
 }
 
-void UIController::unregisterSubstitutionTexture(
-    const std::string& textureName, bool deleteData) {
+void UIController::unregisterSubstitutionTexture(const std::string& textureName,
+                                                 bool deleteData) {
     auto it = m_substitutionTextures.find(textureName);
 
     if (it != m_substitutionTextures.end()) {
@@ -1288,7 +1268,7 @@ bool UIController::NavigateToScene(int iPad, EUIScene scene, void* initData,
             setFullscreenMenuDisplayed(true);
     }
 
-    std::println(stderr, "TIMER: Navigate to scene: Elapsed time {:.6f}",
+    fprintf(stderr, "TIMER: Navigate to scene: Elapsed time %.6f",
                  timer.elapsed_seconds());
 
     return success;
@@ -1357,9 +1337,11 @@ void UIController::NavigateToHomeMenu() {
         // need to stop the streaming audio - by playing streaming audio from
         // the default texture pack now reset the streaming sounds back to the
         // normal ones
-        pMinecraft->soundEngine->SetStreamingSounds(
-            eStream_Overworld_Calm1, eStream_Overworld_piano3, eStream_Nether1,
-            eStream_Nether4, eStream_end_dragon, eStream_end_end, eStream_CD_1);
+        static_cast<SoundEngine*>(pMinecraft->soundEngine)
+            ->SetStreamingSounds(eStream_Overworld_Calm1,
+                                 eStream_Overworld_piano3, eStream_Nether1,
+                                 eStream_Nether4, eStream_end_dragon,
+                                 eStream_end_end, eStream_CD_1);
         pMinecraft->soundEngine->playStreaming("", 0, 0, 0, 1, 1);
 
         // 		if(pDLCTexPack->m_pStreamedWaveBank!=nullptr)
@@ -1370,7 +1352,8 @@ void UIController::NavigateToHomeMenu() {
         // 		{
         // 			pDLCTexPack->m_pSoundBank->Destroy();
         // 		}
-        const unsigned int result = PlatformStorage.UnmountInstalledDLC("TPACK");
+        const unsigned int result =
+            PlatformStorage.UnmountInstalledDLC("TPACK");
 
         app.DebugPrintf("Unmount result is %d\n", result);
     }
@@ -1796,8 +1779,7 @@ void UIController::DisplayGamertag(unsigned int iPad, bool show) {
     }
 }
 
-void UIController::SetSelectedItem(unsigned int iPad,
-                                   const std::string& name) {
+void UIController::SetSelectedItem(unsigned int iPad, const std::string& name) {
     EUIGroup group;
 
     if (app.GetGameStarted()) {
@@ -2159,8 +2141,8 @@ void UIController::ClearPressStart() { m_iPressStartQuadrantsMask = 0; }
 IPlatformStorage::EMessageResult UIController::RequestAlertMessage(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
-    char* pwchFormatString) {
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult),
+    void* lpParam, char* pwchFormatString) {
     return RequestMessageBox(uiTitle, uiText, uiOptionA, uiOptionC, dwPad, Func,
                              lpParam, pwchFormatString, 0, false);
 }
@@ -2168,8 +2150,8 @@ IPlatformStorage::EMessageResult UIController::RequestAlertMessage(
 IPlatformStorage::EMessageResult UIController::RequestErrorMessage(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
-    char* pwchFormatString) {
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult),
+    void* lpParam, char* pwchFormatString) {
     return RequestMessageBox(uiTitle, uiText, uiOptionA, uiOptionC, dwPad, Func,
                              lpParam, pwchFormatString, 0, true);
 }
@@ -2177,8 +2159,9 @@ IPlatformStorage::EMessageResult UIController::RequestErrorMessage(
 IPlatformStorage::EMessageResult UIController::RequestMessageBox(
     unsigned int uiTitle, unsigned int uiText, unsigned int* uiOptionA,
     unsigned int uiOptionC, unsigned int dwPad,
-    int (*Func)(void*, int, const IPlatformStorage::EMessageResult), void* lpParam,
-    char* pwchFormatString, unsigned int dwFocusButton, bool bIsError)
+    int (*Func)(void*, int, const IPlatformStorage::EMessageResult),
+    void* lpParam, char* pwchFormatString, unsigned int dwFocusButton,
+    bool bIsError)
 
 {
     MessageBoxInfo param;
@@ -2224,7 +2207,8 @@ IPlatformStorage::EMessageResult UIController::RequestMessageBox(
 
 IPlatformStorage::EMessageResult UIController::RequestUGCMessageBox(
     int title /* = -1 */, int message /* = -1 */, int iPad /* = -1*/,
-    int (*Func)(void*, int, const IPlatformStorage::EMessageResult) /* = nullptr*/,
+    int (*Func)(void*, int,
+                const IPlatformStorage::EMessageResult) /* = nullptr*/,
     void* lpParam /* = nullptr*/) {
     // Default title / messages
     if (title == -1) {
@@ -2244,9 +2228,11 @@ IPlatformStorage::EMessageResult UIController::RequestUGCMessageBox(
                                   lpParam);
 }
 
-IPlatformStorage::EMessageResult UIController::RequestContentRestrictedMessageBox(
+IPlatformStorage::EMessageResult
+UIController::RequestContentRestrictedMessageBox(
     int title /* = -1 */, int message /* = -1 */, int iPad /* = -1*/,
-    int (*Func)(void*, int, const IPlatformStorage::EMessageResult) /* = nullptr*/,
+    int (*Func)(void*, int,
+                const IPlatformStorage::EMessageResult) /* = nullptr*/,
     void* lpParam /* = nullptr*/) {
     // Default title / messages
     if (title == -1) {
@@ -2254,7 +2240,7 @@ IPlatformStorage::EMessageResult UIController::RequestContentRestrictedMessageBo
     }
 
     if (message == -1) {
-#if defined(_WINDOWS64) || defined(__linux__)
+#if 1
         // IDS_CONTENT_RESTRICTION doesn't exist on XB1
         message = IDS_NO_USER_CREATED_CONTENT_PRIVILEGE_CREATE;
 #else
@@ -2280,7 +2266,7 @@ void UIController::setFontCachingCalculationBuffer(int length) {
     draw call is not large enough, Iggy will crash or otherwise behave
     incorrectly.
     */
-#if defined(_WIN64) || defined(__linux__)
+#if INTPTR_MAX == INT64_MAX
     static const int CHAR_SIZE = 24;
 #else
     static const int CHAR_SIZE = 16;

@@ -1,12 +1,12 @@
 
 #include "UIScene_TrialExitUpsell.h"
 
-#include "platform/profile/profile.h"
-#include "app/common/App_Defines.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/GameTypes.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 class UILayer;

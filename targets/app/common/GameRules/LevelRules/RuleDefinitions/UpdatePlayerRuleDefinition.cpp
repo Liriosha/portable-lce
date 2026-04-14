@@ -4,16 +4,16 @@
 
 #include <memory>
 
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
+#include "app/common/Game.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/AddItemRuleDefinition.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "minecraft/Pos.h"
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/food/FoodData.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
+#include "util/StringHelpers.h"
 
 UpdatePlayerRuleDefinition::UpdatePlayerRuleDefinition() {
     m_bUpdateHealth = m_bUpdateFood = m_bUpdateYRot = false;

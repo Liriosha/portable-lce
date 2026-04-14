@@ -1,8 +1,8 @@
 #pragma once
 // using namespace std;
 
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "TutorialTask.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
 
 class Tutorial;
 

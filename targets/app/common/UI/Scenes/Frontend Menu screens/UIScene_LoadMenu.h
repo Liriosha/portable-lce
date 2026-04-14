@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <string>
 
-#include "platform/storage/storage.h"
 #include "IUIScene_StartGame.h"
 #include "app/common/DLC/DLCPack.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_BitmapIcon.h"
@@ -15,7 +15,7 @@
 #include "app/common/UI/Controls/UIControl_Slider.h"
 #include "app/common/UI/Controls/UIControl_TexturePackList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
+#include "platform/storage/storage.h"
 
 class DLCPack;
 class LevelGenerationOptions;
@@ -126,16 +126,16 @@ private:
     static int TrophyDialogReturned(void* pParam, int iPad,
                                     IPlatformStorage::EMessageResult result);
     static int LoadDataComplete(void* pParam);
-    static int CheckResetNetherReturned(void* pParam, int iPad,
-                                        IPlatformStorage::EMessageResult result);
-    static int DeleteSaveDialogReturned(void* pParam, int iPad,
-                                        IPlatformStorage::EMessageResult result);
+    static int CheckResetNetherReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
+    static int DeleteSaveDialogReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
     int deleteSaveDataReturned(bool bSuccess);
     static int MustSignInReturnedPSN(void* pParam, int iPad,
                                      IPlatformStorage::EMessageResult result);
 
 public:
     int loadSaveDataThumbnailReturned(std::uint8_t* pbThumbnail,
-                                     unsigned int thumbnailBytes);
+                                      unsigned int thumbnailBytes);
     static int StartGame_SignInReturned(void* pParam, bool, int);
 };

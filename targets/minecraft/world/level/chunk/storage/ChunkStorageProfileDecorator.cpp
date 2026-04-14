@@ -1,10 +1,9 @@
-#include "minecraft/util/Log.h"
 #include "ChunkStorageProfileDecorator.h"
 
 #include <stdio.h>
 
-#include "app/linux/LinuxGame.h"
 #include "java/System.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/level/chunk/storage/ChunkStorage.h"
 
 ChunkStorageProfilerDecorator::ChunkStorageProfilerDecorator(
@@ -46,30 +45,18 @@ void ChunkStorageProfilerDecorator::tick() {
     if (counter > 500) {
         if (loadCount > 0) {
 #if !defined(_CONTENT_PACKAGE)
-#if defined(__linux__)
             sprintf(buf, "Average load time: %f (%lld)",
                     0.000001 * (double)timeSpentLoading / (double)loadCount,
                     (long long)loadCount);
-#else
-            sprintf(buf, "Average load time: %f (%I64d)",
-                    0.000001 * (double)timeSpentLoading / (double)loadCount,
-                    loadCount);
-#endif
-            Log::info(buf);
+            Log::info("%s", buf);
 #endif
         }
         if (saveCount > 0) {
 #if !defined(_CONTENT_PACKAGE)
-#if defined(__linux__)
             sprintf(buf, "Average save time: %f (%lld)",
                     0.000001 * (double)timeSpentSaving / (double)loadCount,
                     (long long)loadCount);
-#else
-            sprintf(buf, "Average save time: %f (%I64d)",
-                    0.000001 * (double)timeSpentSaving / (double)loadCount,
-                    loadCount);
-#endif
-            Log::info(buf);
+            Log::info("%s", buf);
 #endif
         }
         counter = 0;

@@ -7,14 +7,14 @@
 #include <unordered_map>
 #include <utility>
 
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/CollectItemRuleDefinition.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/CompleteAllRuleDefinition.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/UpdatePlayerRuleDefinition.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/UseTileRuleDefinition.h"
-#include "app/common/GameRules/LevelRules/Rules/GameRule.h"
-#include "app/common/GameRules/LevelRules/Rules/GameRulesInstance.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
+#include "minecraft/world/level/GameRules/GameRule.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
+#include "minecraft/world/level/GameRules/GameRulesInstance.h"
 #include "util/StringHelpers.h"
 
 CompoundGameRuleDefinition::CompoundGameRuleDefinition() {

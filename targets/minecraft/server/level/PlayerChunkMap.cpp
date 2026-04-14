@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "PlayerChunkMap.h"
 
 #include <assert.h>
@@ -10,12 +9,10 @@
 #include <unordered_set>
 #include <utility>
 
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/linux/LinuxGame.h"
 #include "ServerChunkCache.h"
 #include "ServerLevel.h"
 #include "ServerPlayer.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/network/packet/BlockRegionUpdatePacket.h"
 #include "minecraft/network/packet/ChunkTilesUpdatePacket.h"
 #include "minecraft/network/packet/ChunkVisibilityAreaPacket.h"
@@ -25,10 +22,12 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/network/PlayerConnection.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/level/ChunkPos.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/chunk/LevelChunk.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
+#include "platform/network/network.h"
 
 PlayerChunkMap::PlayerChunk::PlayerChunk(int x, int z, PlayerChunkMap* pcm)
     : pos(x, z) {
@@ -265,7 +264,7 @@ void PlayerChunkMap::PlayerChunk::broadcast(std::shared_ptr<Packet> packet) {
             ServerPlayer::getFlagIndexForChunk(pos, parent->dimension);
         if (player->seenChunks.find(pos) != player->seenChunks.end() &&
             (player->connection->isLocal() ||
-             g_NetworkManager.SystemFlagGet(
+             NetworkService.SystemFlagGet(
                  player->connection->getNetworkPlayer(), flagIndex))) {
             player->connection->send(packet);
             sentTo.push_back(player);
@@ -299,7 +298,7 @@ void PlayerChunkMap::PlayerChunk::broadcast(std::shared_ptr<Packet> packet) {
         // (this flag will be the same for all players on the same system)
         int flagIndex =
             ServerPlayer::getFlagIndexForChunk(pos, parent->dimension);
-        if (!g_NetworkManager.SystemFlagGet(
+        if (!NetworkService.SystemFlagGet(
                 player->connection->getNetworkPlayer(), flagIndex))
             continue;
 

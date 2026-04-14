@@ -1,10 +1,9 @@
-#include "minecraft/util/Log.h"
 #include "BucketItem.h"
 
 #include <memory>
 #include <string>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
@@ -12,8 +11,8 @@
 #include "minecraft/network/packet/ChatPacket.h"
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/server/network/PlayerConnection.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/player/Abilities.h"
 #include "minecraft/world/entity/player/Inventory.h"

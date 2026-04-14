@@ -38,7 +38,7 @@ public:
 
     virtual std::string getResource(
         const std::string& name)  // 4J - changed to just return a name rather
-                                   // than an input stream
+                                  // than an input stream
     {
         /* 4J - TODO
 return TexturePack.class.getResourceAsStream(name);
@@ -47,15 +47,22 @@ return TexturePack.class.getResourceAsStream(name);
     }
     virtual DLCPack* getDLCPack() { return nullptr; }
 
+    // True for trial skins / texture packs that the user has not yet
+    // purchased. The default (built-in) skin and any owned DLC pack
+    // returns false. Used by save and disconnect paths to refuse
+    // operations that would otherwise unlock paid content for free.
+    [[nodiscard]] virtual bool needsPurchase() { return false; }
+
     // 4J Added
     virtual std::string getPath(bool bTitleUpdateTexture = false,
-                                 const char* pchBDPatchFilename = nullptr);
+                                const char* pchBDPatchFilename = nullptr);
     virtual std::string getAnimationString(const std::string& textureName,
-                                            const std::string& path,
-                                            bool allowFallback) = 0;
-    virtual BufferedImage* getImageResource(
-        const std::string& File, bool filenameHasExtension = false,
-        bool bTitleUpdateTexture = false, const std::string& drive = "") = 0;
+                                           const std::string& path,
+                                           bool allowFallback) = 0;
+    virtual BufferedImage* getImageResource(const std::string& File,
+                                            bool filenameHasExtension = false,
+                                            bool bTitleUpdateTexture = false,
+                                            const std::string& drive = "") = 0;
     virtual void loadColourTable() = 0;
     virtual void loadUI() = 0;
     virtual void unloadUI() = 0;

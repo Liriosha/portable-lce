@@ -2,9 +2,7 @@
 
 #include <cmath>
 
-#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
-
 #include "java/Class.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/client/renderer/Tesselator.h"
@@ -20,6 +18,8 @@
 #include "minecraft/world/level/tile/FireTile.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation EntityRenderer::SHADOW_LOCATION =
     ResourceLocation(TN__CLAMP__MISC_SHADOW);

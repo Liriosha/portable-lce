@@ -1,16 +1,14 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "PreLoginPacket.h"
 
 #include <cstdint>
 #include <cstring>
 
-#include "app/common/BuildVer/BuildVer.h"
-#include "platform/IPlatformNetwork.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "PacketListener.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/BuildVer.h"
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 
 PreLoginPacket::PreLoginPacket() {
     loginKey = "";

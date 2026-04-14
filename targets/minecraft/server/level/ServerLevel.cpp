@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "ServerLevel.h"
 
 #include <assert.h>
@@ -7,15 +5,7 @@
 #include <algorithm>
 #include <mutex>
 
-#include "platform/input/input.h"
-#include "platform/storage/storage.h"
 #include "EntityTracker.h"
-#include "platform/ShutdownManager.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/DLC/DLCManager.h"
-#include "app/common/DLC/DLCPack.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/linux/LinuxGame.h"
 #include "PlayerChunkMap.h"
 #include "Pos.h"
 #include "ServerChunkCache.h"
@@ -23,8 +13,10 @@
 #include "ServerPlayer.h"
 #include "java/Class.h"
 #include "java/Random.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
-#include "minecraft/client/skins/DLCTexturePack.h"
+#include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/network/packet/AddGlobalEntityPacket.h"
 #include "minecraft/network/packet/EntityEventPacket.h"
@@ -36,6 +28,7 @@
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/ServerScoreboard.h"
 #include "minecraft/server/network/PlayerConnection.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/ProgressListener.h"
 #include "minecraft/util/WeighedRandom.h"
 #include "minecraft/util/WeighedTreasure.h"
@@ -66,6 +59,10 @@
 #include "minecraft/world/level/tile/entity/ChestTileEntity.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/input/input.h"
+#include "platform/network/network.h"
+#include "platform/storage/storage.h"
+#include "platform/thread/ShutdownManager.h"
 #include "strings.h"
 
 class ChunkStorage;
@@ -736,7 +733,7 @@ std::vector<TickNextTickData>* ServerLevel::fetchTicksInChunk(LevelChunk* chunk,
             }
         } else {
             if (!toBeTicked.empty()) {
-                Log::info("To be ticked size: %d\n", toBeTicked.size());
+                Log::info("To be ticked size: %zu\n", toBeTicked.size());
             }
             for (auto it = toBeTicked.begin(); it != toBeTicked.end();) {
                 TickNextTickData td = *it;
@@ -851,8 +848,7 @@ void ServerLevel::setInitialSpawn(LevelSettings* levelSettings) {
         zSpawn = findBiome->z;
         delete findBiome;
     } else {
-        Log::info(
-            "Level::setInitialSpawn - Unable to find spawn biome\n");
+        Log::info("Level::setInitialSpawn - Unable to find spawn biome\n");
     }
 
     int tries = 0;
@@ -989,11 +985,7 @@ void ServerLevel::saveToDisc(ProgressListener* progressListener,
     // the case for going into the mash-up pack world with a trial version)
     if (!Minecraft::GetInstance()->skins->isUsingDefaultSkin()) {
         TexturePack* tPack = Minecraft::GetInstance()->skins->getSelected();
-        DLCTexturePack* pDLCTexPack = (DLCTexturePack*)tPack;
-
-        DLCPack* pDLCPack = pDLCTexPack->getDLCInfoParentPack();
-
-        if (!pDLCPack->hasPurchasedFile(DLCManager::e_DLCType_Texture, "")) {
+        if (tPack->needsPurchase()) {
             return;
         }
     }

@@ -1,11 +1,10 @@
-#include "minecraft/IGameServices.h"
 #include "Painting.h"
 
 #include <memory>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/HangingEntity.h"
 #include "minecraft/world/entity/player/Abilities.h"

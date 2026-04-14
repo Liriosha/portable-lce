@@ -1,14 +1,11 @@
-#include "minecraft/util/Log.h"
 #include "Tesselator.h"
-
-
 
 #include <vector>
 
-#include "platform/renderer/renderer.h"
-#include "app/linux/LinuxGame.h"
-#include "platform/stubs.h"
 #include "minecraft/client/MemoryTracker.h"
+#include "minecraft/util/Log.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 bool Tesselator::TRIANGLE_MODE = false;
 bool Tesselator::USE_VBO = false;
@@ -133,7 +130,8 @@ void Tesselator::end() {
                     PlatformRenderer.DrawVertices(
                         (IPlatformRenderer::ePrimitiveType)mode, vertexCount,
                         _array->data(),
-                        IPlatformRenderer::VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TEXGEN,
+                        IPlatformRenderer::
+                            VERTEX_TYPE_PF3_TF2_CB4_NB4_XW1_TEXGEN,
                         IPlatformRenderer::PIXEL_SHADER_TYPE_PROJECTION);
                 } else {
                     PlatformRenderer.DrawVertices(
@@ -414,7 +412,7 @@ typedef unsigned short hfloat;
 extern hfloat convertFloatToHFloat(float f);
 extern float convertHFloatToFloat(hfloat hf);
 
-#if defined(__linux__)
+#if 1
 namespace {
 void packLinuxLightmapCoords(int tex2, std::int16_t& u, std::int16_t& v) {
     u = static_cast<std::int16_t>(tex2 & 0xffff);
@@ -471,7 +469,7 @@ void Tesselator::vertex(float x, float y, float z) {
         pShortData[5] = (((int)(v * 8192.0f)) & 0xffff);
         std::int16_t u2 = static_cast<std::int16_t>(_tex2 & 0xffff);
         std::int16_t v2 = static_cast<std::int16_t>((_tex2 >> 16) & 0xffff);
-#if defined(__linux__)
+#if 1
         packLinuxLightmapCoords(_tex2, u2, v2);
         logLinuxPackedLightmapCoords("compact", _tex2, u2, v2);
 #endif
@@ -526,7 +524,7 @@ void Tesselator::vertex(float x, float y, float z) {
         }
         if (hasTexture2) {
 // 4jcraft: we will be lighting the blocks right in here
-#if defined(__linux__)
+#if 1
             std::int16_t tex2U;
             std::int16_t tex2V;
             packLinuxLightmapCoords(_tex2, tex2U, tex2V);
@@ -539,8 +537,8 @@ void Tesselator::vertex(float x, float y, float z) {
 #endif
         } else {
             // -512 each for u/v will mean that the renderer will use global
-            // settings (set via PlatformRenderer.StateSetVertexTextureUV) rather
-            // than these local ones
+            // settings (set via PlatformRenderer.StateSetVertexTextureUV)
+            // rather than these local ones
             *(unsigned int*)(&_array->data()[p + 7]) = 0xfe00fe00;
         }
 

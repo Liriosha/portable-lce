@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "EnderMan.h"
 
 #include <math.h>
@@ -8,10 +7,10 @@
 #include <string>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/damageSource/EntityDamageSource.h"

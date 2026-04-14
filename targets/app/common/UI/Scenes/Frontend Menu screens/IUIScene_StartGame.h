@@ -2,14 +2,14 @@
 
 #include <string>
 
-#include "platform/storage/storage.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_BitmapIcon.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_TexturePackList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
+#include "platform/storage/storage.h"
 
 class UILayer;
 
@@ -54,8 +54,8 @@ protected:
 
     static int TrialTexturePackWarningReturned(
         void* pParam, int iPad, IPlatformStorage::EMessageResult result);
-    static int UnlockTexturePackReturned(void* pParam, int iPad,
-                                         IPlatformStorage::EMessageResult result);
-    static int TexturePackDialogReturned(void* pParam, int iPad,
-                                         IPlatformStorage::EMessageResult result);
+    static int UnlockTexturePackReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
+    static int TexturePackDialogReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
 };

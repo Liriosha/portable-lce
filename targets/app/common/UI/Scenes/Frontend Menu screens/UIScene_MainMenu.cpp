@@ -1,40 +1,41 @@
 
 #include "UIScene_MainMenu.h"
 
+#include <chrono>
 #include <cmath>
+#include <ctime>
 #include <format>
 #include <functional>
 #include <numbers>
 
-#include "platform/PlatformTypes.h"
-#include "platform/profile/profile.h"
-#include "platform/renderer/renderer.h"
-#include "app/common/App_Defines.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
 #include "app/common/UI/UIString.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "platform/NetTypes.h"
-#include "util/StringHelpers.h"
-
 #include "java/InputOutputStream/BufferedReader.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/InputStreamReader.h"
 #include "java/Random.h"
 #include "java/System.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameTypes.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/User.h"
 #include "minecraft/client/gui/Font.h"
 #include "minecraft/client/gui/ScreenSizeCalculator.h"
 #include "minecraft/server/MinecraftServer.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "platform/PlatformTypes.h"
+#include "platform/game/game.h"
+#include "platform/network/NetTypes.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 class LevelGenerationOptions;
 
@@ -175,18 +176,22 @@ void UIScene_MainMenu::handleGainFocus(bool navBack) {
         random->nextInt((int)m_splashes.size() - (eSplashRandomStart + 1));
 
     // Override splash text on certain dates
-    SYSTEMTIME LocalSysTime;
-    GetLocalTime(&LocalSysTime);
-    if (LocalSysTime.wMonth == 11 && LocalSysTime.wDay == 9) {
+    auto now = std::chrono::system_clock::now();
+    auto dp = std::chrono::floor<std::chrono::days>(now);
+    std::chrono::year_month_day ymd{dp};
+    const auto month = ymd.month();
+    const uint32_t day = static_cast<uint32_t>(ymd.day());
+
+    if (month == std::chrono::November && day == 9) {
         splashIndex = eSplashHappyBirthdayEx;
-    } else if (LocalSysTime.wMonth == 6 && LocalSysTime.wDay == 1) {
+    } else if (month == std::chrono::June && day == 1) {
         splashIndex = eSplashHappyBirthdayNotch;
-    } else if (LocalSysTime.wMonth == 12 &&
-               LocalSysTime.wDay == 24)  // the Java game shows this on
-                                         // Christmas Eve, so we will too
+    } else if (month == std::chrono::December &&
+               day == 24)  // the Java game shows this on
+                           // Christmas Eve, so we will too
     {
         splashIndex = eSplashMerryXmas;
-    } else if (LocalSysTime.wMonth == 1 && LocalSysTime.wDay == 1) {
+    } else if (month == std::chrono::January && day == 1) {
         splashIndex = eSplashHappyNewYear;
     }
     // splashIndex = 47; // Very short string
@@ -296,8 +301,7 @@ void UIScene_MainMenu::handlePress(F64 controlId, F64 childId) {
         if (PlatformProfile.IsSignedIn(primaryPad)) {
             if (confirmUser) {
                 PlatformProfile.RequestSignInUI(false, false, true, false, true,
-                                               signInReturnedFunc,
-                                               primaryPad);
+                                                signInReturnedFunc, primaryPad);
             } else {
                 RunAction(primaryPad);
             }
@@ -393,8 +397,8 @@ void UIScene_MainMenu::customDrawSplash(IggyCustomDrawCallbackRegion* region) {
     ui.endCustomDraw(region);
 }
 
-int UIScene_MainMenu::MustSignInReturned(void* pParam, int iPad,
-                                         IPlatformStorage::EMessageResult result) {
+int UIScene_MainMenu::MustSignInReturned(
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_MainMenu* pClass = (UIScene_MainMenu*)pParam;
 
     if (result == IPlatformStorage::EMessage_ResultAccept) {
@@ -451,8 +455,8 @@ int UIScene_MainMenu::MustSignInReturned(void* pParam, int iPad,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             // if the user is valid, we should set the presence
             if (PlatformProfile.IsSignedIn(i)) {
-                PlatformProfile.SetCurrentGameActivity(i, CONTEXT_PRESENCE_MENUS,
-                                                      false);
+                PlatformProfile.SetCurrentGameActivity(
+                    i, CONTEXT_PRESENCE_MENUS, false);
             }
         }
     }
@@ -468,7 +472,7 @@ int UIScene_MainMenu::HelpAndOptions_SignInReturned(void* pParam,
         // 4J-JEV: Don't we only need to update rich-presence if the sign-in
         // status changes.
         PlatformProfile.SetCurrentGameActivity(iPad, CONTEXT_PRESENCE_MENUS,
-                                              false);
+                                               false);
 
 #if TO_BE_IMPLEMENTED
         if (app.GetTMSDLCInfoRead())
@@ -503,8 +507,8 @@ int UIScene_MainMenu::HelpAndOptions_SignInReturned(void* pParam,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             // if the user is valid, we should set the presence
             if (PlatformProfile.IsSignedIn(i)) {
-                PlatformProfile.SetCurrentGameActivity(i, CONTEXT_PRESENCE_MENUS,
-                                                      false);
+                PlatformProfile.SetCurrentGameActivity(
+                    i, CONTEXT_PRESENCE_MENUS, false);
             }
         }
     }
@@ -520,7 +524,7 @@ int UIScene_MainMenu::CreateLoad_SignInReturned(void* pParam, bool bContinue,
         // 4J-JEV: We only need to update rich-presence if the sign-in status
         // changes.
         PlatformProfile.SetCurrentGameActivity(iPad, CONTEXT_PRESENCE_MENUS,
-                                              false);
+                                               false);
 
         unsigned int uiIDA[1] = {IDS_OK};
 
@@ -532,7 +536,7 @@ int UIScene_MainMenu::CreateLoad_SignInReturned(void* pParam, bool bContinue,
             PlatformProfile.SetLockedProfile(PlatformProfile.GetPrimaryPad());
 
             // change the minecraft player name
-            Minecraft::GetInstance()->user->name = 
+            Minecraft::GetInstance()->user->name =
                 PlatformProfile.GetGamertag(PlatformProfile.GetPrimaryPad());
 
             {
@@ -593,9 +597,8 @@ int UIScene_MainMenu::CreateLoad_SignInReturned(void* pParam, bool bContinue,
                         }
 #else
                         Minecraft* pMinecraft = Minecraft::GetInstance();
-                        pMinecraft->user->name =
-                            PlatformProfile.GetGamertag(
-                                PlatformProfile.GetPrimaryPad());
+                        pMinecraft->user->name = PlatformProfile.GetGamertag(
+                            PlatformProfile.GetPrimaryPad());
 
                         // ensure we've applied this player's settings
                         app.ApplyGameSettingsChanged(iPad);
@@ -609,8 +612,8 @@ int UIScene_MainMenu::CreateLoad_SignInReturned(void* pParam, bool bContinue,
                     // offline
                     PlatformProfile.DisplayOfflineProfile(
                         [pClass](bool b, int p) {
-                            return CScene_Main::CreateLoad_OfflineProfileReturned(
-                                pClass, b, p);
+                            return CScene_Main::
+                                CreateLoad_OfflineProfileReturned(pClass, b, p);
                         },
                         PlatformProfile.GetPrimaryPad());
 #else
@@ -630,8 +633,8 @@ int UIScene_MainMenu::CreateLoad_SignInReturned(void* pParam, bool bContinue,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             // if the user is valid, we should set the presence
             if (PlatformProfile.IsSignedIn(i)) {
-                PlatformProfile.SetCurrentGameActivity(i, CONTEXT_PRESENCE_MENUS,
-                                                      false);
+                PlatformProfile.SetCurrentGameActivity(
+                    i, CONTEXT_PRESENCE_MENUS, false);
             }
         }
     }
@@ -646,7 +649,7 @@ int UIScene_MainMenu::Leaderboards_SignInReturned(void* pParam, bool bContinue,
         // 4J-JEV: We only need to update rich-presence if the sign-in status
         // changes.
         PlatformProfile.SetCurrentGameActivity(iPad, CONTEXT_PRESENCE_MENUS,
-                                              false);
+                                               false);
 
         unsigned int uiIDA[1] = {IDS_OK};
 
@@ -674,7 +677,8 @@ int UIScene_MainMenu::Leaderboards_SignInReturned(void* pParam, bool bContinue,
                                        PlatformProfile.GetPrimaryPad());
 #endif
             } else {
-                PlatformProfile.SetLockedProfile(PlatformProfile.GetPrimaryPad());
+                PlatformProfile.SetLockedProfile(
+                    PlatformProfile.GetPrimaryPad());
                 proceedToScene(PlatformProfile.GetPrimaryPad(),
                                eUIScene_LeaderboardsMenu);
             }
@@ -686,8 +690,8 @@ int UIScene_MainMenu::Leaderboards_SignInReturned(void* pParam, bool bContinue,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             // if the user is valid, we should set the presence
             if (PlatformProfile.IsSignedIn(i)) {
-                PlatformProfile.SetCurrentGameActivity(i, CONTEXT_PRESENCE_MENUS,
-                                                      false);
+                PlatformProfile.SetCurrentGameActivity(
+                    i, CONTEXT_PRESENCE_MENUS, false);
             }
         }
     }
@@ -703,7 +707,7 @@ int UIScene_MainMenu::Achievements_SignInReturned(void* pParam, bool bContinue,
         // 4J-JEV: We only need to update rich-presence if the sign-in status
         // changes.
         PlatformProfile.SetCurrentGameActivity(iPad, CONTEXT_PRESENCE_MENUS,
-                                              false);
+                                               false);
 
         // XShowAchievementsUI(PlatformProfile.GetPrimaryPad());
     } else {
@@ -713,8 +717,8 @@ int UIScene_MainMenu::Achievements_SignInReturned(void* pParam, bool bContinue,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             // if the user is valid, we should set the presence
             if (PlatformProfile.IsSignedIn(i)) {
-                PlatformProfile.SetCurrentGameActivity(i, CONTEXT_PRESENCE_MENUS,
-                                                      false);
+                PlatformProfile.SetCurrentGameActivity(
+                    i, CONTEXT_PRESENCE_MENUS, false);
             }
         }
     }
@@ -729,7 +733,7 @@ int UIScene_MainMenu::UnlockFullGame_SignInReturned(void* pParam,
         // 4J-JEV: We only need to update rich-presence if the sign-in status
         // changes.
         PlatformProfile.SetCurrentGameActivity(iPad, CONTEXT_PRESENCE_MENUS,
-                                              false);
+                                               false);
 
         pClass->RunUnlockOrDLC(iPad);
     } else {
@@ -739,8 +743,8 @@ int UIScene_MainMenu::UnlockFullGame_SignInReturned(void* pParam,
         for (int i = 0; i < XUSER_MAX_COUNT; i++) {
             // if the user is valid, we should set the presence
             if (PlatformProfile.IsSignedIn(i)) {
-                PlatformProfile.SetCurrentGameActivity(i, CONTEXT_PRESENCE_MENUS,
-                                                      false);
+                PlatformProfile.SetCurrentGameActivity(
+                    i, CONTEXT_PRESENCE_MENUS, false);
             }
         }
     }
@@ -748,8 +752,8 @@ int UIScene_MainMenu::UnlockFullGame_SignInReturned(void* pParam,
     return 0;
 }
 
-int UIScene_MainMenu::ExitGameReturned(void* pParam, int iPad,
-                                       IPlatformStorage::EMessageResult result) {
+int UIScene_MainMenu::ExitGameReturned(
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     // UIScene_MainMenu* pClass = (UIScene_MainMenu*)pParam;
 
     // buttons reversed on this
@@ -767,7 +771,7 @@ void UIScene_MainMenu::RunPlayGame(int iPad) {
     // clear the remembered signed in users so their profiles get read again
     app.ClearSignInChangeUsersMask();
 
-    app.ReleaseSaveThumbnail();
+    PlatformGame.ReleaseSaveThumbnail();
 
     if (PlatformProfile.IsGuest(iPad)) {
         unsigned int uiIDA[1];
@@ -782,7 +786,7 @@ void UIScene_MainMenu::RunPlayGame(int iPad) {
         // If the player was signed in before selecting play, we'll not have
         // read the profile yet, so query the sign-in status to get this to
         // happen
-        PlatformProfile.QuerySigninStatus();
+        (void)PlatformProfile.QuerySigninStatus();
 
         // 4J-PB - Need to check for installed DLC
         if (!app.DLCInstallProcessCompleted()) app.StartInstallDLCProcess(iPad);
@@ -807,9 +811,8 @@ void UIScene_MainMenu::RunPlayGame(int iPad) {
                     if (PlatformStorage.SetSaveDevice(
                             &CScene_Main::DeviceSelectReturned, this) == true) {
                         // change the minecraft player name
-                        pMinecraft->user->name =
-                            PlatformProfile.GetGamertag(
-                                PlatformProfile.GetPrimaryPad());
+                        pMinecraft->user->name = PlatformProfile.GetGamertag(
+                            PlatformProfile.GetPrimaryPad());
                         // save device already selected
 
                         // ensure we've applied this player's settings
@@ -839,8 +842,8 @@ void UIScene_MainMenu::RunPlayGame(int iPad) {
                     m_Timer.SetShow(true);
                 }
 #else
-                pMinecraft->user->name = 
-                    PlatformProfile.GetGamertag(PlatformProfile.GetPrimaryPad());
+                pMinecraft->user->name = PlatformProfile.GetGamertag(
+                    PlatformProfile.GetPrimaryPad());
 
                 // ensure we've applied this player's settings
                 app.ApplyGameSettingsChanged(iPad);
@@ -891,7 +894,7 @@ void UIScene_MainMenu::RunLeaderboards(int iPad) {
             // If the player was signed in before selecting play, we'll not have
             // read the profile yet, so query the sign-in status to get this to
             // happen
-            PlatformProfile.QuerySigninStatus();
+            (void)PlatformProfile.QuerySigninStatus();
 
             proceedToScene(iPad, eUIScene_LeaderboardsMenu);
         }
@@ -911,7 +914,7 @@ void UIScene_MainMenu::RunUnlockOrDLC(int iPad) {
             // If the player was signed in before selecting play, we'll not
             // have read the profile yet, so query the sign-in status to get
             // this to happen
-            PlatformProfile.QuerySigninStatus();
+            (void)PlatformProfile.QuerySigninStatus();
 
             {
                 bool bContentRestricted = false;
@@ -1010,7 +1013,7 @@ void UIScene_MainMenu::RunHelpAndOptions(int iPad) {
         // If the player was signed in before selecting play, we'll not have
         // read the profile yet, so query the sign-in status to get this to
         // happen
-        PlatformProfile.QuerySigninStatus();
+        (void)PlatformProfile.QuerySigninStatus();
 
 #if TO_BE_IMPLEMENTED
         // 4J-PB - You can be offline and still can go into help and options

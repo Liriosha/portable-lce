@@ -8,9 +8,9 @@
 #include <system_error>
 #include <vector>
 
-#include "util/StringHelpers.h"  // 4jcraft TODO
-#include "platform/fs/fs.h"
 #include "java/FileFilter.h"
+#include "platform/fs/fs.h"
+#include "util/StringHelpers.h"  // 4jcraft TODO
 
 const char File::pathSeparator = '/';
 
@@ -20,9 +20,7 @@ const std::string File::pathRoot =
 namespace {
 namespace fs = std::filesystem;
 
-fs::path ToFilesystemPath(const std::string& path) {
-    return fs::path(path);
-}
+fs::path ToFilesystemPath(const std::string& path) { return fs::path(path); }
 
 std::string ToFilename(const fs::path& path) {
     const std::string filename = path.filename().string();
@@ -63,7 +61,6 @@ File::File(const std::string& pathname) {
     if (fixedPath.find("GAME:/") == 0) fixedPath = fixedPath.substr(6);
     m_abstractPathName = fixedPath;
 
-#if defined(__linux__)
     std::string request = std::filesystem::path(m_abstractPathName).string();
     while (!request.empty() && request[0] == '/') request.erase(0, 1);
     if (request.find("res/") == 0) request.erase(0, 4);
@@ -93,14 +90,14 @@ File::File(const std::string& pathname) {
             return;
         }
     }
-#endif
+    // #ifdef _WINDOWS64
+    //     std::string path =
+    //     std::filesystem::path(m_abstractPathName).string(); std::string
+    //     finalPath = PlatformStorage.GetMountedPath(path.c_str()); if
+    //     (finalPath.size() == 0) finalPath = path; m_abstractPathName =
+    //     finalPath;
+    // #endif
 
-#ifdef _WINDOWS64
-    std::string path = std::filesystem::path(m_abstractPathName).string();
-    std::string finalPath = PlatformStorage.GetMountedPath(path.c_str());
-    if (finalPath.size() == 0) finalPath = path;
-    m_abstractPathName = finalPath;
-#endif
     /*
     std::vector<std::string> path = stringSplit( pathname, pathSeparator );
 
@@ -125,9 +122,8 @@ File::File(const std::string& pathname) {
 File::File(const std::string& parent,
            const std::string& child)  //: m_abstractPathName( child  )
 {
-    m_abstractPathName =
-        pathRoot + pathSeparator + parent + pathSeparator + child;
-    // this->parent = new File( parent );
+    // Using std::filesystem::path to join paths properly
+    m_abstractPathName = (std::filesystem::path(parent) / child).string();
 }
 
 // Creates a new File instance by converting the given path vector into an
@@ -201,11 +197,9 @@ bool File::mkdirs() const {
         return fs::is_directory(path, error);
     }
 
-    if (error) {
-        return false;
-    }
+    fs::create_directories(path, error);
 
-    return fs::create_directories(path, error);
+    return error.value() == 0;
 }
 
 /*

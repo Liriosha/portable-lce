@@ -3,18 +3,19 @@
 
 #include <assert.h>
 
-#include "platform/profile/profile.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_Progress.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/LinuxGame.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/world/inventory/FurnaceMenu.h"
 #include "minecraft/world/level/tile/entity/FurnaceTileEntity.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 class UILayer;
@@ -53,7 +54,7 @@ UIScene_FurnaceMenu::UIScene_FurnaceMenu(int iPad, void* _initData,
     m_slotListIngredient.addSlots(FurnaceMenu::INGREDIENT_SLOT, 1);
     m_slotListResult.addSlots(FurnaceMenu::RESULT_SLOT, 1);
 
-    app.SetRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_FORGING);
+    PlatformGame.SetRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_FORGING);
 
     delete initData;
 }

@@ -1,5 +1,5 @@
 
-#include "app/common/GameRules/LevelRules/Rules/GameRule.h"
+#include "minecraft/world/level/GameRules/GameRule.h"
 
 #include <wchar.h>
 
@@ -8,10 +8,9 @@
 #include <unordered_map>
 #include <utility>
 
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
 
 class Connection;
 class ItemInstance;
@@ -33,15 +32,14 @@ GameRule::ValueType GameRule::getParameter(const std::string& parameterName) {
     if (m_parameters.find(parameterName) == m_parameters.end()) {
 #ifndef _CONTENT_PACKAGE
         printf("WARNING: Parameter %s was not set before being fetched\n",
-                parameterName.c_str());
+               parameterName.c_str());
         assert(0);
 #endif
     }
     return m_parameters[parameterName];
 }
 
-void GameRule::setParameter(const std::string& parameterName,
-                            ValueType value) {
+void GameRule::setParameter(const std::string& parameterName, ValueType value) {
     if (m_parameters.find(parameterName) == m_parameters.end()) {
 #ifndef _CONTENT_PACKAGE
         printf("Adding parameter %s to GameRule\n", parameterName.c_str());

@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "AnvilMenu.h"
 
 #include <algorithm>
@@ -6,8 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/Container.h"
 #include "minecraft/world/entity/player/Abilities.h"
 #include "minecraft/world/entity/player/Inventory.h"
@@ -27,6 +25,7 @@
 #include "minecraft/world/level/tile/Tile.h"
 #include "nbt/ListTag.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 AnvilMenu::AnvilMenu(std::shared_ptr<Inventory> inventory, Level* level, int xt,
                      int yt, int zt, std::shared_ptr<Player> player) {
@@ -233,9 +232,8 @@ void AnvilMenu::createResult() {
 
                 price += namingCost;
                 if (DEBUG_COST) {
-                    Log::info(
-                        "Un-naming cost; price is now %d (went up by %d)",
-                        price, namingCost);
+                    Log::info("Un-naming cost; price is now %d (went up by %d)",
+                              price, namingCost);
                 }
                 result->resetHoverName();
             }
@@ -246,8 +244,8 @@ void AnvilMenu::createResult() {
 
             price += namingCost;
             if (DEBUG_COST) {
-                Log::info("Naming cost; price is now %d (went up by %d)",
-                                price, namingCost);
+                Log::info("Naming cost; price is now %d (went up by %d)", price,
+                          namingCost);
             }
 
             if (input->hasCustomHoverName()) {
@@ -291,9 +289,8 @@ void AnvilMenu::createResult() {
 
             tax += count + level * fee;
             if (DEBUG_COST) {
-                Log::info(
-                    "Enchantment tax; tax is now %d (went up by %d)", tax,
-                    (count + level * fee));
+                Log::info("Enchantment tax; tax is now %d (went up by %d)", tax,
+                          (count + level * fee));
             }
         }
 
@@ -335,11 +332,11 @@ void AnvilMenu::createResult() {
 
     if (DEBUG_COST) {
         if (level->isClientSide) {
-            Log::info("CLIENT Cost is %d (%d price, %d tax)\n", cost,
-                            price, tax);
+            Log::info("CLIENT Cost is %d (%d price, %d tax)\n", cost, price,
+                      tax);
         } else {
-            Log::info("SERVER Cost is %d (%d price, %d tax)\n", cost,
-                            price, tax);
+            Log::info("SERVER Cost is %d (%d price, %d tax)\n", cost, price,
+                      tax);
         }
     }
 }

@@ -8,21 +8,19 @@
 
 #include <memory>
 
-#include "platform/profile/profile.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/Leaderboards/LeaderboardInterface.h"
-#include "app/common/Leaderboards/LeaderboardManager.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_LeaderboardList.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/Console_Debug_enum.h"
 #include "minecraft/world/item/Item.h"
 #include "minecraft/world/item/ItemInstance.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/leaderboard/leaderboard.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 #define PLAYER_ONLINE_TIMER_ID 0
@@ -97,7 +95,7 @@ const UIScene_LeaderboardsMenu::LeaderboardDescriptor UIScene_LeaderboardsMenu::
 
 UIScene_LeaderboardsMenu::UIScene_LeaderboardsMenu(int iPad, void* initData,
                                                    UILayer* parentLayer)
-    : UIScene(iPad, parentLayer), m_interface(LeaderboardManager::Instance()) {
+    : UIScene(iPad, parentLayer) {
     // Setup all the Iggy references we need for this scene
     initialiseMovie();
 
@@ -127,8 +125,8 @@ UIScene_LeaderboardsMenu::UIScene_LeaderboardsMenu(int iPad, void* initData,
     m_labelFilter.init(filterBuffer);
 
     char entriesBuffer[40];
-    snprintf(entriesBuffer, 40, "%s%i",
-             app.GetString(IDS_LEADERBOARD_ENTRIES), 0);
+    snprintf(entriesBuffer, 40, "%s%i", app.GetString(IDS_LEADERBOARD_ENTRIES),
+             0);
     m_labelEntries.init(entriesBuffer);
 
     ReadStats(-1);
@@ -160,7 +158,7 @@ std::string UIScene_LeaderboardsMenu::getMoviePath() {
 
 void UIScene_LeaderboardsMenu::tick() {
     UIScene::tick();
-    m_interface.tick();
+    PlatformLeaderboard.Tick();
 }
 
 void UIScene_LeaderboardsMenu::handleReload() {
@@ -208,8 +206,7 @@ void UIScene_LeaderboardsMenu::handleInput(int iPad, int key, bool repeat,
         case ACTION_MENU_RIGHT_SCROLL: {
             // Do nothing if a stats read is currently in progress, otherwise
             // the system complains about to many read requests
-            if (pressed && m_bPopulatedOnce &&
-                LeaderboardManager::Instance()->isIdle()) {
+            if (pressed && m_bPopulatedOnce && PlatformLeaderboard.isIdle()) {
                 // CD - Added for audio
                 ui.PlayUISFX(eSFX_Scroll);
 
@@ -241,8 +238,7 @@ void UIScene_LeaderboardsMenu::handleInput(int iPad, int key, bool repeat,
         case ACTION_MENU_RIGHT: {
             // Do nothing if a stats read is currently in progress, otherwise
             // the system complains about to many read requests
-            if (pressed && m_bPopulatedOnce &&
-                LeaderboardManager::Instance()->isIdle()) {
+            if (pressed && m_bPopulatedOnce && PlatformLeaderboard.isIdle()) {
                 // CD - Added for audio
                 ui.PlayUISFX(eSFX_Scroll);
 
@@ -272,8 +268,7 @@ void UIScene_LeaderboardsMenu::handleInput(int iPad, int key, bool repeat,
         case ACTION_MENU_PAGEDOWN: {
             // Do nothing if a stats read is currently in progress, otherwise
             // the system complains about to many read requests
-            if (pressed && m_bPopulatedOnce &&
-                LeaderboardManager::Instance()->isIdle()) {
+            if (pressed && m_bPopulatedOnce && PlatformLeaderboard.isIdle()) {
                 // CD - Added for audio
                 ui.PlayUISFX(eSFX_Scroll);
 
@@ -286,8 +281,7 @@ void UIScene_LeaderboardsMenu::handleInput(int iPad, int key, bool repeat,
         case ACTION_MENU_X: {
             // Do nothing if a stats read is currently in progress, otherwise
             // the system complains about to many read requests
-            if (pressed && m_bPopulatedOnce &&
-                LeaderboardManager::Instance()->isIdle()) {
+            if (pressed && m_bPopulatedOnce && PlatformLeaderboard.isIdle()) {
                 // CD - Added for audio
                 ui.PlayUISFX(eSFX_Scroll);
 
@@ -367,23 +361,25 @@ void UIScene_LeaderboardsMenu::ReadStats(int startIndex) {
 
     switch (filtermode) {
         case IPlatformLeaderboard::eFM_TopRank: {
-            m_interface.ReadStats_TopRank(
+            PlatformLeaderboard.ReadStats_TopRank(
                 this, m_currentDifficulty,
                 (IPlatformLeaderboard::EStatsType)m_currentLeaderboard,
                 m_newEntryIndex, m_newReadSize);
         } break;
         case IPlatformLeaderboard::eFM_MyScore: {
             PlayerUID uid;
-            PlatformProfile.GetXUID(PlatformProfile.GetPrimaryPad(), &uid, true);
-            m_interface.ReadStats_MyScore(
+            PlatformProfile.GetXUID(PlatformProfile.GetPrimaryPad(), &uid,
+                                    true);
+            PlatformLeaderboard.ReadStats_MyScore(
                 this, m_currentDifficulty,
                 (IPlatformLeaderboard::EStatsType)m_currentLeaderboard,
                 uid /*ignored on PS3*/, m_newReadSize);
         } break;
         case IPlatformLeaderboard::eFM_Friends: {
             PlayerUID uid;
-            PlatformProfile.GetXUID(PlatformProfile.GetPrimaryPad(), &uid, true);
-            m_interface.ReadStats_Friends(
+            PlatformProfile.GetXUID(PlatformProfile.GetPrimaryPad(), &uid,
+                                    true);
+            PlatformLeaderboard.ReadStats_Friends(
                 this, m_currentDifficulty,
                 (IPlatformLeaderboard::EStatsType)m_currentLeaderboard,
                 uid /*ignored on PS3*/, m_newEntryIndex, m_newReadSize);
@@ -405,7 +401,7 @@ bool UIScene_LeaderboardsMenu::OnStatsReadComplete(
 
     m_isProcessingStatsRead = true;
 
-    // bool noResults = LeaderboardManager::Instance()->GetStatsState() !=
+    // bool noResults = PlatformLeaderboard.GetStatsState() !=
     // XboxIPlatformLeaderboard::eStatsState_Ready;
     bool ret;
 
@@ -415,7 +411,7 @@ bool UIScene_LeaderboardsMenu::OnStatsReadComplete(
     m_stats = results;
     ret = RetrieveStats();
 
-    // else LeaderboardManager::Instance()->SetStatsRetrieved(false);
+    // else PlatformLeaderboard.SetStatsRetrieved(false);
 
     PopulateLeaderboard(retIn);
 
@@ -483,7 +479,7 @@ bool UIScene_LeaderboardsMenu::RetrieveStats() {
             m_leaderboard.m_entries[entryIndex].m_bRequestedFriend = false;
         }
 
-        // LeaderboardManager::Instance()->SetStatsRetrieved(true);
+        // PlatformLeaderboard.SetStatsRetrieved(true);
 
         m_newEntryIndex = 0;
         m_newEntriesCount = NUM_ENTRIES;
@@ -491,11 +487,11 @@ bool UIScene_LeaderboardsMenu::RetrieveStats() {
         return true;
     }
 
-    // assert( LeaderboardManager::Instance()->GetStats() != nullptr );
+    // assert( PlatformLeaderboard.GetStats() != nullptr );
     // PXUSER_STATS_READ_RESULTS stats =
-    // LeaderboardManager::Instance()->GetStats(); if( m_currentFilter ==
+    // PlatformLeaderboard.GetStats(); if( m_currentFilter ==
     // IPlatformLeaderboard::eFM_Friends  )
-    // LeaderboardManager::Instance()->SortFriendStats();
+    // PlatformLeaderboard.SortFriendStats();
 
     bool isDistanceLeaderboard =
         LEADERBOARD_DESCRIPTORS[m_currentLeaderboard][m_currentDifficulty]
@@ -513,7 +509,7 @@ bool UIScene_LeaderboardsMenu::RetrieveStats() {
                 : m_numStats;
 
         if (m_leaderboard.m_totalEntryCount == 0 || m_newEntriesCount == 0) {
-            // LeaderboardManager::Instance()->SetStatsRetrieved(false);
+            // PlatformLeaderboard.SetStatsRetrieved(false);
             return false;
         }
 
@@ -734,8 +730,7 @@ void UIScene_LeaderboardsMenu::PopulateLeaderboard(
 
                     true,  // 4J-JEV: Has error message to display.
 
-                    app.GetString(idsErrorMessage), "", "", "", "", "",
-                    "");
+                    app.GetString(idsErrorMessage), "", "", "", "", "", "");
             } else {
                 m_listEntries.addDataSet(
                     isLast, m_leaderboard.m_entries[i].m_row,
@@ -826,7 +821,7 @@ void UIScene_LeaderboardsMenu::handleRequestMoreData(F64 startIndex, bool up) {
 
     if (m_leaderboard.m_totalEntryCount > 0 &&
         (item + 1) < GetEntryStartIndex()) {
-        if (LeaderboardManager::Instance()->isIdle()) {
+        if (PlatformLeaderboard.isIdle()) {
             int readIndex = (GetEntryStartIndex() + 1) - READ_SIZE;
             if (readIndex <= 0) readIndex = 1;
             assert(readIndex >= 1 &&
@@ -836,7 +831,7 @@ void UIScene_LeaderboardsMenu::handleRequestMoreData(F64 startIndex, bool up) {
     } else if (m_leaderboard.m_totalEntryCount > 0 &&
                (item + 1) >=
                    (GetEntryStartIndex() + m_leaderboard.m_entries.size())) {
-        if (LeaderboardManager::Instance()->isIdle()) {
+        if (PlatformLeaderboard.isIdle()) {
             int readIndex =
                 (GetEntryStartIndex() + 1) + m_leaderboard.m_entries.size();
             assert(readIndex >= 1 &&

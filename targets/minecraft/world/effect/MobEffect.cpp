@@ -9,8 +9,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include "minecraft/GameEnums.h"
 #include "java/Class.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/effect/AbsoptionMobEffect.h"

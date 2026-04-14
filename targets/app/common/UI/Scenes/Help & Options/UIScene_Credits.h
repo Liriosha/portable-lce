@@ -2,14 +2,14 @@
 
 #include <string>
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/Iggy/include/rrCore.h"
+#include "app/common/Iggy/include/rrCore.h"
 
 class UILayer;
 
@@ -21,10 +21,8 @@ class UILayer;
 #define DYNAMODE_FONT_CREDITS_COUNT 2
 #define PS3_DOLBY_CREDIT 4
 
-#if defined(_WINDOWS64) || defined(__linux__)
 #define MAX_CREDIT_STRINGS \
     (XBOXONE_CREDITS_COUNT + MILES_AND_IGGY_CREDITS_COUNT)
-#endif
 
 class UIScene_Credits : public UIScene {
 private:

@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "ServerChunkCache.h"
 
 #include <assert.h>
@@ -6,12 +5,12 @@
 #include <string.h>
 
 #include <algorithm>
+#include <atomic>
 
-#include "minecraft/IGameServices.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "ServerLevel.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/server/MinecraftServer.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/ProgressListener.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/biome/Biome.h"
@@ -21,6 +20,7 @@
 #include "minecraft/world/level/chunk/storage/ChunkStorage.h"
 #include "minecraft/world/level/chunk/storage/OldChunkStorage.h"
 #include "minecraft/world/level/dimension/Dimension.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/tile/Tile.h"
 
 ServerChunkCache::ServerChunkCache(ServerLevel* level, ChunkStorage* storage,
@@ -58,7 +58,7 @@ ServerChunkCache::~ServerChunkCache() {
     for (unsigned int i = 0; i < XZSIZE * XZSIZE; ++i) {
         delete m_unloadedCache[i];
     }
-    delete m_unloadedCache;
+    delete[] m_unloadedCache;
 #endif
 
     auto itEnd = m_loadedChunkList.end();
@@ -165,16 +165,10 @@ LevelChunk* ServerChunkCache::create(
             }
         }
 
-#if defined(_WIN64) || defined(__LP64__)
-        if (InterlockedCompareExchangeRelease64(
-                (int64_t*)&cache[idx], (int64_t)chunk, (int64_t)lastChunk) ==
-            (int64_t)lastChunk)
-#else
-        if (InterlockedCompareExchangeRelease(
-                (int32_t*)&cache[idx], (int32_t)chunk, (int32_t)lastChunk) ==
-            (int32_t)lastChunk)
-#endif
-        {
+        LevelChunk* expected = lastChunk;
+        if (std::atomic_ref<LevelChunk*>(cache[idx])
+                .compare_exchange_strong(expected, chunk,
+                                         std::memory_order_release)) {
             // Successfully updated the cache
             std::lock_guard<std::recursive_mutex> lock(m_csLoadCreate);
             // 4J - added - this will run a recalcHeightmap if source is a
@@ -823,7 +817,7 @@ bool ServerChunkCache::shouldSave() { return !level->noSave; }
 
 std::string ServerChunkCache::gatherStats() {
     return "ServerChunkCache: ";  // + toWString<int>(loadedChunks.size()) + "
-                                   // Drop: " + toWString<int>(toDrop.size());
+                                  // Drop: " + toWString<int>(toDrop.size());
 }
 
 std::vector<Biome::MobSpawnerData*>* ServerChunkCache::getMobsAt(
@@ -831,8 +825,9 @@ std::vector<Biome::MobSpawnerData*>* ServerChunkCache::getMobsAt(
     return source->getMobsAt(mobCategory, x, y, z);
 }
 
-TilePos* ServerChunkCache::findNearestMapFeature(
-    Level* level, const std::string& featureName, int x, int y, int z) {
+TilePos* ServerChunkCache::findNearestMapFeature(Level* level,
+                                                 const std::string& featureName,
+                                                 int x, int y, int z) {
     return source->findNearestMapFeature(level, featureName, x, y, z);
 }
 

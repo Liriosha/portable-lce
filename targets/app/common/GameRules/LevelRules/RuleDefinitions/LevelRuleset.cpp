@@ -1,9 +1,9 @@
 #include "LevelRuleset.h"
 
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/CompoundGameRuleDefinition.h"
 #include "app/common/GameRules/LevelRules/RuleDefinitions/NamedAreaRuleDefinition.h"
-#include "app/common/Localisation/StringTable.h"
+#include "minecraft/locale/StringTable.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
 
 class AABB;
 

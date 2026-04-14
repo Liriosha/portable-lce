@@ -1,16 +1,15 @@
-#include "minecraft/IGameServices.h"
 #include "Villager.h"
 
 #include <algorithm>
 #include <utility>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
 #include "Pos.h"
 #include "SharedConstants.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/effect/MobEffect.h"

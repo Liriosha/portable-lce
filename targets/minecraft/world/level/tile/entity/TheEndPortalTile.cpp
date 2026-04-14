@@ -2,10 +2,10 @@
 
 #include <string>
 
-#include "minecraft/IGameServices.h"
 #include "TheEndPortalTileEntity.h"
 #include "java/Class.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/core/particles/ParticleTypes.h"
 #include "minecraft/world/IconRegister.h"
 #include "minecraft/world/entity/Entity.h"

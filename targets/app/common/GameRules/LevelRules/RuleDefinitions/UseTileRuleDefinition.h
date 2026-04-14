@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include "GameRuleDefinition.h"
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
 #include "minecraft/Pos.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
 
 class UseTileRuleDefinition : public GameRuleDefinition {
 private:

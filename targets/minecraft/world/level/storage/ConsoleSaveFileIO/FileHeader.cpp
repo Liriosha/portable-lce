@@ -2,8 +2,6 @@
 
 // #define _DEBUG_FILE_HEADER
 
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
-
 #include <assert.h>
 #include <wchar.h>
 
@@ -12,12 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "util/Definitions.h"
 #include "java/System.h"
-
-extern LinuxGame app;
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/FileHeader.h"
 
 FileHeader::FileHeader() {
     lastFile = nullptr;
@@ -115,8 +109,8 @@ void FileHeader::WriteHeader(void* saveMem) {
     char* headerPosition = (char*)saveMem + headerOffset;
 
 #if defined(_DEBUG_FILE_HEADER)
-    Log::info("\n\nWrite file Header: Offset = %d, Size = %d\n",
-                    headerOffset, headerSize);
+    Log::info("\n\nWrite file Header: Offset = %d, Size = %d\n", headerOffset,
+              headerSize);
 #endif
 
     // Write the header
@@ -182,8 +176,8 @@ void FileHeader::ReadHeader(
     Log::info(
         "Read save file with orignal version: %d, and current version %d\n",
         m_originalSaveVersion, m_saveVersion);
-    Log::info("\n\nRead file Header: Offset = %d, Size = %d\n",
-                    headerOffset, headerSize);
+    Log::info("\n\nRead file Header: Offset = %d, Size = %d\n", headerOffset,
+              headerSize);
 #endif
 
     char* headerPosition = (char*)saveMem + headerOffset;
@@ -269,11 +263,10 @@ void FileHeader::ReadHeader(
                 lastFile = entry;
                 fileTable.push_back(entry);
 #if defined(_DEBUG_FILE_HEADER)
-                Log::info(
-                    "File: %s, Start = %d, Length = %d, End = %d\n",
-                    entry->data.filename, entry->data.startOffset,
-                    entry->data.length,
-                    entry->data.startOffset + entry->data.length);
+                Log::info("File: %s, Start = %d, Length = %d, End = %d\n",
+                          entry->data.filename, entry->data.startOffset,
+                          entry->data.length,
+                          entry->data.startOffset + entry->data.length);
 #endif
 
                 i += sizeof(FileEntrySaveDataV1);
@@ -282,8 +275,7 @@ void FileHeader::ReadHeader(
         } break;
         default:
 #if !defined(_CONTENT_PACKAGE)
-            Log::info("**********  Invalid save version %d\n",
-                            m_saveVersion);
+            Log::info("**********  Invalid save version %d\n", m_saveVersion);
             assert(0);
 #endif
             break;

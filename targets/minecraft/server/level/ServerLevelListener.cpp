@@ -1,11 +1,9 @@
-#include "minecraft/util/Log.h"
 #include "ServerLevelListener.h"
 
 #include <memory>
 #include <vector>
 
 #include "EntityTracker.h"
-#include "app/linux/LinuxGame.h"
 #include "PlayerChunkMap.h"
 #include "ServerLevel.h"
 #include "ServerPlayer.h"
@@ -16,6 +14,7 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/network/PlayerConnection.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/level/dimension/Dimension.h"
 

@@ -10,6 +10,7 @@
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/inventory/AbstractContainerMenu.h"
 #include "minecraft/world/inventory/CraftingMenu.h"
+#include "platform/stubs.h"
 
 class Player;
 

@@ -4,11 +4,10 @@
 
 #include <algorithm>
 
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "util/StringHelpers.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "minecraft/client/Minecraft.h"
@@ -24,6 +23,7 @@
 #include "minecraft/world/item/trading/MerchantRecipe.h"
 #include "minecraft/world/item/trading/MerchantRecipeList.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 IUIScene_TradingMenu::IUIScene_TradingMenu() {
     m_validOffersCount = 0;
@@ -47,8 +47,8 @@ bool IUIScene_TradingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
     if (pMinecraft->localgameModes[getPad()] != nullptr) {
-        Tutorial* tutorial =
-            pMinecraft->localgameModes[getPad()]->getTutorial();
+        Tutorial* tutorial = static_cast<Tutorial*>(
+            pMinecraft->localgameModes[getPad()]->getTutorial());
         if (tutorial != nullptr) {
             tutorial->handleUIInput(iAction);
             if (ui.IsTutorialVisible(getPad()) &&

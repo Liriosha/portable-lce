@@ -5,13 +5,12 @@
 #include <cstdlib>
 #include <utility>
 
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "platform/fs/fs.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "app/common/Game.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/FileInputStream.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "platform/fs/fs.h"
 
 void ArchiveFile::_readHeader(DataInputStream* dis) {
     int numberOfFiles = dis->readInt();
@@ -29,8 +28,7 @@ void ArchiveFile::_readHeader(DataInputStream* dis) {
         } else
             meta->isCompressed = false;
 
-        m_index.insert(
-            std::pair<std::string, PMetaData>(meta->filename, meta));
+        m_index.insert(std::pair<std::string, PMetaData>(meta->filename, meta));
     }
 }
 
@@ -114,10 +112,9 @@ std::vector<uint8_t> ArchiveFile::getFile(const std::string& filename) {
         const unsigned int fileSize = static_cast<unsigned int>(data->filesize);
         std::uint8_t* pbData = new std::uint8_t[fileSize == 0 ? 1 : fileSize];
         out = std::vector<uint8_t>(pbData, pbData + fileSize);
-        auto readResult =
-            PlatformFilesystem.readFileSegment(
-                m_sourcefile.getPath(), static_cast<std::size_t>(data->ptr),
-                out.data(), static_cast<std::size_t>(data->filesize));
+        auto readResult = PlatformFilesystem.readFileSegment(
+            m_sourcefile.getPath(), static_cast<std::size_t>(data->ptr),
+            out.data(), static_cast<std::size_t>(data->filesize));
 
         if (readResult.status != IPlatformFilesystem::ReadStatus::Ok) {
             app.DebugPrintf("Failed to read archive file segment\n");

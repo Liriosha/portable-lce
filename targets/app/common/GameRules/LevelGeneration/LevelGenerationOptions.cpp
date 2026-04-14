@@ -1,4 +1,4 @@
-#include "LevelGenerationOptions.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 
 #include <limits.h>
 #include <wchar.h>
@@ -6,28 +6,27 @@
 #include <unordered_set>
 #include <utility>
 
-#include "minecraft/GameEnums.h"
 #include "app/common/DLC/DLCGameRulesHeader.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
+#include "app/common/Game.h"
 #include "app/common/GameRules/GameRuleManager.h"
 #include "app/common/GameRules/LevelGeneration/ApplySchematicRuleDefinition.h"
 #include "app/common/GameRules/LevelGeneration/BiomeOverride.h"
 #include "app/common/GameRules/LevelGeneration/ConsoleGenerateStructure.h"
-#include "app/common/GameRules/LevelGeneration/ConsoleSchematicFile.h"
 #include "app/common/GameRules/LevelGeneration/StartFeature.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
-#include "app/common/Localisation/StringTable.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "java/File.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/Pos.h"
+#include "minecraft/locale/StringTable.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/chunk/LevelChunk.h"
 #include "minecraft/world/level/dimension/Dimension.h"
+#include "minecraft/world/level/levelgen/ConsoleSchematicFile.h"
 #include "minecraft/world/level/levelgen/structure/BoundingBox.h"
 #include "minecraft/world/phys/AABB.h"
 #include "platform/fs/fs.h"
@@ -441,8 +440,7 @@ ConsoleSchematicFile* LevelGenerationOptions::loadSchematicFile(
     auto it = m_schematics.find(filename);
     if (it != m_schematics.end()) {
 #if !defined(_CONTENT_PACKAGE)
-        printf("We have already loaded schematic file %s\n",
-                filename.c_str());
+        printf("We have already loaded schematic file %s\n", filename.c_str());
 #endif
         it->second->incrementRefCount();
         return it->second;
@@ -471,8 +469,7 @@ ConsoleSchematicFile* LevelGenerationOptions::getSchematicFile(
     return schematic;
 }
 
-void LevelGenerationOptions::releaseSchematicFile(
-    const std::string& filename) {
+void LevelGenerationOptions::releaseSchematicFile(const std::string& filename) {
     // 4J Stu - We don't want to delete them when done, but probably want to
     // keep a set of active schematics for the current world
     // auto it = m_schematics.find(filename);
@@ -556,7 +553,7 @@ void LevelGenerationOptions::loadBaseSaveData() {
                 [this](int pad, std::uint32_t err, std::uint32_t lic) {
                     return onPackMounted(pad, err, lic);
                 },
-                "WPACK") != ERROR_IO_PENDING) {
+                "WPACK") != 997 /* ERROR_IO_PENDING */) {
             // corrupt DLC
             setLoadedData();
             app.DebugPrintf("Failed to mount LGO DLC %d for pad %d\n",
@@ -577,7 +574,7 @@ int LevelGenerationOptions::onPackMounted(int iPad, uint32_t dwErr,
                                           uint32_t dwLicenceMask) {
     LevelGenerationOptions* lgo = this;
     lgo->m_bLoadingData = false;
-    if (dwErr != ERROR_SUCCESS) {
+    if (dwErr != 0 /* ERROR_SUCCESS */) {
         // corrupt DLC
         app.DebugPrintf("Failed to mount LGO DLC for pad %d: %d\n", iPad,
                         dwErr);
@@ -628,7 +625,8 @@ int LevelGenerationOptions::onPackMounted(int iPad, uint32_t dwErr,
                     uint8_t* pbData = (uint8_t*)new uint8_t[dwFileSize];
                     auto readResult = PlatformFilesystem.readFile(
                         save.getPath(), pbData, dwFileSize);
-                    if (readResult.status != IPlatformFilesystem::ReadStatus::Ok) {
+                    if (readResult.status !=
+                        IPlatformFilesystem::ReadStatus::Ok) {
                         app.FatalLoadError();
                     }
 

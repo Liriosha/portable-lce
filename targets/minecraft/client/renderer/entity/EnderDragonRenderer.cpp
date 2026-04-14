@@ -5,9 +5,7 @@
 #include <numbers>
 #include <vector>
 
-#include "platform/renderer/renderer.h"
 #include "SharedConstants.h"
-
 #include "java/Random.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/model/dragon/DragonModel.h"
@@ -21,6 +19,8 @@
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/boss/enderdragon/EnderCrystal.h"
 #include "minecraft/world/entity/boss/enderdragon/EnderDragon.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation EnderDragonRenderer::DRAGON_EXPLODING_LOCATION =
     ResourceLocation(TN_MOB_ENDERDRAGON_SHUFFLE);

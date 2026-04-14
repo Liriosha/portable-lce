@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "Spider.h"
 
 #include <math.h>
@@ -7,9 +6,9 @@
 #include <limits>
 #include <memory>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/Difficulty.h"
 #include "minecraft/world/effect/MobEffect.h"
 #include "minecraft/world/effect/MobEffectInstance.h"

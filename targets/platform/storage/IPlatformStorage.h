@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "PlatformTypes.h"
+#include "platform/PlatformTypes.h"
 
 #define MAX_DISPLAYNAME_LENGTH 128  // CELL_SAVEDATA_SYSP_SUBTITLE_SIZE on PS3
 #define MAX_DETAILS_LENGTH 128      // CELL_SAVEDATA_SYSP_SUBTITLE_SIZE on PS3
@@ -35,8 +35,6 @@ struct SAVE_DETAILS {
 using PSAVE_DETAILS = SAVE_DETAILS*;
 
 class C4JStringTable;
-
-
 
 class IPlatformStorage {
 public:
@@ -198,9 +196,10 @@ public:
                                unsigned int textDataBytes) = 0;
     virtual ESaveGameState SaveSaveData(
         std::function<int(const bool)> callback) = 0;
-    virtual void CopySaveDataToNewSave(
-        std::uint8_t* pbThumbnail, unsigned int cbThumbnail,
-        char* wchNewName, std::function<int(bool)> callback) = 0;
+    virtual void CopySaveDataToNewSave(std::uint8_t* pbThumbnail,
+                                       unsigned int cbThumbnail,
+                                       char* wchNewName,
+                                       std::function<int(bool)> callback) = 0;
     virtual ESaveGameState DoesSaveExist(bool* pbExists) = 0;
     virtual bool EnoughSpaceForAMinSaveGame() = 0;
     virtual void SetSaveMessageVPosition(float fY) = 0;
@@ -211,10 +210,9 @@ public:
     virtual PSAVE_DETAILS ReturnSavesInfo() = 0;
     virtual void ClearSavesInfo() = 0;
     virtual ESaveGameState LoadSaveDataThumbnail(
-        PSAVE_INFO pSaveInfo,
-        std::function<int(std::uint8_t* thumbnailData,
-                          unsigned int thumbnailBytes)>
-            callback) = 0;
+        PSAVE_INFO pSaveInfo, std::function<int(std::uint8_t* thumbnailData,
+                                                unsigned int thumbnailBytes)>
+                                  callback) = 0;
     virtual void GetSaveCacheFileInfo(unsigned int fileIndex,
                                       XCONTENT_DATA& xContentData) = 0;
     virtual void GetSaveCacheFileInfo(unsigned int fileIndex,
@@ -224,16 +222,14 @@ public:
         PSAVE_INFO pSaveInfo,
         std::function<int(const bool, const bool)> callback) = 0;
     virtual ESaveGameState DeleteSaveData(
-        PSAVE_INFO pSaveInfo,
-        std::function<int(const bool)> callback) = 0;
+        PSAVE_INFO pSaveInfo, std::function<int(const bool)> callback) = 0;
 
     // DLC
     virtual void RegisterMarketplaceCountsCallback(
         std::function<int(DLC_TMS_DETAILS*, int)> callback) = 0;
     virtual void SetDLCPackageRoot(char* pszDLCRoot) = 0;
     virtual EDLCStatus GetDLCOffers(
-        int iPad,
-        std::function<int(int, std::uint32_t, int)> callback,
+        int iPad, std::function<int(int, std::uint32_t, int)> callback,
         std::uint32_t dwOfferTypesBitmask =
             XMARKETPLACE_OFFERING_TYPE_CONTENT) = 0;
     virtual unsigned int CancelGetDLCOffers() = 0;
@@ -260,8 +256,7 @@ public:
     // Title storage
     virtual ETMSStatus ReadTMSFile(
         int iQuadrant, eGlobalStorage eStorageFacility, eTMS_FileType eFileType,
-        char* pwchFilename, std::uint8_t** ppBuffer,
-        unsigned int* pBufferSize,
+        char* pwchFilename, std::uint8_t** ppBuffer, unsigned int* pBufferSize,
         std::function<int(char*, int, bool, int)> callback = nullptr,
         int iAction = 0) = 0;
     virtual bool WriteTMSFile(int iQuadrant, eGlobalStorage eStorageFacility,

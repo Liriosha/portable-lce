@@ -1,13 +1,11 @@
-#include "app/common/Network/NetworkPlayerInterface.h"
+#include "PlayerInfoPacket.h"
+
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "minecraft/network/packet/PacketListener.h"
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/server/network/PlayerConnection.h"
-#ifndef __linux__
-#include <qnet.h>
-#endif  // __linux__
-#include "PlayerInfoPacket.h"
+#include "platform/network/network.h"
 
 PlayerInfoPacket::PlayerInfoPacket() {
     m_networkSmallId = 0;

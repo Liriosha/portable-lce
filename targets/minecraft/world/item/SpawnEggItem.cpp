@@ -1,16 +1,14 @@
-#include "minecraft/IGameServices.h"
 #include "SpawnEggItem.h"
 
 #include <unordered_map>
 #include <utility>
 
 #include "Facing.h"
-#include "app/common/Colours/ColourTable.h"
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
 #include "java/Class.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/Difficulty.h"
 #include "minecraft/world/IconRegister.h"
@@ -26,6 +24,7 @@
 #include "minecraft/world/level/tile/entity/MobSpawnerTileEntity.h"
 #include "minecraft/world/phys/HitResult.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 SpawnEggItem::SpawnEggItem(int id) : Item(id) {
     setMaxStackSize(16);  // 4J-PB brought forward. It is 64 on PC, but we'll
@@ -40,8 +39,8 @@ std::string SpawnEggItem::getHoverName(
 
     int nameId = EntityIO::getNameId(itemInstance->getAuxValue());
     if (nameId >= 0) {
-        elementName =
-            replaceAll(elementName, "{*CREATURE*}", gameServices().getString(nameId));
+        elementName = replaceAll(elementName, "{*CREATURE*}",
+                                 gameServices().getString(nameId));
         // elementName += " " + I18n.get("entity." + encodeId + ".name");
     } else {
         elementName = replaceAll(elementName, "{*CREATURE*}", "");

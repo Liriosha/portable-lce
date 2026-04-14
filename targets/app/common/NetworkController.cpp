@@ -4,10 +4,10 @@
 #include <cstring>
 #include <thread>
 
+#include "app/common/DLC/DLCPack.h"
 #include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/ProgressRenderer.h"
 #include "minecraft/client/multiplayer/MultiPlayerLevel.h"
@@ -21,6 +21,7 @@
 #include "platform/input/input.h"
 #include "platform/profile/profile.h"
 #include "platform/storage/storage.h"
+#include "strings.h"
 
 unsigned int NetworkController::m_uiLastSignInData = 0;
 

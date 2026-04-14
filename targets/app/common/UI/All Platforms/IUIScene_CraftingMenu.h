@@ -2,10 +2,10 @@
 #include <memory>
 
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/world/item/Item.h"
 #include "minecraft/world/item/crafting/Recipy.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
 
 class LocalPlayer;
 class ItemInstance;
@@ -110,8 +110,7 @@ protected:
     virtual void setIngredientDescriptionItem(
         int iPad, int index, std::shared_ptr<ItemInstance> item) = 0;
     virtual void setIngredientDescriptionRedBox(int index, bool show) = 0;
-    virtual void setIngredientDescriptionText(int index,
-                                              const char* text) = 0;
+    virtual void setIngredientDescriptionText(int index, const char* text) = 0;
     virtual void setShowCraftHSlot(int iIndex, bool show) = 0;
     virtual void showTabHighlight(int iIndex, bool show) = 0;
     virtual void setGroupText(const char* text) = 0;

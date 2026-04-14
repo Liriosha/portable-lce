@@ -1,10 +1,10 @@
 #include "UseTileRuleDefinition.h"
 
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
-#include "app/common/GameRules/LevelRules/RuleDefinitions/GameRuleDefinition.h"
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
+#include "app/common/Game.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
+#include "minecraft/world/level/GameRules/GameRuleDefinition.h"
+#include "util/StringHelpers.h"
 
 UseTileRuleDefinition::UseTileRuleDefinition() {
     m_tileId = -1;

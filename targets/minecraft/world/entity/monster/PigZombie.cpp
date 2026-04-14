@@ -1,12 +1,11 @@
-#include "minecraft/IGameServices.h"
 #include "PigZombie.h"
 
 #include <string>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/Difficulty.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"

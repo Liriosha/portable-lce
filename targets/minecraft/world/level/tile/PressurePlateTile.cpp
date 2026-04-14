@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/player/Player.h"
@@ -44,7 +43,7 @@ int PressurePlateTile::getSignalStrength(Level* level, int x, int y, int z) {
         entities = level->getEntitiesOfClass(typeid(Player), &at_bb);
     else
         assert(0);  // 4J-JEV: We're going to delete something at a random
-                         // location.
+                    // location.
 
     if (entities != nullptr && !entities->empty()) {
         for (auto it = entities->begin(); it != entities->end(); ++it) {

@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "HopperTileEntity.h"
 
 #include <stdint.h>
@@ -7,8 +6,8 @@
 #include <format>
 
 #include "Facing.h"
-#include "app/linux/LinuxGame.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/WorldlyContainer.h"
 #include "minecraft/world/entity/EntitySelector.h"
@@ -110,7 +109,8 @@ void HopperTileEntity::setItem(unsigned int slot,
 }
 
 std::string HopperTileEntity::getName() {
-    return hasCustomName() ? name : gameServices().getString(IDS_CONTAINER_HOPPER);
+    return hasCustomName() ? name
+                           : gameServices().getString(IDS_CONTAINER_HOPPER);
 }
 
 std::string HopperTileEntity::getCustomName() {

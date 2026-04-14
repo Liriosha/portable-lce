@@ -2,8 +2,8 @@
 
 #include <memory>
 
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/world/entity/ai/attributes/AttributeInstance.h"
 #include "minecraft/world/entity/ai/goal/BreedGoal.h"

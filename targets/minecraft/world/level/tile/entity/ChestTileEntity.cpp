@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "ChestTileEntity.h"
 
 #include <stdint.h>
@@ -6,12 +5,12 @@
 #include <vector>
 
 #include "Direction.h"
-#include "app/linux/LinuxGame.h"
 #include "SharedConstants.h"
 #include "TileEntity.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/network/packet/ContainerOpenPacket.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/world/CompoundContainer.h"
 #include "minecraft/world/Container.h"
 #include "minecraft/world/entity/player/Player.h"

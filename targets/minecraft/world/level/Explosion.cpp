@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "Explosion.h"
 
 #include <math.h>
@@ -7,11 +6,11 @@
 #include <utility>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/Random.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"
@@ -207,7 +206,7 @@ void Explosion::finalizeExplosion(
     if (destroyBlocks) {
         // toBlowArray.addAll(toBlow);
         //  TODO 4J Stu - Reverse iterator
-        Log::info("Finalizing explosion size %d\n", toBlow.size());
+        Log::info("Finalizing explosion size %zu\n", toBlow.size());
         static const int MAX_EXPLODE_PARTICLES = 50;
         // 4J - try and make at most MAX_EXPLODE_PARTICLES pairs of particles
         int fraction = (int)toBlowArray->size() / MAX_EXPLODE_PARTICLES;

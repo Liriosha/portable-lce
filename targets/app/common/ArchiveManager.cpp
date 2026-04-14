@@ -3,14 +3,14 @@
 #include <mutex>
 #include <string>
 
+#include "app/common/Game.h"
 #include "app/common/UI/All Platforms/ArchiveFile.h"
-#include "app/linux/LinuxGame.h"
 #include "java/File.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "platform/fs/fs.h"
 #include "platform/PlatformTypes.h"
+#include "platform/fs/fs.h"
 
 ArchiveManager::ArchiveManager()
     : m_mediaArchive(nullptr), m_dwRequiredTexturePackID(0) {}
@@ -18,14 +18,9 @@ ArchiveManager::ArchiveManager()
 void ArchiveManager::loadMediaArchive() {
     std::string mediapath = "";
 
-#if _WINDOWS64
     mediapath = "Common\\Media\\MediaWindows64.arc";
-#elif __linux__
-    mediapath = "app/common/Media/MediaLinux.arc";
-#endif
 
     if (!mediapath.empty()) {
-#if defined(__linux__)
         std::string exeDirW = PlatformFilesystem.getBasePath().string();
         std::string candidate = exeDirW + File::pathSeparator + mediapath;
         if (File(candidate).exists()) {
@@ -33,9 +28,6 @@ void ArchiveManager::loadMediaArchive() {
         } else {
             m_mediaArchive = new ArchiveFile(File(mediapath));
         }
-#else
-        m_mediaArchive = new ArchiveFile(File(mediapath));
-#endif
     }
 }
 

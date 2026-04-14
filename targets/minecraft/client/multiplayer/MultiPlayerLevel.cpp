@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "MultiPlayerLevel.h"
 
 #include <float.h>
@@ -10,22 +9,20 @@
 #include <string>
 #include <utility>
 
-#include "platform/PlatformTypes.h"
-#include "platform/input/input.h"
 #include "ClientConnection.h"
-#include "app/common/Audio/SoundEngine.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/linux/LinuxGame.h"
 #include "MultiPlayerChunkCache.h"
 #include "MultiPlayerLocalPlayer.h"
+#include "app/common/Audio/ConsoleSoundEngine.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/particle/FireworksParticles.h"
 #include "minecraft/client/particle/ParticleEngine.h"
 #include "minecraft/core/particles/ParticleTypes.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/level/ChunkPos.h"
@@ -39,6 +36,8 @@
 #include "minecraft/world/level/storage/SavedDataStorage.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
+#include "platform/PlatformTypes.h"
+#include "platform/input/input.h"
 
 class LevelSettings;
 class Scoreboard;
@@ -105,13 +104,13 @@ MultiPlayerLevel::~MultiPlayerLevel() {
 }
 
 void MultiPlayerLevel::unshareChunkAt(int x, int z) {
-    if (g_NetworkManager.IsHost()) {
+    if (NetworkService.IsHost()) {
         Level::getChunkAt(x, z)->stopSharingTilesAndData();
     }
 }
 
 void MultiPlayerLevel::shareChunkAt(int x, int z) {
-    if (g_NetworkManager.IsHost()) {
+    if (NetworkService.IsHost()) {
         Level::getChunkAt(x, z)->startSharingTilesAndData();
     }
 }
@@ -194,12 +193,12 @@ void MultiPlayerLevel::tick() {
     // chunks become unshared over time.
 
     int ls = dimension->getXZSize();
-    if (g_NetworkManager.IsHost()) {
+    if (NetworkService.IsHost()) {
         if (Level::reallyHasChunk(unshareCheckX - (ls / 2),
                                   unshareCheckZ - (ls / 2))) {
             LevelChunk* lc = Level::getChunk(unshareCheckX - (ls / 2),
                                              unshareCheckZ - (ls / 2));
-            if (g_NetworkManager.IsHost()) {
+            if (NetworkService.IsHost()) {
                 lc->startSharingTilesAndData(1000 * 60 * 2);
             }
         }
@@ -612,8 +611,8 @@ bool MultiPlayerLevel::doSetTileAndData(int x, int y, int z, int tile,
     // don't change things as the host might have been sharing data and so set
     // it already, but the renderer won't know to update
     if ((Level::setTileAndData(x, y, z, tile, data, Tile::UPDATE_ALL) ||
-         g_NetworkManager.IsHost())) {
-        if (g_NetworkManager.IsHost() && visuallyImportant) {
+         NetworkService.IsHost())) {
+        if (NetworkService.IsHost() && visuallyImportant) {
             // 4J Stu - This got removed from the tileUpdated function in TU14.
             // Adding it back here as we need it to handle the cases where the
             // chunk data is shared so the normal paths never call this

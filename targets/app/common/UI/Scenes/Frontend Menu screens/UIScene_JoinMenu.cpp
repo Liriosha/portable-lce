@@ -4,22 +4,22 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "app/common/App_Defines.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/SessionInfo.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "minecraft/GameEnums.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/GameTypes.h"
 #include "minecraft/world/Difficulty.h"
 #include "minecraft/world/level/LevelSettings.h"
 #include "platform/PlatformTypes.h"
+#include "platform/network/network.h"
 #include "platform/profile/profile.h"
 #include "strings.h"
 

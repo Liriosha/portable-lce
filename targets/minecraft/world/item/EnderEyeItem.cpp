@@ -1,13 +1,12 @@
-#include "minecraft/util/Log.h"
 #include "EnderEyeItem.h"
 
 #include <memory>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
 #include "minecraft/Direction.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/player/Abilities.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/entity/projectile/EyeOfEnderSignal.h"

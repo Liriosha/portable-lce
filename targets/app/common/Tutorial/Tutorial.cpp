@@ -6,9 +6,9 @@
 #include <algorithm>
 #include <compare>
 
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
+#include "TutorialMessage.h"
 #include "app/common/App_structs.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Constraints/TutorialConstraint.h"
 #include "app/common/Tutorial/Hints/DiggerItemHint.h"
 #include "app/common/Tutorial/Hints/LookAtEntityHint.h"
@@ -21,12 +21,9 @@
 #include "app/common/Tutorial/Tasks/RideEntityTask.h"
 #include "app/common/Tutorial/Tasks/TutorialTask.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "TutorialMessage.h"
-#include "util/Timer.h"
-#include "util/StringHelpers.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "java/Class.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLevel.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
@@ -45,7 +42,10 @@
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/level/tile/TreeTile.h"
 #include "minecraft/world/level/tile/WallTile.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
+#include "util/Timer.h"
 
 class MobEffect;
 
@@ -71,6 +71,8 @@ bool Tutorial::PopupMessageDetails::isSameContent(PopupMessageDetails* other) {
                          (m_promptString.compare(other->m_promptString) == 0);
     return textTheSame && titleTheSame && promptTheSame;
 }
+
+void ITutorial::staticInit() { Tutorial::staticCtor(); }
 
 void Tutorial::staticCtor() {
     //
@@ -2131,7 +2133,8 @@ void Tutorial::tick() {
     if (!m_allowShow) {
         if (currentTask[m_CurrentState] != nullptr &&
             (!currentTask[m_CurrentState]->AllowFade() ||
-             (lastMessageTime + std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) >
+             (lastMessageTime +
+              std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) >
                  time_util::clock::now())) {
             uiTempDisabled = true;
         }
@@ -2152,7 +2155,8 @@ void Tutorial::tick() {
     if (ui.IsPauseMenuDisplayed(m_iPad)) {
         if (currentTask[m_CurrentState] != nullptr &&
             (!currentTask[m_CurrentState]->AllowFade() ||
-             (lastMessageTime + std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) >
+             (lastMessageTime +
+              std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) >
                  time_util::clock::now())) {
             uiTempDisabled = true;
         }
@@ -2232,7 +2236,9 @@ void Tutorial::tick() {
                 isCurrentTask = false;
                 if ((!task->ShowMinimumTime() ||
                      (task->hasBeenActivated() &&
-                      (lastMessageTime + std::chrono::milliseconds(m_iTutorialMinimumDisplayMessageTime)) <
+                      (lastMessageTime +
+                       std::chrono::milliseconds(
+                           m_iTutorialMinimumDisplayMessageTime)) <
                           time_util::clock::now())) &&
                     task->isCompleted()) {
                     eTutorial_CompletionAction compAction =
@@ -2323,7 +2329,9 @@ void Tutorial::tick() {
                 }
                 if (task != nullptr && task->ShowMinimumTime() &&
                     task->hasBeenActivated() &&
-                    (lastMessageTime + std::chrono::milliseconds(m_iTutorialMinimumDisplayMessageTime)) <
+                    (lastMessageTime +
+                     std::chrono::milliseconds(
+                         m_iTutorialMinimumDisplayMessageTime)) <
                         time_util::clock::now()) {
                     task->setShownForMinimumTime();
 
@@ -2392,14 +2400,17 @@ void Tutorial::tick() {
         }
     }
 
-    if (m_hintDisplayed && (lastMessageTime + std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) <
-                               time_util::clock::now()) {
+    if (m_hintDisplayed &&
+        (lastMessageTime +
+         std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) <
+            time_util::clock::now()) {
         m_hintDisplayed = false;
     }
 
     if (currentFailedConstraint[m_CurrentState] == nullptr &&
         currentTask[m_CurrentState] != nullptr && (m_iTaskReminders != 0) &&
-        (lastMessageTime + std::chrono::milliseconds(m_iTaskReminders * m_iTutorialReminderTime)) <
+        (lastMessageTime + std::chrono::milliseconds(m_iTaskReminders *
+                                                     m_iTutorialReminderTime)) <
             time_util::clock::now()) {
         // Reminder
         PopupMessageDetails* message = new PopupMessageDetails();
@@ -2428,7 +2439,8 @@ bool Tutorial::setMessage(PopupMessageDetails* message) {
         m_lastMessageState == m_CurrentState &&
         message->isSameContent(m_lastMessage) &&
         (!message->m_isReminder ||
-         ((lastMessageTime + std::chrono::milliseconds(m_iTutorialReminderTime)) >
+         ((lastMessageTime +
+           std::chrono::milliseconds(m_iTutorialReminderTime)) >
               time_util::clock::now() &&
           message->m_isReminder))) {
         delete message;
@@ -2527,9 +2539,12 @@ bool Tutorial::setMessage(TutorialHint* hint, PopupMessageDetails* message) {
     if (message != nullptr && (message->m_forceDisplay || hintsOn) &&
         (!message->m_delay ||
          ((m_hintDisplayed &&
-           (now - m_lastHintDisplayedTime) > std::chrono::milliseconds(m_iTutorialHintDelayTime)) ||
+           (now - m_lastHintDisplayedTime) >
+               std::chrono::milliseconds(m_iTutorialHintDelayTime)) ||
           (!m_hintDisplayed &&
-           (now - lastMessageTime) > std::chrono::milliseconds(m_iTutorialMinimumDisplayMessageTime))))) {
+           (now - lastMessageTime) >
+               std::chrono::milliseconds(
+                   m_iTutorialMinimumDisplayMessageTime))))) {
         messageShown = setMessage(message);
 
         if (messageShown) {
@@ -2558,7 +2573,8 @@ void Tutorial::showTutorialPopup(bool show) {
     if (!show) {
         if (currentTask[m_CurrentState] != nullptr &&
             (!currentTask[m_CurrentState]->AllowFade() ||
-             (lastMessageTime + std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) >
+             (lastMessageTime +
+              std::chrono::milliseconds(m_iTutorialDisplayMessageTime)) >
                  time_util::clock::now())) {
             uiTempDisabled = true;
         }

@@ -5,25 +5,26 @@
 
 #include <memory>
 
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/Game.h"
+#include "app/common/Iggy/include/rrCore.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_TextInput.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 
 class UILayer;
 #ifdef _DEBUG_MENUS_ENABLED
-#include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
+#include "minecraft/server/MinecraftServer.h"
+#include "minecraft/server/ServerAction.h"
+#include "util/StringHelpers.h"
 
 UIScene_DebugSetCamera::UIScene_DebugSetCamera(int iPad, void* initData,
                                                UILayer* parentLayer)
@@ -32,38 +33,38 @@ UIScene_DebugSetCamera::UIScene_DebugSetCamera(int iPad, void* initData,
     initialiseMovie();
 
     int playerNo = 0;
-    currentPosition = new DebugSetCameraPosition();
-    currentPosition->player = playerNo;
+    currentPosition = {};
+    currentPosition.player = playerNo;
 
     Minecraft* pMinecraft = Minecraft::GetInstance();
     if (pMinecraft != nullptr) {
         Vec3 vec = pMinecraft->localplayers[playerNo]->getPos(1.0);
 
-        currentPosition->m_camX = vec.x;
-        currentPosition->m_camY =
+        currentPosition.m_camX = vec.x;
+        currentPosition.m_camY =
             vec.y -
             1.62;  // pMinecraft->localplayers[playerNo]->getHeadHeight();
-        currentPosition->m_camZ = vec.z;
+        currentPosition.m_camZ = vec.z;
 
-        currentPosition->m_yRot = pMinecraft->localplayers[playerNo]->yRot;
-        currentPosition->m_elev = pMinecraft->localplayers[playerNo]->xRot;
+        currentPosition.m_yRot = pMinecraft->localplayers[playerNo]->yRot;
+        currentPosition.m_elev = pMinecraft->localplayers[playerNo]->xRot;
     }
 
     char TempString[256];
 
-    snprintf(TempString, 256, "%f", currentPosition->m_camX);
+    snprintf(TempString, 256, "%f", currentPosition.m_camX);
     m_textInputX.init(TempString, eControl_CamX);
 
-    snprintf(TempString, 256, "%f", currentPosition->m_camY);
+    snprintf(TempString, 256, "%f", currentPosition.m_camY);
     m_textInputY.init(TempString, eControl_CamY);
 
-    snprintf(TempString, 256, "%f", currentPosition->m_camZ);
+    snprintf(TempString, 256, "%f", currentPosition.m_camZ);
     m_textInputZ.init(TempString, eControl_CamZ);
 
-    snprintf(TempString, 256, "%f", currentPosition->m_yRot);
+    snprintf(TempString, 256, "%f", currentPosition.m_yRot);
     m_textInputYRot.init(TempString, eControl_YRot);
 
-    snprintf(TempString, 256, "%f", currentPosition->m_elev);
+    snprintf(TempString, 256, "%f", currentPosition.m_elev);
     m_textInputElevation.init(TempString, eControl_Elevation);
 
     m_checkboxLockPlayer.init("Lock Player", eControl_LockPlayer,
@@ -78,9 +79,7 @@ UIScene_DebugSetCamera::UIScene_DebugSetCamera(int iPad, void* initData,
     m_labelYRotElev.init("Y-Rot & Elevation (Degs)");
 }
 
-std::string UIScene_DebugSetCamera::getMoviePath() {
-    return "DebugSetCamera";
-}
+std::string UIScene_DebugSetCamera::getMoviePath() { return "DebugSetCamera"; }
 
 void UIScene_DebugSetCamera::handleInput(int iPad, int key, bool repeat,
                                          bool pressed, bool released,
@@ -107,11 +106,13 @@ void UIScene_DebugSetCamera::handleInput(int iPad, int key, bool repeat,
 
 void UIScene_DebugSetCamera::handlePress(F64 controlId, F64 childId) {
     switch ((int)controlId) {
-        case eControl_Teleport:
-            app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                   eXuiServerAction_SetCameraLocation,
-                                   (void*)currentPosition);
-            break;
+        case eControl_Teleport: {
+            MinecraftServer::getInstance()->queueServerAction(
+                minecraft::server::SetCameraLocation{
+                    currentPosition.player, currentPosition.m_camX,
+                    currentPosition.m_camY, currentPosition.m_camZ,
+                    currentPosition.m_yRot, currentPosition.m_elev});
+        } break;
         case eControl_CamX:
         case eControl_CamY:
         case eControl_CamZ:
@@ -146,23 +147,23 @@ int UIScene_DebugSetCamera::handleKeyboardComplete(bool bRes) {
         switch (m_keyboardCallbackControl) {
             case eControl_CamX:
                 m_textInputX.setLabel(value);
-                currentPosition->m_camX = val;
+                currentPosition.m_camX = val;
                 break;
             case eControl_CamY:
                 m_textInputY.setLabel(value);
-                currentPosition->m_camY = val;
+                currentPosition.m_camY = val;
                 break;
             case eControl_CamZ:
                 m_textInputZ.setLabel(value);
-                currentPosition->m_camZ = val;
+                currentPosition.m_camZ = val;
                 break;
             case eControl_YRot:
                 m_textInputYRot.setLabel(value);
-                currentPosition->m_yRot = val;
+                currentPosition.m_yRot = val;
                 break;
             case eControl_Elevation:
                 m_textInputElevation.setLabel(value);
-                currentPosition->m_elev = val;
+                currentPosition.m_elev = val;
                 break;
             default:
                 break;

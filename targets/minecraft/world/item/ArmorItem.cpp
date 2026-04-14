@@ -5,10 +5,9 @@
 #include <format>
 #include <vector>
 
-#include "app/common/Colours/ColourTable.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "java/Class.h"
 #include "minecraft/client/Minecraft.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/core/BehaviorRegistry.h"
 #include "minecraft/core/BlockSource.h"
 #include "minecraft/core/DefaultDispenseItemBehavior.h"
@@ -30,8 +29,8 @@ class Icon;
 const int ArmorItem::healthPerSlot[] = {11, 16, 15, 13};
 
 const std::string ArmorItem::LEATHER_OVERLAYS[] = {
-    "helmetCloth_overlay", "chestplateCloth_overlay",
-    "leggingsCloth_overlay", "bootsCloth_overlay"};
+    "helmetCloth_overlay", "chestplateCloth_overlay", "leggingsCloth_overlay",
+    "bootsCloth_overlay"};
 
 const std::string ArmorItem::TEXTURE_EMPTY_SLOTS[] = {
     "slot_empty_helmet", "slot_empty_chestplate", "slot_empty_leggings",

@@ -2,7 +2,6 @@
 #include "minecraft/client/gui/Screen.h"
 #include "minecraft/stats/Achievements.h"
 
-
 class StatsCounter;
 
 class AchievementScreen : public Screen {
@@ -49,7 +48,7 @@ public:
 
 protected:
     virtual void buttonClicked(Button* button) override;
-    virtual void keyPressed(char eventCharacter, int eventKey);
+    virtual void keyPressed(char eventCharacter, int eventKey) override;
 
 public:
     virtual void render(int mouseX, int mouseY, float a) override;

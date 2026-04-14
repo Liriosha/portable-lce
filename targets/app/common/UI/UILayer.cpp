@@ -2,7 +2,8 @@
 
 #include <algorithm>
 
-#include "platform/renderer/renderer.h"
+#include "app/common/Game.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Components/UIComponent_Chat.h"
 #include "app/common/UI/Components/UIComponent_DebugUIConsole.h"
@@ -14,6 +15,7 @@
 #include "app/common/UI/Components/UIComponent_Tooltips.h"
 #include "app/common/UI/Components/UIComponent_TutorialPopup.h"
 #include "app/common/UI/Components/UIScene_HUD.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Scenes/Debug/UIScene_DebugCreateSchematic.h"
 #include "app/common/UI/Scenes/Debug/UIScene_DebugOptions.h"
 #include "app/common/UI/Scenes/Debug/UIScene_DebugOverlay.h"
@@ -76,9 +78,7 @@
 #include "app/common/UI/Scenes/UIScene_Timer.h"
 #include "app/common/UI/UIGroup.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "platform/renderer/renderer.h"
 
 UILayer::UILayer(UIGroup* parent) {
     m_parentGroup = parent;
@@ -138,7 +138,8 @@ void UILayer::tick() {
     }
 }
 
-void UILayer::render(S32 width, S32 height, IPlatformRenderer::eViewportType viewport) {
+void UILayer::render(S32 width, S32 height,
+                     IPlatformRenderer::eViewportType viewport) {
     if (!ui.IsExpectingOrReloadingSkin()) {
         for (auto it = m_components.begin(); it != m_components.end(); ++it) {
             auto itRef = m_componentRefCount.find((*it)->getSceneType());

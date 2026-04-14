@@ -9,8 +9,6 @@
 // derives from, and not to find the derived class itself (which should own the
 // virtual GetType function)
 
-#include "Player.h"
-
 #include <limits.h>
 #include <wchar.h>
 
@@ -22,21 +20,19 @@
 #include <vector>
 
 #include "Inventory.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/App_structs.h"
-#include "app/common/Minecraft_Macros.h"
-#include "app/common/DLC/DLCManager.h"
-#include "app/common/DLC/DLCSkinFile.h"
-#include "app/linux/LinuxGame.h"
+#include "Player.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "minecraft/Direction.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/Minecraft_Macros.h"
 #include "minecraft/Pos.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/model/HumanoidModel.h"
 #include "minecraft/client/renderer/Textures.h"
+#include "minecraft/client/skins/ISkinAssetData.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/Difficulty.h"
@@ -75,6 +71,7 @@
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/chunk/ChunkSource.h"
 #include "minecraft/world/level/dimension/Dimension.h"
+#include "minecraft/world/level/dlc/DLCConstants.h"
 #include "minecraft/world/level/material/Material.h"
 #include "minecraft/world/level/tile/BedTile.h"
 #include "minecraft/world/level/tile/Tile.h"
@@ -183,8 +180,10 @@ Player::Player(Level* level, const std::string& name) : LivingEntity(level) {
     m_xuid = INVALID_XUID;
     m_OnlineXuid = INVALID_XUID;
     // m_bShownOnMaps = true;
-    setShowOnMaps(
-        gameServices().getGameHostOption(eGameHostOption_Gamertags) != 0 ? true : false);
+    setShowOnMaps(gameServices().getGameHostOption(eGameHostOption_Gamertags) !=
+                          0
+                      ? true
+                      : false);
     m_bIsGuest = false;
 
     // 4J: Set UUID to name on none-XB1 consoles, may change in future but for
@@ -535,7 +534,8 @@ void Player::ride(std::shared_ptr<Entity> e) {
 
 void Player::setPlayerDefaultSkin(EDefaultSkins skin) {
 #if !defined(_CONTENT_PACKAGE)
-    printf("Setting default skin to %d for player %s\n", std::to_underlying(skin), name.c_str());
+    printf("Setting default skin to %d for player %s\n",
+           static_cast<int>(skin), name.c_str());
 #endif
     m_skinIndex = skin;
 }
@@ -543,7 +543,7 @@ void Player::setPlayerDefaultSkin(EDefaultSkins skin) {
 void Player::setCustomSkin(std::uint32_t skinId) {
 #if !defined(_CONTENT_PACKAGE)
     printf("Attempting to set skin to %08X for player %s\n", skinId,
-            name.c_str());
+           name.c_str());
 #endif
     EDefaultSkins playerSkin = EDefaultSkins::ServerSelected;
 
@@ -574,7 +574,8 @@ void Player::setCustomSkin(std::uint32_t skinId) {
     this->customTextureUrl = gameServices().getSkinPathFromId(skinId);
 
     // set the new player additional boxes
-    /*vector<ModelPart *> *pvModelParts=gameServices().getAdditionalModelParts(m_dwSkinId);
+    /*vector<ModelPart *>
+    *pvModelParts=gameServices().getAdditionalModelParts(m_dwSkinId);
 
     if(pvModelParts==nullptr)
     {
@@ -582,23 +583,23 @@ void Player::setCustomSkin(std::uint32_t skinId) {
     Log::info("Couldn't get model parts for skin %X\n",m_dwSkinId);
 
     // do we have it from the DLC pack?
-    DLCSkinFile *pDLCSkinFile =
-    gameServices().getDLCSkinFile(this->customTextureUrl);
+    ISkinAssetData *pSkinAsset =
+    gameServices().getSkinAssetData(this->customTextureUrl);
 
-    if(pDLCSkinFile!=nullptr)
+    if(pSkinAsset!=nullptr)
     {
             const int additionalBoxCount =
-    pDLCSkinFile->getAdditionalBoxesCount(); if(additionalBoxCount != 0)
+    pSkinAsset->getAdditionalBoxesCount(); if(additionalBoxCount != 0)
     {
     Log::info("Got model parts from DLCskin for skin %X\n",m_dwSkinId);
-    pvModelParts=gameServices().setAdditionalSkinBoxesFromVec(m_dwSkinId,pDLCSkinFile->getAdditionalBoxes());
+    pvModelParts=gameServices().setAdditionalSkinBoxesFromVec(m_dwSkinId,pSkinAsset->getAdditionalBoxes());
     this->SetAdditionalModelParts(pvModelParts);
     }
     else
     {
     this->SetAdditionalModelParts(nullptr);
     }
-    gameServices().setAnimOverrideBitmask(pDLCSkinFile->getSkinID(),pDLCSkinFile->getAnimOverrideBitmask());
+    gameServices().setAnimOverrideBitmask(pSkinAsset->getSkinID(),pSkinAsset->getAnimOverrideBitmask());
     }
     else
     {
@@ -664,7 +665,7 @@ void Player::setXuid(PlayerUID xuid) { m_xuid = xuid; }
 void Player::setCustomCape(std::uint32_t capeId) {
 #if !defined(_CONTENT_PACKAGE)
     printf("Attempting to set cape to %08X for player %s\n", capeId,
-            name.c_str());
+           name.c_str());
 #endif
 
     m_dwCapeId = capeId;
@@ -672,7 +673,8 @@ void Player::setCustomCape(std::uint32_t capeId) {
     if (capeId > 0) {
         this->customTextureUrl2 = Player::getCapePathFromId(capeId);
     } else {
-        MOJANG_DATA* pMojangData = gameServices().getMojangDataForXuid(getOnlineXuid());
+        MOJANG_DATA* pMojangData =
+            gameServices().getMojangDataForXuid(getOnlineXuid());
         if (pMojangData) {
             // Cape
             if (pMojangData->wchCape[0] != 0) {
@@ -762,7 +764,8 @@ void Player::ChangePlayerSkin() {
 }
 
 void Player::prepareCustomTextures() {
-    MOJANG_DATA* pMojangData = gameServices().getMojangDataForXuid(getOnlineXuid());
+    MOJANG_DATA* pMojangData =
+        gameServices().getMojangDataForXuid(getOnlineXuid());
 
     if (pMojangData) {
         // Skin
@@ -1519,8 +1522,8 @@ Player::BedSleepingResult Player::startSleepInBed(int x, int y, int z,
         // use the bed in daytime from far away and you'll get the message about
         // only sleeping at night
 
-        if (abs(this->x - x) > 3 || abs(this->y - y) > 2 ||
-            abs(this->z - z) > 3) {
+        if (std::abs(this->x - x) > 3 || std::abs(this->y - y) > 2 ||
+            std::abs(this->z - z) > 3) {
             // too far away
             return TOO_FAR_AWAY;
         }
@@ -2544,7 +2547,8 @@ bool Player::isAllowedToMine() {
 bool Player::isAllowedToAttackPlayers() {
     bool allowed = true;
     if (hasInvisiblePrivilege() ||
-        ((gameServices().getGameHostOption(eGameHostOption_TrustPlayers) == 0) &&
+        ((gameServices().getGameHostOption(eGameHostOption_TrustPlayers) ==
+          0) &&
          getPlayerGamePrivilege(
              Player::ePlayerGamePrivilege_CannotAttackPlayers))) {
         allowed = false;
@@ -2597,7 +2601,8 @@ bool Player::isAllowedToFly() {
 
 bool Player::isAllowedToIgnoreExhaustion() {
     bool allowed = false;
-    if ((gameServices().getGameHostOption(eGameHostOption_HostCanChangeHunger) != 0 &&
+    if ((gameServices().getGameHostOption(
+             eGameHostOption_HostCanChangeHunger) != 0 &&
          getPlayerGamePrivilege(Player::ePlayerGamePrivilege_ClassicHunger) !=
              0) ||
         (isAllowedToFly() && abilities.flying)) {
@@ -2617,7 +2622,8 @@ bool Player::isAllowedToTeleport() {
 
 bool Player::hasInvisiblePrivilege() {
     bool enabled = false;
-    if (gameServices().getGameHostOption(eGameHostOption_HostCanBeInvisible) != 0 &&
+    if (gameServices().getGameHostOption(eGameHostOption_HostCanBeInvisible) !=
+            0 &&
         getPlayerGamePrivilege(Player::ePlayerGamePrivilege_Invisible) != 0) {
         enabled = true;
     }
@@ -2626,7 +2632,8 @@ bool Player::hasInvisiblePrivilege() {
 
 bool Player::hasInvulnerablePrivilege() {
     bool enabled = false;
-    if (gameServices().getGameHostOption(eGameHostOption_HostCanBeInvisible) != 0 &&
+    if (gameServices().getGameHostOption(eGameHostOption_HostCanBeInvisible) !=
+            0 &&
         getPlayerGamePrivilege(Player::ePlayerGamePrivilege_Invulnerable) !=
             0) {
         enabled = true;
@@ -2673,7 +2680,8 @@ std::vector<ModelPart*>* Player::GetAdditionalModelParts() {
             customTextureUrl.substr(0, 3).compare("def") == 0;
 
         // see if we can find the parts
-        m_ppAdditionalModelParts = gameServices().getAdditionalModelParts(m_dwSkinId);
+        m_ppAdditionalModelParts =
+            gameServices().getAdditionalModelParts(m_dwSkinId);
 
         // If it's a default texture (which has no parts), we have the parts, or
         // we already have the texture (in which case we should have parts if
@@ -2694,24 +2702,25 @@ std::vector<ModelPart*>* Player::GetAdditionalModelParts() {
                 m_dwSkinId);
 
             // do we have it from the DLC pack?
-            DLCSkinFile* pDLCSkinFile =
-                gameServices().getDLCSkinFile(this->customTextureUrl);
+            ISkinAssetData* pSkinAsset =
+                gameServices().getSkinAssetData(this->customTextureUrl);
 
-            if (pDLCSkinFile != nullptr) {
+            if (pSkinAsset != nullptr) {
                 const int additionalBoxCount =
-                    pDLCSkinFile->getAdditionalBoxesCount();
+                    pSkinAsset->getAdditionalBoxesCount();
                 if (additionalBoxCount != 0) {
                     Log::info(
                         "m_bCheckedForModelParts Got model parts from DLCskin "
                         "for skin %X\n",
                         m_dwSkinId);
-                    m_ppAdditionalModelParts = gameServices().setAdditionalSkinBoxesFromVec(
-                        m_dwSkinId, pDLCSkinFile->getAdditionalBoxes());
+                    m_ppAdditionalModelParts =
+                        gameServices().setAdditionalSkinBoxesFromVec(
+                            m_dwSkinId, pSkinAsset->getAdditionalBoxes());
                 }
 
                 gameServices().setAnimOverrideBitmask(
-                    pDLCSkinFile->getSkinID(),
-                    pDLCSkinFile->getAnimOverrideBitmask());
+                    pSkinAsset->getSkinID(),
+                    pSkinAsset->getAnimOverrideBitmask());
 
                 m_bCheckedForModelParts = true;
             }

@@ -1,7 +1,4 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "LevelRenderer.h"
-
 
 #include <limits.h>
 #include <stdio.h>
@@ -15,24 +12,18 @@
 #include <ranges>
 #include <utility>
 
-#include "platform/PlatformTypes.h"
-#include "platform/input/input.h"
-#include "platform/renderer/renderer.h"
 #include "Chunk.h"
 #include "GameRenderer.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/Audio/SoundEngine.h"
-#include "app/common/Colours/ColourTable.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/linux/LinuxGame.h"
-#include "util/FrameProfiler.h"
-#include "minecraft/client/renderer/MobSkinMemTextureProcessor.h"
 #include "Tesselator.h"
-#include "util/StringHelpers.h"
+#include "app/common/Audio/ConsoleSoundEngine.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "java/System.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/MemoryTracker.h"
@@ -69,6 +60,7 @@
 #include "minecraft/client/particle/SuspendedTownParticle.h"
 #include "minecraft/client/particle/TerrainParticle.h"
 #include "minecraft/client/player/LocalPlayer.h"
+#include "minecraft/client/renderer/MobSkinMemTextureProcessor.h"
 #include "minecraft/client/renderer/OffsettedRenderList.h"
 #include "minecraft/client/renderer/Textures.h"
 #include "minecraft/client/renderer/TileRenderer.h"
@@ -79,9 +71,10 @@
 #include "minecraft/client/renderer/entity/EntityRenderDispatcher.h"
 #include "minecraft/client/renderer/texture/TextureAtlas.h"
 #include "minecraft/client/renderer/tileentity/TileEntityRenderDispatcher.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/IconRegister.h"
 #include "minecraft/world/entity/Entity.h"
@@ -108,6 +101,12 @@
 #include "minecraft/world/phys/AABB.h"
 #include "minecraft/world/phys/HitResult.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/PlatformTypes.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
+#include "util/FrameProfiler.h"
+#include "util/StringHelpers.h"
 
 class Icon;
 class ItemInstance;
@@ -681,16 +680,16 @@ void LevelRenderer::renderEntities(Vec3* cam, Culler* culler, float a) {
 
 std::string LevelRenderer::gatherStats1() {
     return "C: " + toWString<int>(renderedChunks) + "/" +
-           toWString<int>(totalChunks) + ". F: " +
-           toWString<int>(offscreenChunks) + ", O: " +
-           toWString<int>(occludedChunks) + ", E: " +
-           toWString<int>(emptyChunks);
+           toWString<int>(totalChunks) +
+           ". F: " + toWString<int>(offscreenChunks) +
+           ", O: " + toWString<int>(occludedChunks) +
+           ", E: " + toWString<int>(emptyChunks);
 }
 
 std::string LevelRenderer::gatherStats2() {
     return "E: " + toWString<int>(renderedEntities) + "/" +
-           toWString<int>(totalEntities) + ". B: " +
-           toWString<int>(culledEntities) + ", I: " +
+           toWString<int>(totalEntities) +
+           ". B: " + toWString<int>(culledEntities) + ", I: " +
            toWString<int>((totalEntities - culledEntities) - renderedEntities);
 }
 
@@ -862,8 +861,8 @@ int LevelRenderer::renderChunks(int from, int to, int layer, double alpha) {
             // 4jcraft: replaced glPushMatrix/glTranslatef/glPopMatrix per chunk
             // no more full MVP upload per chunk, can also be bkwards compat
             PlatformRenderer.SetChunkOffset((float)chunk->chunk->x,
-                                         (float)chunk->chunk->y,
-                                         (float)chunk->chunk->z);
+                                            (float)chunk->chunk->y,
+                                            (float)chunk->chunk->z);
 
             if (PlatformRenderer.CBuffCall(list, first)) {
                 first = false;
@@ -1168,7 +1167,7 @@ void LevelRenderer::renderClouds(float alpha) {
 
     // if the primary player has clouds off, so do all players on this machine
     if (gameServices().getGameSettings(PlatformInput.GetPrimaryPad(),
-                            eGameSetting_Clouds) == 0) {
+                                       eGameSetting_Clouds) == 0) {
         return;
     }
 
@@ -2223,7 +2222,8 @@ void LevelRenderer::renderHitOutline(std::shared_ptr<Player> player,
         const float ss = 0.002f;
 
         // 4J-PB - If Display HUD is false, don't render the hit outline
-        if (gameServices().getGameSettings(iPad, eGameSetting_DisplayHUD) == 0) return;
+        if (gameServices().getGameSettings(iPad, eGameSetting_DisplayHUD) == 0)
+            return;
         PlatformRenderer.StateSetLightingEnable(false);
         glDisable(GL_TEXTURE_2D);
 
@@ -3518,7 +3518,7 @@ void LevelRenderer::levelEvent(std::shared_ptr<Player> source, int type, int x,
                 if (!mc->soundEngine->GetIsPlayingStreamingGameMusic()) {
                     level[playerIndex]->playStreamingMusic(
                         "", x, y, z);  // 4J - used to pass nullptr, but using
-                                        // empty string here now instead
+                                       // empty string here now instead
                 }
             }
             mc->localplayers[playerIndex]->updateRichPresence();

@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "util/StringHelpers.h"
 #include "java/Class.h"
 #include "java/JavaMath.h"
 #include "minecraft/network/packet/ComplexItemDataPacket.h"
@@ -26,6 +25,7 @@
 #include "minecraft/world/level/saveddata/MapItemSavedData.h"
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "util/StringHelpers.h"
 
 class SavedData;
 

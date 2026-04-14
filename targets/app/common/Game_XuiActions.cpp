@@ -1,16 +1,15 @@
-#include "app/common/App_Defines.h"
+#include "app/common/Audio/SoundEngine.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/Game.h"
 #include "app/common/GameRules/GameRuleManager.h"
 #include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/UIScene_PauseMenu.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "minecraft/GameEnums.h"
+#include "minecraft/GameTypes.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/client/ProgressRenderer.h"
@@ -28,10 +27,12 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/stats/StatsCounter.h"
 #include "platform/PlatformTypes.h"
+#include "platform/game/game.h"
+#include "platform/network/network.h"
 #include "platform/profile/profile.h"
 #include "platform/storage/storage.h"
 #include "util/StringHelpers.h"
-#include "app/common/Audio/SoundEngine.h"
+#include "strings.h"
 
 void Game::HandleXuiActions(void) {
     eXuiAction eAction;
@@ -215,8 +216,8 @@ void Game::HandleXuiActions(void) {
 
                     // app.CloseAllPlayersXuiScenes();
                     //  Hide the other players scenes
-                    ui.ShowOtherPlayersBaseScene(PlatformProfile.GetPrimaryPad(),
-                                                 false);
+                    ui.ShowOtherPlayersBaseScene(
+                        PlatformProfile.GetPrimaryPad(), false);
 
                     // This just allows it to be shown
                     if (pMinecraft
@@ -454,13 +455,13 @@ void Game::HandleXuiActions(void) {
                         for (int j = 0; j < XUSER_MAX_COUNT; j++) {
                             if (pMinecraft->localplayers[j]) {
                                 if (g_NetworkManager.IsLocalGame()) {
-                                    app.SetRichPresenceContext(
+                                    PlatformGame.SetRichPresenceContext(
                                         j, CONTEXT_GAME_STATE_BLANK);
                                     PlatformProfile.SetCurrentGameActivity(
                                         j, CONTEXT_PRESENCE_MULTIPLAYEROFFLINE,
                                         false);
                                 } else {
-                                    app.SetRichPresenceContext(
+                                    PlatformGame.SetRichPresenceContext(
                                         j, CONTEXT_GAME_STATE_BLANK);
                                     PlatformProfile.SetCurrentGameActivity(
                                         j, CONTEXT_PRESENCE_MULTIPLAYER, false);
@@ -468,7 +469,8 @@ void Game::HandleXuiActions(void) {
                             }
                         }
                     } else {
-                        app.SetRichPresenceContext(i, CONTEXT_GAME_STATE_BLANK);
+                        PlatformGame.SetRichPresenceContext(
+                            i, CONTEXT_GAME_STATE_BLANK);
                         if (g_NetworkManager.IsLocalGame()) {
                             PlatformProfile.SetCurrentGameActivity(
                                 i, CONTEXT_PRESENCE_MULTIPLAYER_1POFFLINE,
@@ -992,10 +994,12 @@ void Game::HandleXuiActions(void) {
                         // need to stop the streaming audio - by playing
                         // streaming audio from the default texture pack now
                         // reset the streaming sounds back to the normal ones
-                        pMinecraft->soundEngine->SetStreamingSounds(
-                            eStream_Overworld_Calm1, eStream_Overworld_piano3,
-                            eStream_Nether1, eStream_Nether4,
-                            eStream_end_dragon, eStream_end_end, eStream_CD_1);
+                        static_cast<SoundEngine*>(pMinecraft->soundEngine)
+                            ->SetStreamingSounds(
+                                eStream_Overworld_Calm1,
+                                eStream_Overworld_piano3, eStream_Nether1,
+                                eStream_Nether4, eStream_end_dragon,
+                                eStream_end_end, eStream_CD_1);
                         pMinecraft->soundEngine->playStreaming("", 0, 0, 0, 1,
                                                                1);
 
@@ -1148,7 +1152,8 @@ void Game::HandleXuiActions(void) {
                 } break;
                 case eAppAction_SetDefaultOptions:
                     SetAction(i, eAppAction_Idle);
-                    SetDefaultOptions((IPlatformProfile::PROFILESETTINGS*)param, i);
+                    SetDefaultOptions((IPlatformProfile::PROFILESETTINGS*)param,
+                                      i);
 
                     // if the profile data has been changed, then force a
                     // profile write It seems we're allowed to break the 5
@@ -1211,10 +1216,11 @@ void Game::HandleXuiActions(void) {
                 case eAppAction_FailedToJoinNoPrivileges: {
                     unsigned int uiIDA[1];
                     uiIDA[0] = IDS_CONFIRM_OK;
-                    IPlatformStorage::EMessageResult result = ui.RequestErrorMessage(
-                        IDS_NO_MULTIPLAYER_PRIVILEGE_TITLE,
-                        IDS_NO_MULTIPLAYER_PRIVILEGE_JOIN_TEXT, uiIDA, 1,
-                        PlatformProfile.GetPrimaryPad());
+                    IPlatformStorage::EMessageResult result =
+                        ui.RequestErrorMessage(
+                            IDS_NO_MULTIPLAYER_PRIVILEGE_TITLE,
+                            IDS_NO_MULTIPLAYER_PRIVILEGE_JOIN_TEXT, uiIDA, 1,
+                            PlatformProfile.GetPrimaryPad());
                     if (result != IPlatformStorage::EMessage_Busy)
                         SetAction(i, eAppAction_Idle);
                 } break;

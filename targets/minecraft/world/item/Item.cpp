@@ -1,6 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
-
 #include "Item.h"
 
 #include <math.h>
@@ -9,10 +6,11 @@
 
 #include "HangingEntityItem.h"
 #include "MapItem.h"
-#include "app/linux/LinuxGame.h"
 #include "java/Class.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/stats/Stats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/Icon.h"
 #include "minecraft/world/IconRegister.h"
@@ -1714,7 +1712,7 @@ attrAttrModMap* Item::getDefaultAttributeModifiers() {
         4J: These are necesary on the PS3.
                 (and 4 and Vita).
 */
-#if (0 || 0 || 0 || defined __linux__)
+#if 1
 const int Item::shovel_iron_Id;
 const int Item::pickAxe_iron_Id;
 const int Item::hatchet_iron_Id;

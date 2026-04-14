@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#include "util/StringHelpers.h"
 #include "java/Class.h"
 #include "java/Random.h"
 #include "minecraft/core/particles/ParticleTypes.h"
@@ -50,6 +49,7 @@
 #include "nbt/CompoundTag.h"
 #include "nbt/FloatTag.h"
 #include "nbt/ListTag.h"
+#include "util/StringHelpers.h"
 
 const float Mob::MAX_WEARING_ARMOR_CHANCE = 0.15f;
 const float Mob::MAX_PICKUP_LOOT_CHANCE = 0.55f;
@@ -763,9 +763,9 @@ bool Mob::interact(std::shared_ptr<Player> player) {
                 if (shared_from_this()->instanceof(eTYPE_TAMABLE_ANIMAL) &&
                     (tamableAnimal = std::dynamic_pointer_cast<TamableAnimal>(
                          shared_from_this()))
-                        ->isTame())  // 4J-JEV: excuse the assignment operator
-                                     // in here, don't want to dyn-cast if it's
-                                     // avoidable.
+                        ->isTame())  // 4J-JEV: excuse the assignment
+                                     // operator in here, don't want to
+                                     // dyn-cast if it's avoidable.
                 {
                     if (player->getUUID().compare(
                             tamableAnimal->getOwnerUUID()) == 0) {
@@ -862,8 +862,7 @@ void Mob::restoreLeashFromSave() {
                 }
             }
             delete livingEnts;
-        } else if (leashInfoTag->contains("X") &&
-                   leashInfoTag->contains("Y") &&
+        } else if (leashInfoTag->contains("X") && leashInfoTag->contains("Y") &&
                    leashInfoTag->contains("Z")) {
             int x = leashInfoTag->getInt("X");
             int y = leashInfoTag->getInt("Y");

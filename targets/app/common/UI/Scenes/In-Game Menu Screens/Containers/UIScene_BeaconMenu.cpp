@@ -4,20 +4,21 @@
 
 #include <memory>
 
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/Controls/UIControl_BeaconEffectButton.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/LinuxGame.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/inventory/AbstractContainerMenu.h"
 #include "minecraft/world/inventory/BeaconMenu.h"
 #include "minecraft/world/item/Item.h"
 #include "minecraft/world/item/ItemInstance.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
 #include "strings.h"
 
 class UILayer;
@@ -61,7 +62,7 @@ UIScene_BeaconMenu::UIScene_BeaconMenu(int iPad, void* _initData,
 
     m_slotListActivatorIcons.addSlots(m_menu->getSize(), 4);
 
-    // app.SetRichPresenceContext(m_iPad,CONTEXT_GAME_STATE_BEACON);
+    // PlatformGame.SetRichPresenceContext(m_iPad,CONTEXT_GAME_STATE_BEACON);
 
     delete initData;
 }

@@ -7,17 +7,16 @@
 #include <string>
 #include <vector>
 
-#include "app/common/Console_Debug_enum.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
+#include "app/common/UI/ConsoleUIController.h"
+#include "minecraft/Console_Debug_enum.h"
 #include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/player/LocalPlayer.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/entity/player/Player.h"
@@ -154,8 +153,8 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
     Minecraft* pMinecraft = Minecraft::GetInstance();
 
     if (pMinecraft->localgameModes[getPad()] != nullptr) {
-        Tutorial* tutorial =
-            pMinecraft->localgameModes[getPad()]->getTutorial();
+        Tutorial* tutorial = static_cast<Tutorial*>(
+            pMinecraft->localgameModes[getPad()]->getTutorial());
         if (tutorial != nullptr) {
             tutorial->handleUIInput(iAction);
             if (ui.IsTutorialVisible(getPad()) &&
@@ -212,8 +211,9 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
                         // iIcon=pTempItemInst->getItem()->getIcon(pTempItemInst->getAuxValue());
 
                         if (pMinecraft->localgameModes[iPad] != nullptr) {
-                            Tutorial* tutorial =
-                                pMinecraft->localgameModes[iPad]->getTutorial();
+                            Tutorial* tutorial = static_cast<Tutorial*>(
+                                pMinecraft->localgameModes[iPad]
+                                    ->getTutorial());
                             if (tutorial != nullptr) {
                                 tutorial->onCrafted(pTempItemInst);
                             }
@@ -247,8 +247,8 @@ bool IUIScene_CraftingMenu::handleKeyDown(int iPad, int iAction, bool bRepeat) {
                     // iIcon=pTempItemInst->getItem()->getIcon(pTempItemInst->getAuxValue());
 
                     if (pMinecraft->localgameModes[iPad] != nullptr) {
-                        Tutorial* tutorial =
-                            pMinecraft->localgameModes[iPad]->getTutorial();
+                        Tutorial* tutorial = static_cast<Tutorial*>(
+                            pMinecraft->localgameModes[iPad]->getTutorial());
                         if (tutorial != nullptr) {
                             tutorial->createItemSelected(
                                 pTempItemInst,
@@ -876,7 +876,7 @@ void IUIScene_CraftingMenu::CheckRecipesAvailable() {
                         app.DebugPrintf("Need more H slots - ");
 #if !defined(_CONTENT_PACKAGE)
                         fprintf(
-                            stderr,
+                            stderr, "%s",
                             app.GetString(pTempItemInst->getDescriptionId()));
 #endif
                         app.DebugPrintf("\n");

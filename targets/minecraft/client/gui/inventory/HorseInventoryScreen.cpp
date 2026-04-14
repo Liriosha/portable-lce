@@ -3,7 +3,6 @@
 #include <cmath>
 #include <string>
 
-
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Font.h"
@@ -15,6 +14,7 @@
 #include "minecraft/world/entity/animal/EntityHorse.h"
 #include "minecraft/world/entity/player/Inventory.h"
 #include "minecraft/world/inventory/HorseInventoryMenu.h"
+#include "platform/stubs.h"
 
 class EntityHorse;
 

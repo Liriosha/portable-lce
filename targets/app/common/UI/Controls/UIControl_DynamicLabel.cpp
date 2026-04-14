@@ -1,13 +1,13 @@
 #include "UIControl_DynamicLabel.h"
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_Base.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/Iggy/include/rrCore.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "util/StringHelpers.h"
 
 UIControl_DynamicLabel::UIControl_DynamicLabel() {}
@@ -26,8 +26,7 @@ bool UIControl_DynamicLabel::setupControl(UIScene* scene, IggyValuePath* parent,
     return success;
 }
 
-void UIControl_DynamicLabel::addText(const std::string& text,
-                                     bool bLastEntry) {
+void UIControl_DynamicLabel::addText(const std::string& text, bool bLastEntry) {
     IggyDataValue result;
     IggyDataValue value[2];
 

@@ -4,20 +4,21 @@
 
 #include <memory>
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_MinecraftHorse.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/Iggy/include/iggy.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/world/Container.h"
 #include "minecraft/world/entity/animal/EntityHorse.h"
@@ -77,7 +78,7 @@ UIScene_HorseInventoryMenu::UIScene_HorseInventoryMenu(int iPad,
 
     setIgnoreInput(false);
 
-    // app.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_HORSE);
+    // PlatformGame.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_HORSE);
 }
 
 std::string UIScene_HorseInventoryMenu::getMoviePath() {

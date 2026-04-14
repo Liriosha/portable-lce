@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
 #include "XboxStructureActionPlaceBlock.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
 
 class AddItemRuleDefinition;
 class StructurePiece;

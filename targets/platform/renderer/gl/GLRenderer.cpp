@@ -1,15 +1,15 @@
 #include "GLRenderer.h"
 
-#include "PlatformTypes.h"
 #include "SDL.h"
 #include "SDL_error.h"
 #include "SDL_events.h"
 #include "SDL_stdinc.h"
 #include "SDL_video.h"
-
 #include "java/ByteBuffer.h"
 #include "java/FloatBuffer.h"
 #include "java/IntBuffer.h"
+#include "platform/PlatformTypes.h"
+#include "platform/renderer/renderer.h"
 
 // undefine macros from header to avoid argument mismatch
 #undef glGenTextures
@@ -24,8 +24,6 @@
 #undef glNormalPointer
 #undef glColorPointer
 #undef glVertexPointer
-#undef glGenQueriesARB
-#undef glGetQueryObjectuARB
 #undef glEnable
 #undef glDisable
 #undef glBlendFunc
@@ -41,21 +39,27 @@
 #include "stb_image.h"
 
 #define GLM_FORCE_RADIANS
-#include <dlfcn.h>
-#include <pthread.h>
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <mutex>
+#include <optional>
+#include <thread>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-GLRenderer gl_renderer_instance;
-IPlatformRenderer& PlatformRenderer = gl_renderer_instance;
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+namespace platform_internal {
+IPlatformRenderer& PlatformRenderer_get() {
+    static GLRenderer instance;
+    return instance;
+}
+}  // namespace platform_internal
 
 // MARK: Shaders
 
@@ -94,17 +98,18 @@ static int s_reqWidth = 1920;
 static int s_reqHeight = 1080;
 static bool s_fullscreen = false;
 
-static pthread_key_t s_glCtxKey;
-static pthread_once_t s_glCtxKeyOnce = PTHREAD_ONCE_INIT;
-static void makeGLCtxKey() { pthread_key_create(&s_glCtxKey, nullptr); }
+static thread_local SDL_GLContext s_glCtx = nullptr;
+
+static std::once_flag s_glCtxKeyOnce;
+
 static const int MAX_SHARED_CTXS = 6;
 static SDL_Window* s_sharedWins[MAX_SHARED_CTXS] = {};
 static SDL_GLContext s_sharedCtxs[MAX_SHARED_CTXS] = {};
 static int s_sharedCtxCount = 0;
 static int s_nextSharedCtx = 0;
-static pthread_mutex_t s_sharedMtx = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t s_glCallMtx = PTHREAD_MUTEX_INITIALIZER;
-static pthread_t s_mainThread;
+static std::mutex s_sharedMtx;
+static std::mutex s_glCallMtx;
+static std::thread::id s_mainThreadId;
 static bool s_mainThreadSet = false;
 static thread_local unsigned int s_rs_dirty_mask = 0xFFFFFFFF;
 
@@ -384,8 +389,8 @@ static void glShadowSetDepthTest(bool e) {
 }
 
 static void glShadowSetBlendFunc(GLint s, GLint d) {
-    if (!(s_gl_shadow_mask & SHADOW_BLEND_FUNC) ||
-        s_gl_state.blendSrc != s || s_gl_state.blendDst != d) {
+    if (!(s_gl_shadow_mask & SHADOW_BLEND_FUNC) || s_gl_state.blendSrc != s ||
+        s_gl_state.blendDst != d) {
         ::glBlendFunc(s, d);
         s_gl_state.blendSrc = s;
         s_gl_state.blendDst = d;
@@ -394,8 +399,7 @@ static void glShadowSetBlendFunc(GLint s, GLint d) {
 }
 
 static void glShadowSetDepthMask(GLboolean e) {
-    if (!(s_gl_shadow_mask & SHADOW_DEPTH_MASK) ||
-        s_gl_state.depthMask != e) {
+    if (!(s_gl_shadow_mask & SHADOW_DEPTH_MASK) || s_gl_state.depthMask != e) {
         ::glDepthMask(e);
         s_gl_state.depthMask = e;
         s_gl_shadow_mask |= SHADOW_DEPTH_MASK;
@@ -506,8 +510,7 @@ static void pushRenderState() {
             glUniform1f(s_shader.uFogStart, s_rs.fogStart);
             glUniform1f(s_shader.uFogEnd, s_rs.fogEnd);
             glUniform1f(s_shader.uFogDensity, s_rs.fogDensity);
-            glUniform4fv(s_shader.uFogColor, 1,
-                         glm::value_ptr(s_rs.fogColor));
+            glUniform4fv(s_shader.uFogColor, 1, glm::value_ptr(s_rs.fogColor));
             glUniform1i(s_shader.uFogEnable, s_rs.fogEnable ? 1 : 0);
         }
         if (s_rs_dirty_mask & DIRTY_TEXTURE) {
@@ -519,11 +522,9 @@ static void pushRenderState() {
         if (s_rs_dirty_mask & DIRTY_GAMMA)
             glUniform1f(s_shader.uInvGamma, 1.0f / s_rs.gamma);
         if (s_rs_dirty_mask & DIRTY_LMT)
-            glUniform4fv(s_shader.uLMTransform, 1,
-                         glm::value_ptr(s_rs.lmt));
+            glUniform4fv(s_shader.uLMTransform, 1, glm::value_ptr(s_rs.lmt));
         if (s_rs_dirty_mask & DIRTY_GLOBAL_LM)
-            glUniform2fv(s_shader.uGlobalLM, 1,
-                         glm::value_ptr(s_rs.globalLM));
+            glUniform2fv(s_shader.uGlobalLM, 1, glm::value_ptr(s_rs.globalLM));
         s_rs_dirty_mask = 0;
     }
     flushMatrices();
@@ -686,10 +687,11 @@ void GLRenderer::Initialise() {
     glViewport(0, 0, s_windowWidth, s_windowHeight);
     s_shader.build(VERT_SRC, FRAG_SRC);
     initStreamingVAOs();
-    pthread_once(&s_glCtxKeyOnce, makeGLCtxKey);
-    s_mainThread = pthread_self();
+
+    s_mainThreadId = std::this_thread::get_id();
     s_mainThreadSet = true;
-    pthread_setspecific(s_glCtxKey, (void*)s_window);
+    s_glCtx = s_glContext;
+
     SDL_GL_MakeCurrent(s_window, s_glContext);
     for (int i = 0; i < MAX_SHARED_CTXS; i++) {
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
@@ -718,32 +720,36 @@ void GLRenderer::Initialise() {
 
 void GLRenderer::InitialiseContext() {
     if (!s_window) return;
-    pthread_once(&s_glCtxKeyOnce, makeGLCtxKey);
-    if (s_mainThreadSet && pthread_equal(pthread_self(), s_mainThread)) {
+
+    if (s_mainThreadSet && std::this_thread::get_id() == s_mainThreadId) {
         SDL_GL_MakeCurrent(s_window, s_glContext);
-        pthread_setspecific(s_glCtxKey, (void*)s_window);
+        s_glCtx = s_glContext;
         return;
     }
-    void* cp = pthread_getspecific(s_glCtxKey);
-    if (cp) {
-        SDL_GLContext ctx = (SDL_GLContext)cp;
-        for (int i = 0; i < s_sharedCtxCount; i++)
-            if (s_sharedCtxs[i] == ctx) {
-                SDL_GL_MakeCurrent(s_sharedWins[i], ctx);
+
+    if (s_glCtx) {
+        for (int i = 0; i < s_sharedCtxCount; i++) {
+            if (s_sharedCtxs[i] == s_glCtx) {
+                SDL_GL_MakeCurrent(s_sharedWins[i], s_glCtx);
                 return;
             }
+        }
         return;
     }
-    pthread_mutex_lock(&s_sharedMtx);
-    SDL_GLContext shared = (s_nextSharedCtx < s_sharedCtxCount)
-                               ? s_sharedCtxs[s_nextSharedCtx++]
-                               : nullptr;
-    pthread_mutex_unlock(&s_sharedMtx);
+
+    SDL_GLContext shared = nullptr;
+    {
+        std::lock_guard<std::mutex> lk(s_sharedMtx);
+        if (s_nextSharedCtx < s_sharedCtxCount)
+            shared = s_sharedCtxs[s_nextSharedCtx++];
+    }
     if (!shared) return;
-    for (int i = 0; i < s_sharedCtxCount; i++)
+
+    for (int i = 0; i < s_sharedCtxCount; i++) {
         if (s_sharedCtxs[i] == shared)
             SDL_GL_MakeCurrent(s_sharedWins[i], shared);
-    pthread_setspecific(s_glCtxKey, (void*)shared);
+    }
+    s_glCtx = shared;
 }
 
 void GLRenderer::StartFrame() {
@@ -789,10 +795,11 @@ void GLRenderer::GetFramebufferSize(int& w, int& h) {
 void GLRenderer::Close() { s_window = nullptr; }
 
 void GLRenderer::Shutdown() {
-    pthread_mutex_lock(&s_glCallMtx);
-    for (auto& kv : s_chunkPool) kv.second.destroy();
-    s_chunkPool.clear();
-    pthread_mutex_unlock(&s_glCallMtx);
+    {
+        std::lock_guard<std::mutex> lk(s_glCallMtx);
+        for (auto& kv : s_chunkPool) kv.second.destroy();
+        s_chunkPool.clear();
+    }
     glDeleteVertexArrays(1, &s_sVAO_std);
     glDeleteBuffers(1, &s_sVBO_std);
     if (s_shader.prog) glDeleteProgram(s_shader.prog);
@@ -812,7 +819,7 @@ void GLRenderer::Shutdown() {
 }
 
 void GLRenderer::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
-                             eVertexType vType, ePixelShaderType) {
+                              eVertexType vType, ePixelShaderType) {
     if (count <= 0 || !dataIn) return;
 
     bool wasQuad = isQuadPrim((int)ptype);
@@ -901,7 +908,7 @@ void GLRenderer::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
         return;
     }
 
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     pushRenderState();
 
     glBindVertexArray(s_sVAO_std);
@@ -916,26 +923,23 @@ void GLRenderer::DrawVertices(ePrimitiveType ptype, int count, void* dataIn,
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    pthread_mutex_unlock(&s_glCallMtx);
 }
 
 void GLRenderer::ReadPixels(int x, int y, int w, int h, void* buf) {
     if (!buf) return;
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, buf);
-    pthread_mutex_unlock(&s_glCallMtx);
 }
 
 int GLRenderer::CBuffCreate(int count) {
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     int b = s_nextListBase;
     s_nextListBase += count;
-    pthread_mutex_unlock(&s_glCallMtx);
     return b;
 }
 
 void GLRenderer::CBuffDelete(int first, int count) {
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     for (int i = first; i < first + count; i++) {
         auto it = s_chunkPool.find(i);
         if (it != s_chunkPool.end()) {
@@ -943,17 +947,15 @@ void GLRenderer::CBuffDelete(int first, int count) {
             s_chunkPool.erase(it);
         }
     }
-    pthread_mutex_unlock(&s_glCallMtx);
 }
 
 void GLRenderer::CBuffDeleteAll() {
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     for (auto& kv : s_chunkPool) {
         kv.second.destroy();
     }
     s_chunkPool.clear();
     s_nextListBase = 1;
-    pthread_mutex_unlock(&s_glCallMtx);
 }
 
 void GLRenderer::CBuffStart(int index, bool) {
@@ -964,12 +966,11 @@ void GLRenderer::CBuffStart(int index, bool) {
 
 void GLRenderer::CBuffEnd() {
     if (s_recListId < 0) return;
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     ChunkBuffer& cb = s_chunkPool[s_recListId];
     cb.destroy();
     if (s_recVerts.empty()) {
         s_chunkPool.erase(s_recListId);
-        pthread_mutex_unlock(&s_glCallMtx);
         s_recListId = -1;
         return;
     }
@@ -977,31 +978,27 @@ void GLRenderer::CBuffEnd() {
     cb.draws = std::move(s_recDraws);
     cb.valid = true;
     cb.vboReady = false;
-    pthread_mutex_unlock(&s_glCallMtx);
     s_recListId = -1;
 }
 
 void GLRenderer::CBuffClear(int index) {
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     auto it = s_chunkPool.find(index);
     if (it != s_chunkPool.end()) {
         it->second.destroy();
         s_chunkPool.erase(it);
     }
-    pthread_mutex_unlock(&s_glCallMtx);
 }
 
 bool GLRenderer::CBuffCall(int index, bool) {
-    pthread_mutex_lock(&s_glCallMtx);
+    std::lock_guard<std::mutex> lk(s_glCallMtx);
     auto it = s_chunkPool.find(index);
     if (it == s_chunkPool.end() || !it->second.valid) {
-        pthread_mutex_unlock(&s_glCallMtx);
         return false;
     }
     ChunkBuffer& cb = it->second;
     if (!cb.vboReady) {
         if (cb.rawVerts.empty()) {
-            pthread_mutex_unlock(&s_glCallMtx);
             return false;
         }
 
@@ -1026,7 +1023,6 @@ bool GLRenderer::CBuffCall(int index, bool) {
     for (const auto& dc : cb.draws) glDrawArrays(dc.prim, dc.first, dc.count);
     glBindVertexArray(0);
 
-    pthread_mutex_unlock(&s_glCallMtx);
     return true;
 }
 
@@ -1076,7 +1072,7 @@ void GLRenderer::MatrixPerspective(float fovy, float asp, float zn, float zf) {
     markMatrixDirty();
 }
 void GLRenderer::MatrixOrthogonal(float l, float r, float b, float t, float zn,
-                                 float zf) {
+                                  float zf) {
     s_proj.cur() = glm::ortho(l, r, b, t, zn, zf);
     markMatrixDirty();
 }
@@ -1099,7 +1095,7 @@ void GLRenderer::Set_matrixDirty() {
     s_boundProgram = 0;
     s_rs_dirty_mask = 0xFFFFFFFF;
     s_gl_shadow_mask = 0;
-    s_normalMatDirty = true; // normal matrix dirt after iggy reset
+    s_normalMatDirty = true;  // normal matrix dirt after iggy reset
     s_matDirty = true;
     s_chunkOffsetValid = false;
     if (s_shader.prog) {
@@ -1136,9 +1132,7 @@ void GLRenderer::StateSetDepthMask(bool e) {
     glShadowSetDepthMask(e ? GL_TRUE : GL_FALSE);
 }
 void GLRenderer::StateSetBlendEnable(bool e) { glShadowSetBlend(e); }
-void GLRenderer::StateSetBlendFunc(int s, int d) {
-    glShadowSetBlendFunc(s, d);
-}
+void GLRenderer::StateSetBlendFunc(int s, int d) { glShadowSetBlendFunc(s, d); }
 void GLRenderer::StateSetDepthFunc(int f) { ::glDepthFunc(f); }
 void GLRenderer::StateSetFaceCull(bool e) { glShadowSetCull(e); }
 void GLRenderer::StateSetFaceCullCW(bool e) {
@@ -1185,7 +1179,10 @@ void GLRenderer::StateSetFogEnable(bool e) {
     }
 }
 void GLRenderer::StateSetFogMode(int mode) {
-    int v = (mode == GL_LINEAR) ? 1 : (mode == GL_EXP) ? 2 : (mode == 0x0801) ? 3 : 0;
+    int v = (mode == GL_LINEAR) ? 1
+            : (mode == GL_EXP)  ? 2
+            : (mode == 0x0801)  ? 3
+                                : 0;
     if (s_rs.fogMode != v) {
         s_rs.fogMode = v;
         markDirty(DIRTY_FOG);
@@ -1261,7 +1258,7 @@ void GLRenderer::StateSetVertexTextureUV(float u, float v) {
     }
 }
 void GLRenderer::StateSetStencil(int fn, uint8_t ref, uint8_t fmask,
-                                uint8_t wmask) {
+                                 uint8_t wmask) {
     glShadowSetStencil(fn, ref, fmask, wmask);
 }
 void GLRenderer::StateSetTextureEnable(bool e) {
@@ -1307,9 +1304,9 @@ void GLRenderer::TextureBindVertex(int idx, bool scaleLight) {
         s_rs.useLightmap = true;
         markDirty(DIRTY_TEXTURE);
     }
-    glm::vec4 newLmt =
-        scaleLight ? glm::vec4{1.f, 1.f, 8.f / 256.f, 8.f / 256.f}
-                   : glm::vec4{1.f, 1.f, 0.f, 0.f};
+    glm::vec4 newLmt = scaleLight
+                           ? glm::vec4{1.f, 1.f, 8.f / 256.f, 8.f / 256.f}
+                           : glm::vec4{1.f, 1.f, 0.f, 0.f};
     if (s_rs.lmt != newLmt) {
         s_rs.lmt = newLmt;
         markDirty(DIRTY_LMT);
@@ -1336,7 +1333,7 @@ void GLRenderer::TextureData(int w, int h, void* d, int lvl, eTextureFormat) {
     }
 }
 void GLRenderer::TextureDataUpdate(int xo, int yo, int w, int h, void* d,
-                                  int lvl) {
+                                   int lvl) {
     glTexSubImage2D(GL_TEXTURE_2D, lvl, xo, yo, w, h, GL_RGBA, GL_UNSIGNED_BYTE,
                     d);
 }
@@ -1368,7 +1365,7 @@ int GLRenderer::LoadTextureData(const char* fn, D3DXIMAGE_INFO* i, int** o) {
     return hr;
 }
 int GLRenderer::LoadTextureData(uint8_t* pb, uint32_t nb, D3DXIMAGE_INFO* i,
-                               int** o) {
+                                int** o) {
     int w, h, c;
     unsigned char* d = stbi_load_from_memory(pb, (int)nb, &w, &h, &c, 4);
     if (!d) return -1;  // Failure
@@ -1402,78 +1399,6 @@ void glDeleteTextures_4J(int id) {
 
 void glDeleteTextures_4J(int n, const unsigned int* textures) {
     ::glDeleteTextures(n, textures);
-}
-
-void glBeginQuery_4J_Helper(unsigned int target, unsigned int id) {
-    typedef void (*PFNGLBEGINQUERYPROC)(unsigned int, unsigned int);
-    static PFNGLBEGINQUERYPROC fn =
-        (PFNGLBEGINQUERYPROC)dlsym(RTLD_DEFAULT, "glBeginQuery");
-    if (fn) fn(target, id);
-}
-
-void glEndQuery_4J_Helper(unsigned int target) {
-    typedef void (*PFNGLENDQUERYPROC)(unsigned int);
-    static PFNGLENDQUERYPROC fn =
-        (PFNGLENDQUERYPROC)dlsym(RTLD_DEFAULT, "glEndQuery");
-    if (fn) fn(target);
-}
-
-void glGenQueries_4J_Helper(unsigned int* id) {
-#ifdef GLES
-    glGenQueries(1, id);
-#else
-    typedef void (*PFNGLGENQUERIESPROC)(int, unsigned int*);
-    static PFNGLGENQUERIESPROC fn =
-        (PFNGLGENQUERIESPROC)dlsym(RTLD_DEFAULT, "glGenQueries");
-    if (fn) fn(1, id);
-#endif
-}
-
-void glGetQueryObjectu_4J_Helper(unsigned int id, unsigned int pname,
-                                 unsigned int* val) {
-#ifdef GLES
-    glGetQueryObjectuiv(id, pname, val);
-#else
-    typedef void (*PFNGLGETQUERYOBJECTUIVPROC)(unsigned int, unsigned int,
-                                               unsigned int*);
-    static PFNGLGETQUERYOBJECTUIVPROC fn =
-        (PFNGLGETQUERYOBJECTUIVPROC)dlsym(RTLD_DEFAULT, "glGetQueryObjectuiv");
-    if (fn) fn(id, pname, val);
-#endif
-}
-
-// c hooks
-#undef glFogfv
-#undef glLightfv
-#undef glLightModelfv
-#undef glShadeModel
-#undef glColorMaterial
-#undef glNormal3f
-
-extern "C" {
-void glFogfv(GLenum pname, const GLfloat* params) {
-    if (pname == 0x0B66)
-        PlatformRenderer.StateSetFogColour(params[0], params[1], params[2]);
-}
-void glLightfv(GLenum light, GLenum pname, const GLfloat* params) {
-    if (pname == 0x1203)
-        PlatformRenderer.StateSetLightDirection(light == 0x4000 ? 0 : 1, params[0],
-                                             params[1], params[2]);
-    else if (pname == 0x1200)
-        PlatformRenderer.StateSetLightAmbientColour(params[0], params[1],
-                                                 params[2]);
-    else if (pname == 0x1201)
-        PlatformRenderer.StateSetLightColour(light == 0x4000 ? 0 : 1, params[0],
-                                          params[1], params[2]);
-}
-void glLightModelfv(GLenum pname, const GLfloat* params) {
-    if (pname == 0x0B53)
-        PlatformRenderer.StateSetLightAmbientColour(params[0], params[1],
-                                                 params[2]);
-}
-void glShadeModel(GLenum) {}
-void glColorMaterial(GLenum, GLenum) {}
-void glNormal3f(GLfloat, GLfloat, GLfloat) {}
 }
 
 // MARK: LinuxStubs
@@ -1523,7 +1448,7 @@ void glTexImage2D_4J(int target, int level, int internalformat, int width,
     (void)format;
     (void)type;
     PlatformRenderer.TextureData(width, height, getBytePtr(pixels), level,
-                              IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw);
+                                 IPlatformRenderer::TEXTURE_FORMAT_RxGyBzAw);
 }
 
 void glLight_4J(int light, int pname, FloatBuffer* params) {
@@ -1558,7 +1483,8 @@ void glCallLists_4J(IntBuffer* lists) {
     if (!lists) return;
     int count = lists->limit() - lists->position();
     int* ids = getIntPtr(lists);
-    for (int i = 0; i < count; i++) PlatformRenderer.CBuffCall(ids[i], false);
+    for (int i = 0; i < count; i++)
+        (void)PlatformRenderer.CBuffCall(ids[i], false);
 }
 
 void glReadPixels_4J(int x, int y, int w, int h, int f, int t, ByteBuffer* p) {
@@ -1575,54 +1501,9 @@ void glVertexPointer_4J(int, int, FloatBuffer*) {}
 void glEndList_4J(int) {}
 void glTexGen_4J(int, int, FloatBuffer*) {}
 
-#include <dlfcn.h>
 #include <stdio.h>
 #include <string.h>
 
-static PFNGLGENQUERIESARBPROC _glGenQueriesARB = nullptr;
-static PFNGLBEGINQUERYARBPROC _glBeginQueryARB = nullptr;
-static PFNGLENDQUERYARBPROC _glEndQueryARB = nullptr;
-static PFNGLGETQUERYOBJECTUIVARBPROC _glGetQueryObjectuivARB = nullptr;
-static bool _queriesInitialized = false;
-
-static void initQueryFuncs() {
-    if (_queriesInitialized) return;
-    _queriesInitialized = true;
-    _glGenQueriesARB =
-        (PFNGLGENQUERIESARBPROC)dlsym(RTLD_DEFAULT, "glGenQueriesARB");
-    _glBeginQueryARB =
-        (PFNGLBEGINQUERYARBPROC)dlsym(RTLD_DEFAULT, "glBeginQueryARB");
-    _glEndQueryARB = (PFNGLENDQUERYARBPROC)dlsym(RTLD_DEFAULT, "glEndQueryARB");
-    _glGetQueryObjectuivARB = (PFNGLGETQUERYOBJECTUIVARBPROC)dlsym(
-        RTLD_DEFAULT, "glGetQueryObjectuivARB");
-}
-
-void glGenQueriesARB_4J(IntBuffer* buf) {
-    initQueryFuncs();
-    if (_glGenQueriesARB && buf) {
-        int n = buf->limit() - buf->position();
-        if (n > 0) _glGenQueriesARB(n, (GLuint*)getIntPtr(buf));
-    }
-}
-
-void glBeginQueryARB_4J(int target, int id) {
-    initQueryFuncs();
-    if (_glBeginQueryARB) _glBeginQueryARB((GLenum)target, (GLuint)id);
-}
-
-void glEndQueryARB_4J(int target) {
-    initQueryFuncs();
-    if (_glEndQueryARB) _glEndQueryARB((GLenum)target);
-}
-
-void glGetQueryObjectuARB_4J(int id, int pname, IntBuffer* params) {
-    initQueryFuncs();
-    if (_glGetQueryObjectuivARB && params)
-        // LWJGL does not change limits/positions during these calls, it
-        // reads/writes exactly at pointer!!
-        _glGetQueryObjectuivARB((GLuint)id, (GLenum)pname,
-                                (GLuint*)getIntPtr(params));
-}
 void glGetFloat(int pname, FloatBuffer* params) {
     glGetFloat_4J(pname, params);
 }

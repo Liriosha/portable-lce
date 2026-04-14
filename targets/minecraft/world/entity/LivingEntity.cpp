@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "LivingEntity.h"
 
 #include <stdint.h>
@@ -14,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
@@ -25,8 +24,8 @@
 #include "minecraft/network/packet/TakeItemEntityPacket.h"
 #include "minecraft/server/level/EntityTracker.h"
 #include "minecraft/server/level/ServerLevel.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/CombatTracker.h"
 #include "minecraft/world/damageSource/DamageSource.h"
@@ -338,8 +337,7 @@ int LivingEntity::decreaseAirSupply(int currentSupply) {
     }
     if (instanceof(eTYPE_PLAYER)) {
         Log::info("++++++++++ %s: Player decreasing air supply to %d\n",
-                        level->isClientSide ? "CLIENT" : "SERVER",
-                        currentSupply - 1);
+                  level->isClientSide ? "CLIENT" : "SERVER", currentSupply - 1);
     }
     return currentSupply - 1;
 }
@@ -423,8 +421,7 @@ void LivingEntity::readAdditionalSaveData(CompoundTag* tag) {
     if (tag->contains("Attributes") && level != nullptr &&
         !level->isClientSide) {
         SharedMonsterAttributes::loadAttributes(
-            getAttributes(),
-            (ListTag<CompoundTag>*)tag->getList("Attributes"));
+            getAttributes(), (ListTag<CompoundTag>*)tag->getList("Attributes"));
     }
 
     if (tag->contains("ActiveEffects")) {
@@ -727,8 +724,8 @@ bool LivingEntity::hurt(DamageSource* source, float dmg) {
         // 4J-JEV, for new achievement Stayin'Frosty, TODO merge with Java
         // version.
         if (this->instanceof(eTYPE_PLAYER) &&
-            (source ==
-             DamageSource::lava))  // Only award when in lava (not any fire).
+            (source == DamageSource::lava))  // Only award when in lava (not
+                                             // any fire).
         {
             std::shared_ptr<Player> plr =
                 std::dynamic_pointer_cast<Player>(shared_from_this());
@@ -1247,8 +1244,12 @@ void LivingEntity::jumpFromGround() {
 }
 
 void LivingEntity::travel(float xa, float ya) {
-    std::shared_ptr<Player> thisPlayer =
-        std::dynamic_pointer_cast<Player>(shared_from_this());
+    // AP - dynamic_pointer_cast is a non-trivial call, use raw pointer instead
+    Player* thisPlayer = nullptr;
+    if (this->instanceof(eTYPE_PLAYER)) {
+        thisPlayer = (Player*)this;
+    }
+
     if (isInWater() && !(thisPlayer && thisPlayer->abilities.flying)) {
         double yo = y;
         moveRelative(xa, ya, useNewAi() ? 0.04f : 0.02f);
@@ -1276,12 +1277,13 @@ void LivingEntity::travel(float xa, float ya) {
         }
     } else {
         float friction = 0.91f;
+        int frictionTile = 0;
         if (onGround) {
             friction = 0.6f * 0.91f;
-            int t = level->getTile(Mth::floor(x), Mth::floor(bb.y0) - 1,
-                                   Mth::floor(z));
-            if (t > 0) {
-                friction = Tile::tiles[t]->friction * 0.91f;
+            frictionTile = level->getTile(Mth::floor(x), Mth::floor(bb.y0) - 1,
+                                          Mth::floor(z));
+            if (frictionTile > 0) {
+                friction = Tile::tiles[frictionTile]->friction * 0.91f;
             }
         }
 
@@ -1300,10 +1302,8 @@ void LivingEntity::travel(float xa, float ya) {
         friction = 0.91f;
         if (onGround) {
             friction = 0.6f * 0.91f;
-            int t = level->getTile(Mth::floor(x), Mth::floor(bb.y0) - 1,
-                                   Mth::floor(z));
-            if (t > 0) {
-                friction = Tile::tiles[t]->friction * 0.91f;
+            if (frictionTile > 0) {
+                friction = Tile::tiles[frictionTile]->friction * 0.91f;
             }
         }
         if (onLadder()) {
@@ -1604,11 +1604,15 @@ void LivingEntity::pushEntities() {
     AABB grown = bb.grow(0.2, 0, 0.2);
     std::vector<std::shared_ptr<Entity>>* entities =
         level->getEntities(shared_from_this(), &grown);
-    if (entities != nullptr && !entities->empty()) {
-        auto itEnd = entities->end();
-        for (auto it = entities->begin(); it != itEnd; it++) {
-            std::shared_ptr<Entity> e = *it;  // entities->at(i);
-            if (e and !e->removed and e->isPushable()) push(e);
+
+    if (entities == nullptr || entities->empty()) {
+        return;
+    }
+
+    std::vector<std::shared_ptr<Entity>> prev_entities = *entities;
+    for (const std::shared_ptr<Entity>& e : prev_entities) {
+        if (e && !e->removed && e->isPushable()) {
+            push(e);
         }
     }
 }

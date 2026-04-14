@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "Fireball.h"
 
 #include <stdint.h>
@@ -10,10 +9,10 @@
 #include <string>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
 #include "java/Random.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/core/particles/ParticleTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/LivingEntity.h"

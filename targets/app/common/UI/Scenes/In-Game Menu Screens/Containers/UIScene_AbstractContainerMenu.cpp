@@ -4,16 +4,16 @@
 #include <cmath>
 #include <memory>
 
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Cursor.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/util/HtmlString.h"
@@ -193,8 +193,8 @@ void UIScene_AbstractContainerMenu::tick() {
     IggyPlayerDispatchEventRS(getMovie(), &mouseEvent, &result);
 }
 
-void UIScene_AbstractContainerMenu::render(S32 width, S32 height,
-                                           IPlatformRenderer::eViewportType viewpBort) {
+void UIScene_AbstractContainerMenu::render(
+    S32 width, S32 height, IPlatformRenderer::eViewportType viewpBort) {
     m_cacheSlotRenders = true;
 
     m_needsCacheRendered = m_needsCacheRendered || m_menu->needsRendered();

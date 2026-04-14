@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "Packet.h"
 
 #include <assert.h>
@@ -13,8 +12,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "java/Exceptions.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
@@ -106,6 +103,7 @@
 #include "minecraft/network/packet/UpdateProgressPacket.h"
 #include "minecraft/network/packet/UseItemPacket.h"
 #include "minecraft/network/packet/XZPacket.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/item/ItemInstance.h"
 #include "nbt/NbtIo.h"
 
@@ -578,8 +576,8 @@ void Packet::writeUtf(const std::string& value,
 }
 
 std::string Packet::readUtf(DataInputStream* dis,
-                             int maxLength)  // throws IOException TODO 4J JEV,
-                                             // should this declare a throws?
+                            int maxLength)  // throws IOException TODO 4J JEV,
+                                            // should this declare a throws?
 {
     short stringLength = dis->readShort();
     if (stringLength > maxLength) {

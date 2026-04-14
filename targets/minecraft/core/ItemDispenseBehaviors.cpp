@@ -1,13 +1,12 @@
-#include "minecraft/IGameServices.h"
 #include "ItemDispenseBehaviors.h"
 
 #include <memory>
 #include <string>
 
-#include "minecraft/GameEnums.h"
-#include "app/linux/LinuxGame.h"
 #include "java/Class.h"
 #include "java/Random.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/core/AbstractProjectileDispenseBehavior.h"
 #include "minecraft/core/BlockSource.h"
 #include "minecraft/core/DefaultDispenseItemBehavior.h"

@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
 #include "minecraft/client/model/SnowManModel.h"
 #include "minecraft/client/model/geom/ModelPart.h"
@@ -16,6 +15,8 @@
 #include "minecraft/world/item/Item.h"
 #include "minecraft/world/item/ItemInstance.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation SnowManRenderer::SNOWMAN_LOCATION =
     ResourceLocation(TN_MOB_SNOWMAN);

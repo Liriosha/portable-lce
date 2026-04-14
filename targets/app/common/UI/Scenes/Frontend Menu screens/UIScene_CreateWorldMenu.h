@@ -4,9 +4,9 @@
 
 #include <string>
 
-#include "platform/storage/storage.h"
 #include "IUIScene_StartGame.h"
 #include "app/common/DLC/DLCPack.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/Controls/UIControl_BitmapIcon.h"
@@ -17,7 +17,7 @@
 #include "app/common/UI/Controls/UIControl_TextInput.h"
 #include "app/common/UI/Controls/UIControl_TexturePackList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
+#include "platform/storage/storage.h"
 
 class DLCPack;
 class UILayer;

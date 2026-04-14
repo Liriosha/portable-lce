@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "EnderDragon.h"
 
 #include <algorithm>
@@ -6,10 +5,11 @@
 #include <limits>
 #include <numbers>
 
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"
@@ -1433,7 +1433,7 @@ bool EnderDragon::setSynchedAction(EEnderdragonAction action,
         entityData->set(DATA_ID_SYNCHED_ACTION, action);
     } else {
         Log::info("EnderDragon: Invalid state transition from %d to %d\n",
-                        getSynchedAction(), action);
+                  getSynchedAction(), action);
     }
 
     return force || validTransition;
@@ -1529,10 +1529,9 @@ void EnderDragon::navigateToNextPathNode() {
             } while (yTarget < (curr.y));
         }
         zTarget = curr.z;
-        Log::info("Path node pos is (%f,%f,%f)\n", curr.x, curr.y,
-                        curr.z);
+        Log::info("Path node pos is (%f,%f,%f)\n", curr.x, curr.y, curr.z);
         Log::info("Setting new target to (%f,%f,%f)\n", xTarget, yTarget,
-                        zTarget);
+                  zTarget);
     }
 }
 
@@ -1576,8 +1575,7 @@ int EnderDragon::findClosestNode() {
                 std::max((level->seaLevel + 10),
                          level->getTopSolidBlock(nodeX, nodeZ) + yAdjustment);
 
-            Log::info("Node %d is at (%d,%d,%d)\n", i, nodeX, nodeY,
-                            nodeZ);
+            Log::info("Node %d is at (%d,%d,%d)\n", i, nodeX, nodeY, nodeZ);
 
             (*m_nodes)[i] = new Node(nodeX, nodeY, nodeZ);
 
@@ -1726,8 +1724,7 @@ Path* EnderDragon::findPath(int startIndex, int endIndex,
     }
 
     if (closest == from) return nullptr;
-    Log::info("Failed to find path from %d to %d\n", startIndex,
-                    endIndex);
+    Log::info("Failed to find path from %d to %d\n", startIndex, endIndex);
     if (finalNode != nullptr) {
         finalNode->cameFrom = closest;
         closest = finalNode;

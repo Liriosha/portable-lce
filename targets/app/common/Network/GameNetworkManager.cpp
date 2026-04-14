@@ -9,28 +9,14 @@
 #include <thread>
 #include <vector>
 
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "platform/renderer/renderer.h"
-#include "platform/storage/storage.h"
-#include "minecraft/GameEnums.h"
 #include "app/common/Game.h"
 #include "app/common/GameRules/GameRuleManager.h"
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/common/Network/PlatformNetworkManagerStub.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/UIScene_PauseMenu.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "Socket.h"
-#include "platform/XboxStubs.h"
-#include "util/StringHelpers.h"
-#include "platform/fs/fs.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/File.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/ProgressRenderer.h"
 #include "minecraft/client/User.h"
@@ -41,18 +27,31 @@
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/network/Connection.h"
+#include "minecraft/network/Socket.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
 #include "minecraft/network/packet/PreLoginPacket.h"
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
+#include "minecraft/server/ServerAction.h"
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/server/network/PlayerConnection.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/item/crafting/FireworksRecipe.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/chunk/storage/OldChunkStorage.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/XboxStubs.h"
+#include "platform/fs/fs.h"
+#include "platform/game/game.h"
+#include "platform/input/input.h"
+#include "platform/network/network.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/storage/storage.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 class FriendSessionInfo;
 class INVITE_INFO;
@@ -60,6 +59,13 @@ class INVITE_INFO;
 // Global instance
 CGameNetworkManager g_NetworkManager;
 IPlatformNetwork* CGameNetworkManager::s_pPlatformNetworkManager;
+
+// minecraft/-side function accessor for INetworkService.
+namespace minecraft::network::platform_internal {
+::minecraft::network::INetworkService& NetworkService_get() {
+    return g_NetworkManager;
+}
+}  // namespace minecraft::network::platform_internal
 
 int64_t CGameNetworkManager::messageQueue[512];
 int64_t CGameNetworkManager::byteQueue[512];
@@ -78,7 +84,7 @@ void CGameNetworkManager::Initialise() {
         LevelRenderer::getGlobalChunkCount() /
         (Level::maxBuildHeight /
          16);  // dividing here by number of renderer chunks in one column
-    s_pPlatformNetworkManager = new IPlatformNetworkStub();
+    s_pPlatformNetworkManager = &PlatformNetwork;
     s_pPlatformNetworkManager->Initialise(this, flagIndexSize);
     m_bNetworkThreadRunning = false;
     m_bInitialised = true;
@@ -342,7 +348,8 @@ bool CGameNetworkManager::StartNetworkGame(Minecraft* minecraft,
         createdConnections.push_back(connection);
 
         int primaryPad = PlatformProfile.GetPrimaryPad();
-        app.SetRichPresenceContext(primaryPad, CONTEXT_GAME_STATE_BLANK);
+        PlatformGame.SetRichPresenceContext(primaryPad,
+                                            CONTEXT_GAME_STATE_BLANK);
         if (GetPlayerCount() >
             1)  // Are we offline or online, and how many players are there
         {
@@ -373,7 +380,8 @@ bool CGameNetworkManager::StartNetworkGame(Minecraft* minecraft,
                 Socket* socket = pNetworkPlayer->GetSocket();
                 app.DebugPrintf(
                     "Closing socket due to player %d not being signed in any "
-                    "more\n");
+                    "more\n",
+                    idx);
                 if (!socket->close(false)) socket->close(true);
 
                 continue;
@@ -401,8 +409,8 @@ bool CGameNetworkManager::StartNetworkGame(Minecraft* minecraft,
             // Open the socket on the server end to accept incoming data
             Socket::addIncomingSocket(socket);
 
-            connection->send(std::shared_ptr<PreLoginPacket>(new PreLoginPacket(
-                PlatformProfile.GetGamertag(idx))));
+            connection->send(std::shared_ptr<PreLoginPacket>(
+                new PreLoginPacket(PlatformProfile.GetGamertag(idx))));
 
             createdConnections.push_back(connection);
 
@@ -444,7 +452,8 @@ bool CGameNetworkManager::StartNetworkGame(Minecraft* minecraft,
             if (g_NetworkManager.IsLeavingGame() || !IsInSession()) break;
 
             if (PlatformProfile.IsSignedIn(idx) && !connection->isClosed()) {
-                app.SetRichPresenceContext(idx, CONTEXT_GAME_STATE_BLANK);
+                PlatformGame.SetRichPresenceContext(idx,
+                                                    CONTEXT_GAME_STATE_BLANK);
                 if (IsLocalGame())
                     PlatformProfile.SetCurrentGameActivity(
                         idx, CONTEXT_PRESENCE_MULTIPLAYEROFFLINE, false);
@@ -620,8 +629,8 @@ void CGameNetworkManager::SetSessionsUpdatedCallback(
 void CGameNetworkManager::GetFullFriendSessionInfo(
     FriendSessionInfo* foundSession,
     std::function<void(bool success)> callback) {
-    s_pPlatformNetworkManager->GetFullFriendSessionInfo(
-        foundSession, std::move(callback));
+    s_pPlatformNetworkManager->GetFullFriendSessionInfo(foundSession,
+                                                        std::move(callback));
 }
 
 void CGameNetworkManager::ForceFriendsSessionRefresh() {
@@ -711,14 +720,15 @@ int CGameNetworkManager::JoinFromInvite_SignInReturned(void* pParam,
                 // If the player was signed in before selecting play, we'll not
                 // have read the profile yet, so query the sign-in status to get
                 // this to happen
-                PlatformProfile.QuerySigninStatus();
+                (void)PlatformProfile.QuerySigninStatus();
 
                 // 4J-PB - clear any previous connection errors
                 Minecraft::GetInstance()->clearConnectionFailed();
 
                 // change the minecraft player name
-                Minecraft::GetInstance()->user->name = 
-                    PlatformProfile.GetGamertag(PlatformProfile.GetPrimaryPad());
+                Minecraft::GetInstance()->user->name =
+                    PlatformProfile.GetGamertag(
+                        PlatformProfile.GetPrimaryPad());
 
                 bool success = g_NetworkManager.JoinGameFromInviteInfo(
                     iPad,            // dwUserIndex
@@ -818,7 +828,8 @@ int CGameNetworkManager::ServerThreadProc(void* lpParameter) {
         }
     }
 
-    C4JThread::setThreadName(static_cast<std::uint32_t>(-1), "Minecraft Server thread");
+    C4JThread::setThreadName(static_cast<std::uint32_t>(-1),
+                             "Minecraft Server thread");
     Compression::UseDefaultThreadStorage();
     OldChunkStorage::UseDefaultThreadStorage();
     Entity::useSmallIds();
@@ -875,13 +886,7 @@ int CGameNetworkManager::ChangeSessionTypeThreadProc(void* lpParam) {
     pMinecraft->progressRenderer->progressStage(
         IDS_PROGRESS_CONVERTING_TO_OFFLINE_GAME);
 
-    while (app.GetXuiServerAction(PlatformProfile.GetPrimaryPad()) !=
-               eXuiServerAction_Idle &&
-           !MinecraftServer::serverHalted()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                           eXuiServerAction_PauseServer, (void*)true);
+    pServer->queueServerAction(minecraft::server::PauseServer{true});
 
     // wait for the server to be in a non-ticking state
     pServer->m_serverPausedEvent->waitForSignal(C4JThread::kInfiniteTimeout);
@@ -1008,8 +1013,8 @@ int CGameNetworkManager::ChangeSessionTypeThreadProc(void* lpParam) {
 
     // Start the game again
     app.SetGameStarted(true);
-    app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                           eXuiServerAction_PauseServer, (void*)false);
+    MinecraftServer::getInstance()->queueServerAction(
+        minecraft::server::PauseServer{false});
     app.SetChangingSessionType(false);
     app.SetReallyChangingSessionType(false);
 
@@ -1218,7 +1223,7 @@ void CGameNetworkManager::PlayerJoining(INetworkPlayer* pNetworkPlayer) {
                 g_NetworkManager.GetLocalPlayerByUserIndex(iPad);
             if (pNetworkPlayer == nullptr) continue;
 
-            app.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_BLANK);
+            PlatformGame.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_BLANK);
             if (multiplayer) {
                 if (localgame)
                     PlatformProfile.SetCurrentGameActivity(
@@ -1241,7 +1246,7 @@ void CGameNetworkManager::PlayerJoining(INetworkPlayer* pNetworkPlayer) {
 void CGameNetworkManager::PlayerLeaving(INetworkPlayer* pNetworkPlayer) {
     if (pNetworkPlayer->IsLocal()) {
         PlatformProfile.SetCurrentGameActivity(pNetworkPlayer->GetUserIndex(),
-                                              CONTEXT_PRESENCE_IDLE, false);
+                                               CONTEXT_PRESENCE_IDLE, false);
     }
 }
 
@@ -1284,8 +1289,9 @@ void CGameNetworkManager::GameInviteReceived(int userIndex,
     bool bContentRestricted = false;
     bool pccAllowed = true;
     bool pccFriendsAllowed = true;
-    PlatformProfile.AllowedPlayerCreatedContent(
-        PlatformProfile.GetPrimaryPad(), false, &pccAllowed, &pccFriendsAllowed);
+    PlatformProfile.AllowedPlayerCreatedContent(PlatformProfile.GetPrimaryPad(),
+                                                false, &pccAllowed,
+                                                &pccFriendsAllowed);
     if (!pccAllowed && !pccFriendsAllowed) noUGC = true;
 
     if (noUGC) {
@@ -1301,7 +1307,8 @@ void CGameNetworkManager::GameInviteReceived(int userIndex,
 
         // 4J-PB - it's possible there is no primary pad here, when accepting an
         // invite from the dashboard
-        // PlatformStorage.RequestMessageBox( IDS_NO_MULTIPLAYER_PRIVILEGE_TITLE,
+        // PlatformStorage.RequestMessageBox(
+        // IDS_NO_MULTIPLAYER_PRIVILEGE_TITLE,
         // IDS_NO_MULTIPLAYER_PRIVILEGE_JOIN_TEXT,
         // uiIDA,1,PlatformProfile.GetPrimaryPad(),nullptr,nullptr,
         // app.GetStringTable());
@@ -1371,7 +1378,7 @@ void CGameNetworkManager::HandleInviteWhenInMenus(
                 // If the player was signed in before selecting play, we'll not
                 // have read the profile yet, so query the sign-in status to get
                 // this to happen
-                PlatformProfile.QuerySigninStatus();
+                (void)PlatformProfile.QuerySigninStatus();
 
                 // 4J-PB - clear any previous connection errors
                 Minecraft::GetInstance()->clearConnectionFailed();
@@ -1379,8 +1386,9 @@ void CGameNetworkManager::HandleInviteWhenInMenus(
                 g_NetworkManager.SetLocalGame(false);
 
                 // change the minecraft player name
-                Minecraft::GetInstance()->user->name = 
-                    PlatformProfile.GetGamertag(PlatformProfile.GetPrimaryPad());
+                Minecraft::GetInstance()->user->name =
+                    PlatformProfile.GetGamertag(
+                        PlatformProfile.GetPrimaryPad());
 
                 bool success = g_NetworkManager.JoinGameFromInviteInfo(
                     userIndex, localUsersMask, pInviteInfo);

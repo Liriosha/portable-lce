@@ -1,23 +1,23 @@
 #include "Minimap.h"
 
-
 #include <math.h>
 #include <string.h>
 #include <wchar.h>
 
 #include <string>
 
-#include "platform/renderer/renderer.h"
 #include "Font.h"
 #include "minecraft/GameEnums.h"
-#include "app/common/Colours/ColourTable.h"
 #include "minecraft/client/BufferedImage.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/Textures.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/level/material/MaterialColor.h"
 #include "minecraft/world/level/saveddata/MapItemSavedData.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 int Minimap::LUT[256];        // 4J added
 bool Minimap::genLUT = true;  // 4J added
@@ -71,7 +71,7 @@ void Minimap::reloadColours() {
             int b = ((color) & 0xff) * br / 255;
 
             // 4J - changed byte order to save having to reorder later
-#if defined(_WIN64) || __linux__
+#if 1
             LUT[i] = 255 << 24 | b << 16 | g << 8 | r;
 #else
             LUT[i] = r << 24 | g << 16 | b << 8 | 255;

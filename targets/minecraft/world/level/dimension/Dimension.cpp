@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "Dimension.h"
 
 #include <math.h>
@@ -6,14 +5,13 @@
 #include <numbers>
 
 #include "HellDimension.h"
-#include "platform/input/input.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/Colours/ColourTable.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/linux/LinuxGame.h"
 #include "NormalDimension.h"
 #include "TheEndDimension.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/LevelType.h"
 #include "minecraft/world/level/biome/Biome.h"
@@ -27,6 +25,7 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/input/input.h"
 
 class Pos;
 

@@ -1,9 +1,9 @@
 #include "UIScene_Intro.h"
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/iggy.h"
-#include "app/linux/Linux_UIController.h"
 
 class UILayer;
 
@@ -25,9 +25,7 @@ UIScene_Intro::UIScene_Intro(int iPad, void* initData, UILayer* parentLayer)
     bool bChina = false;
 
     // 4J Stu - These map to values in the Actionscript
-#if defined(_WINDOWS64) || defined(__linux__)
     int platformIdx = 0;
-#endif
 
     IggyDataValue result;
     IggyDataValue value[3];

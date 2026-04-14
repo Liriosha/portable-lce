@@ -1,15 +1,5 @@
 #include "SDL2Input.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_gamecontroller.h>
-#include <SDL2/SDL_joystick.h>
-#include <SDL2/SDL_keyboard.h>
-#include <SDL2/SDL_mouse.h>
-#include <SDL2/SDL_scancode.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_video.h>
-#include <SDL2/begin_code.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,11 +7,29 @@
 #include <functional>
 #include <string>
 
-#include "../InputConstants.h"
 #include "../../PlatformTypes.h"
+#include "../InputConstants.h"
+#include "SDL.h"
+#include "SDL_events.h"
+#include "SDL_gamecontroller.h"
+#include "SDL_joystick.h"
+#include "SDL_keyboard.h"
+#include "SDL_mouse.h"
+#include "SDL_scancode.h"
+#include "SDL_stdinc.h"
+#include "SDL_video.h"
+#include "begin_code.h"
 
-SDL2Input sdl2_input_instance;
-IPlatformInput& PlatformInput = sdl2_input_instance;
+#if defined(__APPLE__)
+#include "SDL2CursorPatch.h"
+#endif
+
+namespace platform_internal {
+IPlatformInput& PlatformInput_get() {
+    static SDL2Input instance;
+    return instance;
+}
+}  // namespace platform_internal
 
 static const int KEY_COUNT = SDL_NUM_SCANCODES;
 static const int BTN_COUNT = SDL_CONTROLLER_BUTTON_MAX;
@@ -232,6 +240,9 @@ static void TakeSnapIfNeeded() {
 // We initialize the SDL input
 void SDL2Input::Initialise(int, unsigned char, unsigned char, unsigned char) {
     if (!s_sdlInitialized) {
+#if defined(__APPLE__)
+        PatchSDLInvisibleCursor();
+#endif
         if (SDL_WasInit(SDL_INIT_VIDEO) == 0) {
             SDL_Init(SDL_INIT_VIDEO);
         }

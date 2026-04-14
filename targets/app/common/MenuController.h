@@ -5,8 +5,8 @@
 #include <string>
 
 #include "app/common/App_structs.h"
-#include "platform/storage/storage.h"
 #include "platform/XboxStubs.h"
+#include "platform/storage/storage.h"
 
 class Player;
 class Inventory;
@@ -48,8 +48,8 @@ public:
     bool loadCrafting2x2Menu(int iPad, std::shared_ptr<LocalPlayer> player);
     bool loadCrafting3x3Menu(int iPad, std::shared_ptr<LocalPlayer> player,
                              int x, int y, int z);
-    bool loadFireworksMenu(int iPad, std::shared_ptr<LocalPlayer> player,
-                           int x, int y, int z);
+    bool loadFireworksMenu(int iPad, std::shared_ptr<LocalPlayer> player, int x,
+                           int y, int z);
     bool loadSignEntryMenu(int iPad, std::shared_ptr<SignTileEntity> sign);
     bool loadRepairingMenu(int iPad, std::shared_ptr<Inventory> inventory,
                            Level* level, int x, int y, int z);
@@ -69,25 +69,8 @@ public:
     // Action management
     void setAction(int iPad, eXuiAction action, void* param = nullptr);
     eXuiAction getXuiAction(int iPad) { return m_eXuiAction[iPad]; }
-    void setXuiServerAction(int iPad, eXuiServerAction action,
-                            void* param = nullptr) {
-        m_eXuiServerAction[iPad] = action;
-        m_eXuiServerActionParam[iPad] = param;
-    }
-    eXuiServerAction getXuiServerAction(int iPad) {
-        return m_eXuiServerAction[iPad];
-    }
-    void* getXuiServerActionParam(int iPad) {
-        return m_eXuiServerActionParam[iPad];
-    }
     eXuiAction getGlobalXuiAction() { return m_eGlobalXuiAction; }
     void setGlobalXuiAction(eXuiAction action) { m_eGlobalXuiAction = action; }
-    eXuiServerAction getGlobalXuiServerAction() {
-        return m_eGlobalXuiServerAction;
-    }
-    void setGlobalXuiServerAction(eXuiServerAction action) {
-        m_eGlobalXuiServerAction = action;
-    }
 
     // TMS action
     void setTMSAction(int iPad, eTMSAction action) {
@@ -96,18 +79,18 @@ public:
     eTMSAction getTMSAction(int iPad) { return m_eTMSAction[iPad]; }
 
     // Dialog callbacks
-    static int texturePackDialogReturned(void* pParam, int iPad,
-                                         IPlatformStorage::EMessageResult result);
-    static int fatalErrorDialogReturned(void* pParam, int iPad,
-                                        IPlatformStorage::EMessageResult result);
+    static int texturePackDialogReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
+    static int fatalErrorDialogReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
     static int trialOverReturned(void* pParam, int iPad,
                                  IPlatformStorage::EMessageResult result);
     static int unlockFullExitReturned(void* pParam, int iPad,
                                       IPlatformStorage::EMessageResult result);
     static int unlockFullSaveReturned(void* pParam, int iPad,
                                       IPlatformStorage::EMessageResult result);
-    static int unlockFullInviteReturned(void* pParam, int iPad,
-                                        IPlatformStorage::EMessageResult result);
+    static int unlockFullInviteReturned(
+        void* pParam, int iPad, IPlatformStorage::EMessageResult result);
 
     // Remote save
     static int remoteSaveThreadProc(void* lpParameter);
@@ -140,9 +123,6 @@ private:
     eTMSAction m_eTMSAction[XUSER_MAX_COUNT];
     void* m_eXuiActionParam[XUSER_MAX_COUNT];
     eXuiAction m_eGlobalXuiAction;
-    eXuiServerAction m_eXuiServerAction[XUSER_MAX_COUNT];
-    void* m_eXuiServerActionParam[XUSER_MAX_COUNT];
-    eXuiServerAction m_eGlobalXuiServerAction;
 
     unsigned int m_uiOpacityCountDown[XUSER_MAX_COUNT];
 

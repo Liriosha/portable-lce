@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "TrackedEntity.h"
 
 #include <assert.h>
@@ -9,10 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "platform/PlatformTypes.h"
 #include "EntityTracker.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/linux/LinuxGame.h"
 #include "ServerPlayer.h"
 #include "java/Class.h"
 #include "minecraft/SharedConstants.h"
@@ -36,6 +32,7 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/network/PlayerConnection.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Creature.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/ExperienceOrb.h"
@@ -57,12 +54,11 @@
 #include "minecraft/world/item/ItemInstance.h"
 #include "minecraft/world/item/MapItem.h"
 #include "minecraft/world/level/saveddata/MapItemSavedData.h"
+#include "platform/PlatformTypes.h"
+#include "platform/network/network.h"
 
 class AttributeInstance;
 class MobEffectInstance;
-#ifndef __linux__
-#include <qnet.h>
-#endif  // __linux__
 
 TrackedEntity::TrackedEntity(std::shared_ptr<Entity> e, int range,
                              int updateInterval, bool trackDelta) {
@@ -713,7 +709,7 @@ void TrackedEntity::updatePlayers(
 std::shared_ptr<Packet> TrackedEntity::getAddEntityPacket() {
     if (e->removed) {
         Log::info("Fetching addPacket for removed entity - %s\n",
-                        e->getAName().c_str());
+                  e->getAName().c_str());
     }
 
     // 4J-PB - replacing with a switch, rather than tons of ifs

@@ -3,9 +3,9 @@
 #include <utility>
 #include <vector>
 
-
-#include "platform/renderer/renderer.h"
 #include "java/ByteBuffer.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 std::unordered_map<int, int> MemoryTracker::GL_LIST_IDS;
 std::vector<int> MemoryTracker::TEXTURE_IDS;

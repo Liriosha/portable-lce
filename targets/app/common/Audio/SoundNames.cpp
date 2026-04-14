@@ -1,5 +1,5 @@
-#include "Consoles_SoundEngine.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "app/common/Audio/ConsoleSoundEngine.h"
+#include "app/common/Audio/SoundTypes.h"
 
 const char* ConsoleSoundEngine::wchSoundNames[eSoundType_MAX] = {
     "mob/chicken/chicken",        //	eSoundType_MOB_CHICKEN_AMBIENT
@@ -58,7 +58,7 @@ const char* ConsoleSoundEngine::wchSoundNames[eSoundType_MAX] = {
     "mob/cat/meow",               //  eSoundType_MOB_CAT_MEOW
     // 4J-PB - correct the name of the event for hitting ocelots
     "mob/cat/hitt",  //  eSoundType_MOB_CAT_HITT
-                      //	"mob.irongolem.throw", //
+                     //	"mob.irongolem.throw", //
     // eSoundType_MOB_IRONGOLEM_THROW 	"mob.irongolem.hit",
     ////  eSoundType_MOB_IRONGOLEM_HIT 	"mob.irongolem.death",
     ////  eSoundType_MOB_IRONGOLEM_DEATH 	"mob.irongolem.walk",
@@ -205,11 +205,11 @@ const char* ConsoleSoundEngine::wchSoundNames[eSoundType_MAX] = {
     "mob/horse/jump",            // eSoundType_MOB_HORSE_JUMP,
 
     "mob/witch/idle",   // eSoundType_MOB_WITCH_IDLE,			<---
-                         // missing
+                        // missing
     "mob/witch/hurt",   // eSoundType_MOB_WITCH_HURT,			<---
-                         // missing
+                        // missing
     "mob/witch/death",  // eSoundType_MOB_WITCH_DEATH,			<---
-                         // missing
+                        // missing
 
     "mob/slime/big",    // eSoundType_MOB_SLIME_BIG,
     "mob/slime/small",  // eSoundType_MOB_SLIME_SMALL,

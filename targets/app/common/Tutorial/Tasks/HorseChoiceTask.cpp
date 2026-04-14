@@ -3,10 +3,10 @@
 #include <memory>
 
 #include "app/common/Tutorial/Tasks/ChoiceTask.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "java/Class.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/animal/EntityHorse.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
 
 class Tutorial;
 

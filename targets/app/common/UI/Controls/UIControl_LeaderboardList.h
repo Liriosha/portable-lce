@@ -2,12 +2,12 @@
 
 #include <string>
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/UI/Controls/UIControl_Base.h"
 #include "app/common/UI/Controls/UIControl_LeaderboardList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
 #include "UIControl_Base.h"
 
@@ -47,10 +47,9 @@ public:
     void setupTitles(const std::string& rank, const std::string& gamertag);
     void initLeaderboard(int iFirstFocus, int iTotalEntries, int iNumColumns);
     void setColumnIcon(int iColumn, int iType);
-    void addDataSet(bool bLast, int iId, int iRank,
-                    const std::string& gamertag, bool bDisplayMessage,
-                    const std::string& col0, const std::string& col1,
-                    const std::string& col2, const std::string& col3,
-                    const std::string& col4, const std::string& col5,
-                    const std::string& col6);
+    void addDataSet(bool bLast, int iId, int iRank, const std::string& gamertag,
+                    bool bDisplayMessage, const std::string& col0,
+                    const std::string& col1, const std::string& col2,
+                    const std::string& col3, const std::string& col4,
+                    const std::string& col5, const std::string& col6);
 };

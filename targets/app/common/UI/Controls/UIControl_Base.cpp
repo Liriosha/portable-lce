@@ -3,14 +3,14 @@
 #include <string>
 #include <vector>
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/UI/Controls/UIControl.h"
 #include "app/common/UI/UIScene.h"
 #include "app/common/UI/UIString.h"
-#include "app/linux/Iggy/include/iggy.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/Iggy/include/rrCore.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "util/StringHelpers.h"
 
 UIControl_Base::UIControl_Base() {
@@ -91,8 +91,7 @@ const char* UIControl_Base::getLabel() {
     return m_label.c_str();
 }
 
-void UIControl_Base::setAllPossibleLabels(int labelCount,
-                                          char labels[][256]) {
+void UIControl_Base::setAllPossibleLabels(int labelCount, char labels[][256]) {
     IggyDataValue result;
     IggyDataValue* value = new IggyDataValue[labelCount];
     IggyStringUTF8* stringVal = new IggyStringUTF8[labelCount];

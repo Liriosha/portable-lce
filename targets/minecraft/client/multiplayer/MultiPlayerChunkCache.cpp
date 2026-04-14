@@ -3,9 +3,9 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "util/StringHelpers.h"
+#include <atomic>
+
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/level/ServerChunkCache.h"
 #include "minecraft/server/level/ServerLevel.h"
@@ -19,6 +19,7 @@
 #include "minecraft/world/level/dimension/Dimension.h"
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "util/StringHelpers.h"
 
 MultiPlayerChunkCache::MultiPlayerChunkCache(Level* level) {
     XZSIZE = level->dimension->getXZSize();  // 4J Added
@@ -167,7 +168,7 @@ LevelChunk* MultiPlayerChunkCache::create(int x, int z) {
             std::unique_lock<std::mutex> lock(m_csLoadCreate);
 
             // LevelChunk *chunk;
-            if (g_NetworkManager
+            if (NetworkService
                     .IsHost())  // force here to disable sharing of data
             {
                 // 4J-JEV: We are about to use shared data, abort if the server
@@ -175,8 +176,8 @@ LevelChunk* MultiPlayerChunkCache::create(int x, int z) {
                 if (MinecraftServer::getInstance()->serverHalted())
                     return nullptr;
 
-                // If we're the host, then don't create the chunk, share data
-                // from the server's copy
+                // If we're the host, then don't create the chunk, share
+                // data from the server's copy
 #ifdef _LARGE_WORLDS
                 LevelChunk* serverChunk =
                     MinecraftServer::getInstance()
@@ -210,20 +211,14 @@ LevelChunk* MultiPlayerChunkCache::create(int x, int z) {
             chunk->loaded = true;
         }
 
-#if (defined _WIN64 || defined __LP64__)
-        if (InterlockedCompareExchangeRelease64(
-                (int64_t*)&cache[idx], (int64_t)chunk, (int64_t)lastChunk) ==
-            (int64_t)lastChunk)
-#else
-        if (InterlockedCompareExchangeRelease(
-                (int32_t*)&cache[idx], (int32_t)chunk, (int32_t)lastChunk) ==
-            (int32_t)lastChunk)
-#endif  // 0
-        {
+        LevelChunk* expected = lastChunk;
+        if (std::atomic_ref<LevelChunk*>(cache[idx])
+                .compare_exchange_strong(expected, chunk,
+                                         std::memory_order_release)) {
             // If we're sharing with the server, we'll need to calculate our
             // heightmap now, which isn't shared. If we aren't sharing with the
             // server, then this will be calculated when the chunk data arrives.
-            if (g_NetworkManager.IsHost()) {
+            if (NetworkService.IsHost()) {
                 chunk->recalcHeightmapOnly();
             }
 

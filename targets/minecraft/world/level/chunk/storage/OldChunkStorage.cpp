@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "OldChunkStorage.h"
 
 #include <assert.h>
@@ -12,15 +10,14 @@
 #include <unordered_map>
 #include <utility>
 
-#include "platform/input/input.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/linux/LinuxGame.h"
-#include "util/Definitions.h"
 #include "java/File.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "java/InputOutputStream/FileInputStream.h"
 #include "java/InputOutputStream/FileOutputStream.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/EntityIO.h"
 #include "minecraft/world/level/Level.h"
@@ -33,6 +30,7 @@
 #include "nbt/CompoundTag.h"
 #include "nbt/ListTag.h"
 #include "nbt/NbtIo.h"
+#include "platform/input/input.h"
 
 thread_local OldChunkStorage::ThreadStorage* OldChunkStorage::m_tlsStorage =
     nullptr;
@@ -73,22 +71,46 @@ OldChunkStorage::OldChunkStorage(File dir, bool create) {
     this->create = create;
 }
 
+// https://cplusplus.com/forum/general/144043/
+void to_base36(int value, char* buf) {
+    static const char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+    char tmp[64];
+    int i = 0;
+    unsigned int uval =
+        (value < 0) ? -(unsigned int)value : (unsigned int)value;
+
+    if (uval == 0) {
+        buf[0] = '0';
+        buf[1] = '\0';
+        return;
+    }
+
+    while (uval > 0) {
+        tmp[i++] = digits[uval % 36];
+        uval /= 36;
+    }
+    if (value < 0) tmp[i++] = '-';
+
+    for (int j = 0; j < i; ++j) buf[j] = tmp[i - 1 - j];
+    buf[i] = '\0';
+}
+
 File OldChunkStorage::getFile(int x, int z) {
+    constexpr int MAX_PATH_SIZE = 256;
+
     char name[MAX_PATH_SIZE];
     char path1[MAX_PATH_SIZE];
     char path2[MAX_PATH_SIZE];
 
     char xRadix36[64];
     char zRadix36[64];
-#if defined(__linux__)
-    assert(0);  // need a gcc verison of _itow ?
-#else
-    _itow(x, xRadix36, 36);
-    _itow(z, zRadix36, 36);
+
+    to_base36(x, xRadix36);
+    to_base36(z, zRadix36);
     snprintf(name, MAX_PATH_SIZE, "c.%s.%s.dat", xRadix36, zRadix36);
-    _itow(x & 63, path1, 36);
-    _itow(z & 63, path2, 36);
-#endif
+    to_base36(x & 63, path1);
+    to_base36(z & 63, path2);
+
     // sprintf(file,"%s\\%s",dir,path1);
     File file(dir, std::string(path1));
     if (!file.exists()) {
@@ -135,7 +157,7 @@ LevelChunk* OldChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing level data, skipping\n", x,
                     z);
-            Log::info(buf);
+            Log::info("%s", buf);
             return nullptr;
         }
         if (!tag->getCompound("Level")->contains("Blocks")) {
@@ -143,7 +165,7 @@ LevelChunk* OldChunkStorage::load(Level* level, int x, int z) {
             sprintf(buf,
                     "Chunk file at %d, %d is missing block data, skipping\n", x,
                     z);
-            Log::info(buf);
+            Log::info("%s", buf);
             return nullptr;
         }
         LevelChunk* levelChunk =
@@ -154,7 +176,7 @@ LevelChunk* OldChunkStorage::load(Level* level, int x, int z) {
                     "Chunk fileat %d, %d is in the wrong location; relocating. "
                     "Expected %d, %d, got %d, %d\n",
                     x, z, x, z, levelChunk->x, levelChunk->z);
-            Log::info(buf);
+            Log::info("%s", buf);
             tag->putInt("xPos", x);
             tag->putInt("zPos", z);
             levelChunk =
@@ -470,10 +492,9 @@ LevelChunk* OldChunkStorage::load(Level* level, DataInputStream* dis) {
             for (int i = 0; i < tileTicks->size(); i++) {
                 CompoundTag* teTag = tileTicks->get(i);
 
-                level->forceAddTileTick(
-                    teTag->getInt("x"), teTag->getInt("y"),
-                    teTag->getInt("z"), teTag->getInt("i"),
-                    teTag->getInt("t"), teTag->getInt("p"));
+                level->forceAddTileTick(teTag->getInt("x"), teTag->getInt("y"),
+                                        teTag->getInt("z"), teTag->getInt("i"),
+                                        teTag->getInt("t"), teTag->getInt("p"));
             }
         }
     }
@@ -579,10 +600,9 @@ LevelChunk* OldChunkStorage::load(Level* level, CompoundTag* tag) {
             for (int i = 0; i < tileTicks->size(); i++) {
                 CompoundTag* teTag = tileTicks->get(i);
 
-                level->forceAddTileTick(
-                    teTag->getInt("x"), teTag->getInt("y"),
-                    teTag->getInt("z"), teTag->getInt("i"),
-                    teTag->getInt("t"), teTag->getInt("p"));
+                level->forceAddTileTick(teTag->getInt("x"), teTag->getInt("y"),
+                                        teTag->getInt("z"), teTag->getInt("i"),
+                                        teTag->getInt("t"), teTag->getInt("p"));
             }
         }
     }

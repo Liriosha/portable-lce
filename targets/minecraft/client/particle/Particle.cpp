@@ -4,7 +4,6 @@
 
 #include <cmath>
 
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "minecraft/SharedConstants.h"
@@ -212,6 +211,6 @@ bool Particle::isAttackable() { return false; }
 //@Override
 std::string Particle::toString() {
     return "A particle";  // getClass()->getSimpleName() + ", Pos (" + x + ","
-                           // + y + "," + z + "), RGBA (" + rCol + "," + gCol +
-                           // "," + bCol + "," + alpha + "), Age " + age;
+                          // + y + "," + z + "), RGBA (" + rCol + "," + gCol +
+                          // "," + bCol + "," + alpha + "), Age " + age;
 }

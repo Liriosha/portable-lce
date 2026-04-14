@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "ItemEntity.h"
 
 #include <stdint.h>
@@ -7,12 +6,12 @@
 #include <numbers>
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
 #include "SharedConstants.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"

@@ -6,7 +6,6 @@
 #include <numbers>
 #include <optional>
 
-#include "platform/renderer/renderer.h"
 #include "minecraft/client/model/MinecartModel.h"
 #include "minecraft/client/model/geom/Model.h"
 #include "minecraft/client/renderer/Textures.h"
@@ -16,6 +15,8 @@
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/item/Minecart.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 class Tile;
 

@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "SharedConstants.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/Difficulty.h"
@@ -314,8 +314,7 @@ void Zombie::addAdditonalSaveData(CompoundTag* tag) {
 
     if (isBaby()) tag->putBoolean("IsBaby", true);
     if (isVillager()) tag->putBoolean("IsVillager", true);
-    tag->putInt("ConversionTime",
-                isConverting() ? villagerConversionTime : -1);
+    tag->putInt("ConversionTime", isConverting() ? villagerConversionTime : -1);
 }
 
 void Zombie::readAdditionalSaveData(CompoundTag* tag) {

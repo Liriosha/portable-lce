@@ -1,6 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/GameHostOptions.h"
-#include "minecraft/util/Log.h"
 #include "PlayerConnection.h"
 
 #include <wchar.h>
@@ -11,15 +8,6 @@
 #include <format>
 #include <utility>
 
-#include "minecraft/GameEnums.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/DLC/DLCManager.h"
-#include "app/common/DLC/DLCSkinFile.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/common/Network/Socket.h"
-#include "app/linux/LinuxGame.h"
-#include "minecraft/client/model/SkinBox.h"
 #include "ServerConnection.h"
 #include "java/Class.h"
 #include "java/InputOutputStream/ByteArrayInputStream.h"
@@ -27,11 +15,18 @@
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "java/System.h"
+#include "minecraft/Console_Debug_enum.h"
 #include "minecraft/Facing.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
+#include "minecraft/client/model/SkinBox.h"
+#include "minecraft/client/skins/ISkinAssetData.h"
 #include "minecraft/commands/CommandDispatcher.h"
 #include "minecraft/commands/CommandsEnum.h"
 #include "minecraft/network/Connection.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/network/packet/AnimatePacket.h"
 #include "minecraft/network/packet/ChatPacket.h"
 #include "minecraft/network/packet/ClientCommandPacket.h"
@@ -72,6 +67,7 @@
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/server/level/ServerPlayerGameMode.h"
 #include "minecraft/stats/GenericStats.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/animal/EntityHorse.h"
 #include "minecraft/world/entity/item/ItemEntity.h"
@@ -97,6 +93,7 @@
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/LevelSettings.h"
 #include "minecraft/world/level/dimension/Dimension.h"
+#include "minecraft/world/level/dlc/DLCConstants.h"
 #include "minecraft/world/level/saveddata/MapItemSavedData.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/level/tile/entity/BeaconTileEntity.h"
@@ -104,6 +101,7 @@
 #include "minecraft/world/level/tile/entity/SignTileEntity.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/network/network.h"
 
 class SavedData;
 
@@ -139,8 +137,10 @@ PlayerConnection::PlayerConnection(MinecraftServer* server,
     m_onlineXUID = INVALID_XUID;
     m_bHasClientTickedOnce = false;
 
-    setShowOnMaps(
-        gameServices().getGameHostOption(eGameHostOption_Gamertags) != 0 ? true : false);
+    setShowOnMaps(gameServices().getGameHostOption(eGameHostOption_Gamertags) !=
+                          0
+                      ? true
+                      : false);
 }
 
 PlayerConnection::~PlayerConnection() { delete connection; }
@@ -384,8 +384,7 @@ void PlayerConnection::handleMovePlayer(
 #if !defined(_CONTENT_PACKAGE)
             printf("%s moved wrongly!\n", player->name.c_str());
             Log::info("Got position %f, %f, %f\n", xt, yt, zt);
-            Log::info("Expected %f, %f, %f\n", player->x, player->y,
-                            player->z);
+            Log::info("Expected %f, %f, %f\n", player->x, player->y, player->z);
 #endif
         }
         player->absMoveTo(xt, yt, zt, yRotT, xRotT);
@@ -408,7 +407,7 @@ void PlayerConnection::handleMovePlayer(
                     //                    kicked for floating too long!");
 #if !defined(_CONTENT_PACKAGE)
                     printf("%s was kicked for floating too long!\n",
-                            player->name.c_str());
+                           player->name.c_str());
 #endif
                     disconnect(DisconnectPacket::eDisconnect_NoFlying);
                     return;
@@ -810,11 +809,12 @@ void PlayerConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
         // Request for texture
 #if !defined(_CONTENT_PACKAGE)
         printf("Server received request for custom texture %s\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwBytes = 0;
-        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwBytes);
+        gameServices().getMemFileDetails(packet->textureName, &pbData,
+                                         &dwBytes);
 
         if (dwBytes != 0) {
             send(std::shared_ptr<TexturePacket>(
@@ -826,10 +826,10 @@ void PlayerConnection::handleTexture(std::shared_ptr<TexturePacket> packet) {
         // Response with texture data
 #if !defined(_CONTENT_PACKAGE)
         printf("Server received custom texture %s\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
-                                 packet->dataBytes);
+                                            packet->dataBytes);
         server->connection->handleTextureReceived(packet->textureName);
     }
 }
@@ -843,21 +843,22 @@ void PlayerConnection::handleTextureAndGeometry(
         // Request for texture and geometry
 #if !defined(_CONTENT_PACKAGE)
         printf("Server received request for custom texture %s\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         std::uint8_t* pbData = nullptr;
         unsigned int dwTextureBytes = 0;
-        gameServices().getMemFileDetails(packet->textureName, &pbData, &dwTextureBytes);
-        DLCSkinFile* pDLCSkinFile =
-            gameServices().getDLCSkinFile(packet->textureName);
+        gameServices().getMemFileDetails(packet->textureName, &pbData,
+                                         &dwTextureBytes);
+        ISkinAssetData* pSkinAsset =
+            gameServices().getSkinAssetData(packet->textureName);
 
         if (dwTextureBytes != 0) {
-            if (pDLCSkinFile) {
-                if (pDLCSkinFile->getAdditionalBoxesCount() != 0) {
+            if (pSkinAsset) {
+                if (pSkinAsset->getAdditionalBoxesCount() != 0) {
                     send(std::shared_ptr<TextureAndGeometryPacket>(
                         new TextureAndGeometryPacket(packet->textureName,
                                                      pbData, dwTextureBytes,
-                                                     pDLCSkinFile)));
+                                                     pSkinAsset)));
                 } else {
                     send(std::shared_ptr<TextureAndGeometryPacket>(
                         new TextureAndGeometryPacket(packet->textureName,
@@ -883,23 +884,23 @@ void PlayerConnection::handleTextureAndGeometry(
         // Response with texture and geometry data
 #if !defined(_CONTENT_PACKAGE)
         printf("Server received custom texture %s and geometry\n",
-                packet->textureName.c_str());
+               packet->textureName.c_str());
 #endif
         gameServices().addMemoryTextureFile(packet->textureName, packet->pbData,
-                                 packet->dwTextureBytes);
+                                            packet->dwTextureBytes);
 
         // add the geometry to the app list
         if (packet->dwBoxC != 0) {
 #if !defined(_CONTENT_PACKAGE)
             printf("Adding skin boxes for skin id %X, box count %d\n",
-                    packet->dwSkinID, packet->dwBoxC);
+                   packet->dwSkinID, packet->dwBoxC);
 #endif
-            gameServices().setAdditionalSkinBoxes(packet->dwSkinID, packet->BoxDataA,
-                                       packet->dwBoxC);
+            gameServices().setAdditionalSkinBoxes(
+                packet->dwSkinID, packet->BoxDataA, packet->dwBoxC);
         }
         // Add the anim override
         gameServices().setAnimOverrideBitmask(packet->dwSkinID,
-                                   packet->uiAnimOverrideBitmask);
+                                              packet->uiAnimOverrideBitmask);
 
         player->setCustomSkin(packet->dwSkinID);
 
@@ -936,17 +937,18 @@ void PlayerConnection::handleTextureAndGeometryReceived(
         std::uint8_t* pbData = nullptr;
         unsigned int dwTextureBytes = 0;
         gameServices().getMemFileDetails(textureName, &pbData, &dwTextureBytes);
-        DLCSkinFile* pDLCSkinFile = gameServices().getDLCSkinFile(textureName);
+        ISkinAssetData* pSkinAsset =
+            gameServices().getSkinAssetData(textureName);
 
         if (dwTextureBytes != 0) {
-            if (pDLCSkinFile &&
-                (pDLCSkinFile->getAdditionalBoxesCount() != 0)) {
+            if (pSkinAsset && (pSkinAsset->getAdditionalBoxesCount() != 0)) {
                 send(std::shared_ptr<TextureAndGeometryPacket>(
-                    new TextureAndGeometryPacket(
-                        textureName, pbData, dwTextureBytes, pDLCSkinFile)));
+                    new TextureAndGeometryPacket(textureName, pbData,
+                                                 dwTextureBytes, pSkinAsset)));
             } else {
                 // get the data from the app
-                std::uint32_t dwSkinID = gameServices().getSkinIdFromPath(textureName);
+                std::uint32_t dwSkinID =
+                    gameServices().getSkinIdFromPath(textureName);
                 std::vector<SKIN_BOX*>* pvSkinBoxes =
                     gameServices().getAdditionalSkinBoxes(dwSkinID);
                 unsigned int uiAnimOverrideBitmask =
@@ -966,11 +968,12 @@ void PlayerConnection::handleTextureChange(
     std::shared_ptr<TextureChangePacket> packet) {
     switch (packet->action) {
         case TextureChangePacket::e_TextureChange_Skin:
-            player->setCustomSkin(gameServices().getSkinIdFromPath(packet->path));
+            player->setCustomSkin(
+                gameServices().getSkinIdFromPath(packet->path));
 #if !defined(_CONTENT_PACKAGE)
             printf("Skin for server player %s has changed to %s (%d)\n",
-                    player->name.c_str(), player->customTextureUrl.c_str(),
-                    player->getPlayerDefaultSkin());
+                   player->name.c_str(), player->customTextureUrl.c_str(),
+                   static_cast<int>(player->getPlayerDefaultSkin()));
 #endif
             break;
         case TextureChangePacket::e_TextureChange_Cape:
@@ -978,7 +981,7 @@ void PlayerConnection::handleTextureChange(
             // player->customTextureUrl2 = packet->path;
 #if !defined(_CONTENT_PACKAGE)
             printf("Cape for server player %s has changed to %s\n",
-                    player->name.c_str(), player->customTextureUrl2.c_str());
+                   player->name.c_str(), player->customTextureUrl2.c_str());
 #endif
             break;
     }
@@ -1014,7 +1017,7 @@ void PlayerConnection::handleTextureAndGeometryChange(
         "PlayerConnection::handleTextureAndGeometryChange - Skin for server "
         "player %s has changed to %s (%d)\n",
         player->name.c_str(), player->customTextureUrl.c_str(),
-        player->getPlayerDefaultSkin());
+        static_cast<int>(player->getPlayerDefaultSkin()));
 #endif
 
     if (!packet->path.empty() &&
@@ -1060,46 +1063,47 @@ void PlayerConnection::handleServerSettingsChanged(
             gameServices().setGameHostOption(
                 eGameHostOption_FireSpreads,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_FireSpreads));
+                                     eGameHostOption_FireSpreads));
             gameServices().setGameHostOption(
                 eGameHostOption_TNT,
                 GameHostOptions::get(packet->data, eGameHostOption_TNT));
             gameServices().setGameHostOption(
                 eGameHostOption_MobGriefing,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_MobGriefing));
+                                     eGameHostOption_MobGriefing));
             gameServices().setGameHostOption(
                 eGameHostOption_KeepInventory,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_KeepInventory));
+                                     eGameHostOption_KeepInventory));
             gameServices().setGameHostOption(
                 eGameHostOption_DoMobSpawning,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_DoMobSpawning));
+                                     eGameHostOption_DoMobSpawning));
             gameServices().setGameHostOption(
                 eGameHostOption_DoMobLoot,
                 GameHostOptions::get(packet->data, eGameHostOption_DoMobLoot));
             gameServices().setGameHostOption(
                 eGameHostOption_DoTileDrops,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_DoTileDrops));
+                                     eGameHostOption_DoTileDrops));
             gameServices().setGameHostOption(
                 eGameHostOption_DoDaylightCycle,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_DoDaylightCycle));
+                                     eGameHostOption_DoDaylightCycle));
             gameServices().setGameHostOption(
                 eGameHostOption_NaturalRegeneration,
                 GameHostOptions::get(packet->data,
-                                      eGameHostOption_NaturalRegeneration));
+                                     eGameHostOption_NaturalRegeneration));
 
             server->getPlayers()->broadcastAll(
                 std::shared_ptr<ServerSettingsChangedPacket>(
                     new ServerSettingsChangedPacket(
                         ServerSettingsChangedPacket::HOST_IN_GAME_SETTINGS,
-                        gameServices().getGameHostOption(eGameHostOption_All))));
+                        gameServices().getGameHostOption(
+                            eGameHostOption_All))));
 
             // Update the QoS data
-            g_NetworkManager.UpdateAndSetGameSessionData();
+            NetworkService.UpdateAndSetGameSessionData();
         }
     }
 }
@@ -1408,10 +1412,10 @@ void PlayerConnection::handlePlayerInfo(
         if (serverPlayer != nullptr) {
             unsigned int origPrivs = serverPlayer->getAllPlayerGamePrivileges();
 
-            bool trustPlayers =
-                gameServices().getGameHostOption(eGameHostOption_TrustPlayers) != 0;
-            bool cheats =
-                gameServices().getGameHostOption(eGameHostOption_CheatsEnabled) != 0;
+            bool trustPlayers = gameServices().getGameHostOption(
+                                    eGameHostOption_TrustPlayers) != 0;
+            bool cheats = gameServices().getGameHostOption(
+                              eGameHostOption_CheatsEnabled) != 0;
             if (serverPlayer == player) {
                 GameType* gameType =
                     Player::getPlayerGamePrivilege(
@@ -1424,7 +1428,7 @@ void PlayerConnection::handlePlayerInfo(
                     gameType) {
 #if !defined(_CONTENT_PACKAGE)
                     printf("Setting %s to game mode %d\n",
-                            serverPlayer->name.c_str(), gameType);
+                           serverPlayer->name.c_str(), gameType->getId());
 #endif
                     serverPlayer->setPlayerGamePrivilege(
                         Player::ePlayerGamePrivilege_CreativeMode,
@@ -1439,7 +1443,7 @@ void PlayerConnection::handlePlayerInfo(
                 } else {
 #if !defined(_CONTENT_PACKAGE)
                     printf("%s already has game mode %d\n",
-                            serverPlayer->name.c_str(), gameType);
+                           serverPlayer->name.c_str(), gameType->getId());
 #endif
                 }
                 if (cheats) {

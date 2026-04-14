@@ -4,16 +4,13 @@
 #include <format>
 #include <string>
 #include <vector>
-#if !defined(__linux__)
-#include <qnet.h>
-#endif
+
+#include "minecraft/network/INetworkService.h"
 #include "platform/PlatformTypes.h"
-#include "platform/IPlatformNetwork.h"
-#include "platform/NetTypes.h"
-#include "NetworkPlayerInterface.h"
-#include "PlatformNetworkManagerStub.h"
-#include "SessionInfo.h"
-#include "platform/C4JThread.h"
+#include "platform/network/IPlatformNetwork.h"
+#include "platform/network/NetTypes.h"
+#include "platform/network/network.h"
+#include "platform/thread/C4JThread.h"
 
 class ClientConnection;
 class Minecraft;
@@ -21,17 +18,13 @@ class FriendSessionInfo;
 class INVITE_INFO;
 class INetworkPlayer;
 
-const int NON_QNET_SENDDATA_ACK_REQUIRED = 1;
-
 // This class implements the game-side interface to the networking system. As
 // such, it is platform independent and may contain bits of game-side code where
 // appropriate. It shouldn't ever reference any platform specifics of the
 // network implementation (eg QNET), rather it should interface with an
 // implementation of PlatformNetworkManager to provide this functionality.
 
-class CGameNetworkManager {
-    friend class IPlatformNetworkStub;
-
+class CGameNetworkManager : public ::minecraft::network::INetworkService {
 public:
     CGameNetworkManager();
     // Misc high level flow
@@ -96,9 +89,8 @@ public:
     bool GetGameSessionInfo(int iPad, SessionID sessionId,
                             FriendSessionInfo* foundSession);
     void SetSessionsUpdatedCallback(std::function<void()> callback);
-    void GetFullFriendSessionInfo(
-        FriendSessionInfo* foundSession,
-        std::function<void(bool success)> callback);
+    void GetFullFriendSessionInfo(FriendSessionInfo* foundSession,
+                                  std::function<void(bool success)> callback);
     void ForceFriendsSessionRefresh();
 
     // Session joining and leaving
@@ -163,11 +155,13 @@ public:
     static int messageQueuePos;
 
     // Methods called from PlatformNetworkManager
-private:
+    // 4jcraft: made these public, we can't friend class StubPlatformNetwork
+    // here like before because that would be naming an opaque platform backend
+    // class, plus this API is shit so i dont care
+public:
     void StateChange_AnyToHosting();
     void StateChange_AnyToJoining();
-    void StateChange_JoiningToIdle(
-        IPlatformNetwork::eJoinFailedReason reason);
+    void StateChange_JoiningToIdle(IPlatformNetwork::eJoinFailedReason reason);
     void StateChange_AnyToStarting();
     void StateChange_AnyToEnding(bool bStateWasPlaying);
     void StateChange_AnyToIdle();
@@ -193,7 +187,6 @@ private:
     bool m_bInitialised;
 
 private:
-    float m_lastPlayerEventTimeStart;  // For telemetry
     static IPlatformNetwork* s_pPlatformNetworkManager;
     bool m_bNetworkThreadRunning;
     int GetJoiningReadyPercentage();

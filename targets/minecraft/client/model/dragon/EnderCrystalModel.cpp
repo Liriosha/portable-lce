@@ -3,9 +3,9 @@
 #include <memory>
 #include <string>
 
-
-#include "platform/renderer/renderer.h"
 #include "minecraft/client/model/geom/ModelPart.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 EnderCrystalModel::EnderCrystalModel(float g) {
     glass = new ModelPart(this, "glass");

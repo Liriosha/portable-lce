@@ -7,8 +7,6 @@
 #include <utility>
 #include <vector>
 
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "ServerLevel.h"
 #include "ServerPlayer.h"
 #include "TrackedEntity.h"
@@ -20,6 +18,7 @@
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/level/chunk/LevelChunk.h"
 #include "minecraft/world/level/dimension/Dimension.h"
+#include "platform/network/network.h"
 
 EntityTracker::EntityTracker(ServerLevel* level) {
     this->level = level;

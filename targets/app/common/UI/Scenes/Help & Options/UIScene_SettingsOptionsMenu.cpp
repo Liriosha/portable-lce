@@ -3,20 +3,20 @@
 
 #include <wchar.h>
 
-#include "platform/profile/profile.h"
-#include "platform/renderer/renderer.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_Slider.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "minecraft/GameEnums.h"
 #include "minecraft/client/Minecraft.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
 
 int UIScene_SettingsOptionsMenu::m_iDifficultySettingA[4] = {
@@ -380,7 +380,8 @@ void UIScene_SettingsOptionsMenu::handleSliderMove(F64 sliderId,
 
             std::string wsText = app.GetString(m_iDifficultySettingA[value]);
             EHTMLFontSize size = eHTMLSize_Normal;
-            if (!PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen()) {
+            if (!PlatformRenderer.IsHiDef() &&
+                !PlatformRenderer.IsWidescreen()) {
                 size = eHTMLSize_Splitscreen;
             }
             char startTags[64];

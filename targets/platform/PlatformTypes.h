@@ -1,25 +1,41 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
+#include <memory>
 
 // Shared value types used by platform interfaces. These are NOT interfaces
 // themselves — they are data carriers that cross the platform boundary.
 
 struct ImageFileBuffer {
     enum EImageType { e_typePNG, e_typeJPG };
-    EImageType m_type;
-    void* m_pBuffer = nullptr;
-    int m_bufferSize = 0;
 
-    [[nodiscard]] int GetType() const { return m_type; }
-    [[nodiscard]] void* GetBufferPointer() const { return m_pBuffer; }
-    [[nodiscard]] int GetBufferSize() const { return m_bufferSize; }
+    ImageFileBuffer() = default;
+    ImageFileBuffer(EImageType type, std::size_t size)
+        : m_type(type),
+          m_pBuffer(size > 0 ? std::make_unique<std::byte[]>(size) : nullptr),
+          m_bufferSize(size) {}
+
+    // move-only
+    ImageFileBuffer(ImageFileBuffer&&) noexcept = default;
+    ImageFileBuffer& operator=(ImageFileBuffer&&) noexcept = default;
+    ImageFileBuffer(const ImageFileBuffer&) = delete;
+    ImageFileBuffer& operator=(const ImageFileBuffer&) = delete;
+
+    [[nodiscard]] EImageType GetType() const { return m_type; }
+    [[nodiscard]] std::byte* GetBufferPointer() const {
+        return m_pBuffer.get();
+    }
+    [[nodiscard]] std::size_t GetBufferSize() const { return m_bufferSize; }
     [[nodiscard]] bool Allocated() const { return m_pBuffer != nullptr; }
     void Release() {
-        std::free(m_pBuffer);
-        m_pBuffer = nullptr;
+        m_pBuffer.reset();
+        m_bufferSize = 0;
     }
+
+    EImageType m_type{e_typePNG};
+    std::unique_ptr<std::byte[]> m_pBuffer;
+    std::size_t m_bufferSize = 0;
 };
 
 struct D3DXIMAGE_INFO {
@@ -59,6 +75,11 @@ inline constexpr int XUSER_INDEX_ANY = 255;
 inline constexpr int XUSER_MAX_COUNT = 4;
 inline constexpr int XUSER_NAME_SIZE = 32;
 inline constexpr int XUSER_INDEX_FOCUS = 254;
+
+// Maximum local (split-screen) players. Same as XUSER_MAX_COUNT; kept as a
+// separate name because gameplay code talks about "local players" rather
+// than Xbox user slots.
+#define MAX_LOCAL_PLAYERS 4
 
 using PlayerUID = unsigned long long;
 using PPlayerUID = PlayerUID*;
@@ -106,11 +127,15 @@ struct XMARKETPLACE_CONTENTOFFER_INFO {
 using PXMARKETPLACE_CONTENTOFFER_INFO = XMARKETPLACE_CONTENTOFFER_INFO*;
 
 inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_CONTENT = 0x00000002;
-inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_GAME_DEMO = 0x00000020;
-inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_GAME_TRAILER = 0x00000040;
+inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_GAME_DEMO =
+    0x00000020;
+inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_GAME_TRAILER =
+    0x00000040;
 inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_THEME = 0x00000080;
 inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_TILE = 0x00000800;
 inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_ARCADE = 0x00002000;
 inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_VIDEO = 0x00004000;
-inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_CONSUMABLE = 0x00010000;
-inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_AVATARITEM = 0x00100000;
+inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_CONSUMABLE =
+    0x00010000;
+inline constexpr std::uint32_t XMARKETPLACE_OFFERING_TYPE_AVATARITEM =
+    0x00100000;

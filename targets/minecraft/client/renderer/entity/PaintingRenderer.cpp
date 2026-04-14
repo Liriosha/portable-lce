@@ -2,10 +2,7 @@
 
 #include <cmath>
 
-
-#include "platform/renderer/renderer.h"
 #include "EntityRenderDispatcher.h"
-
 #include "java/Random.h"
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/Textures.h"
@@ -13,6 +10,8 @@
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/Painting.h"
 #include "minecraft/world/level/Level.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation PaintingRenderer::PAINTING_LOCATION(TN_ART_KZ);
 

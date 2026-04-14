@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "PendingConnection.h"
 
 #include <stdio.h>
@@ -7,18 +5,12 @@
 #include <cstdint>
 #include <vector>
 
-#include "platform/PlatformTypes.h"
-#include "platform/storage/storage.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/BuildVer/BuildVer.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "platform/IPlatformNetwork.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "platform/NetTypes.h"
 #include "PlayerConnection.h"
 #include "ServerConnection.h"
 #include "java/Random.h"
+#include "minecraft/BuildVer.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/network/Connection.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
@@ -27,6 +19,11 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/level/ServerPlayer.h"
+#include "minecraft/util/Log.h"
+#include "platform/PlatformTypes.h"
+#include "platform/network/NetTypes.h"
+#include "platform/network/network.h"
+#include "platform/storage/storage.h"
 
 class Packet;
 // #if 0
@@ -80,7 +77,7 @@ void PendingConnection::disconnect(DisconnectPacket::eDisconnectReason reason) {
 void PendingConnection::handlePreLogin(std::shared_ptr<PreLoginPacket> packet) {
     if (packet->m_netcodeVersion != MINECRAFT_NET_VERSION) {
         Log::info("Netcode version is %d not equal to %d\n",
-                        packet->m_netcodeVersion, MINECRAFT_NET_VERSION);
+                  packet->m_netcodeVersion, MINECRAFT_NET_VERSION);
         if (packet->m_netcodeVersion > MINECRAFT_NET_VERSION) {
             disconnect(DisconnectPacket::eDisconnect_OutdatedServer);
         } else {
@@ -136,11 +133,11 @@ void PendingConnection::sendPreLoginResponse() {
     }
 
     {
-        connection->send(std::shared_ptr<PreLoginPacket>(
-            new PreLoginPacket("-", ugcXuids, ugcXuidCount, ugcFriendsOnlyBits,
-                               server->m_ugcPlayersVersion, szUniqueMapName,
-                               gameServices().getGameHostOption(eGameHostOption_All),
-                               hostIndex, server->m_texturePackId)));
+        connection->send(std::shared_ptr<PreLoginPacket>(new PreLoginPacket(
+            "-", ugcXuids, ugcXuidCount, ugcFriendsOnlyBits,
+            server->m_ugcPlayersVersion, szUniqueMapName,
+            gameServices().getGameHostOption(eGameHostOption_All), hostIndex,
+            server->m_texturePackId)));
     }
 }
 
@@ -150,8 +147,8 @@ void PendingConnection::handleLogin(std::shared_ptr<LoginPacket> packet) {
     // name = packet->userName;
     if (packet->clientVersion != SharedConstants::NETWORK_PROTOCOL_VERSION) {
         Log::info("Client version is %d not equal to %d\n",
-                        packet->clientVersion,
-                        SharedConstants::NETWORK_PROTOCOL_VERSION);
+                  packet->clientVersion,
+                  SharedConstants::NETWORK_PROTOCOL_VERSION);
         if (packet->clientVersion > SharedConstants::NETWORK_PROTOCOL_VERSION) {
             disconnect(DisconnectPacket::eDisconnect_OutdatedServer);
         } else {

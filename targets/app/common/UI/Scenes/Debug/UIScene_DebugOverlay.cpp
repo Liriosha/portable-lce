@@ -5,21 +5,21 @@
 
 #include <memory>
 
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/Tutorial/Tutorial.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_ButtonList.h"
 #include "app/common/UI/Controls/UIControl_Slider.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/iggy.h"
+#include "minecraft/GameEnums.h"
+#include "platform/profile/profile.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/Game.h"
+#include "app/common/Iggy/include/rrCore.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "minecraft/commands/common/EnchantItemCommand.h"
 #include "minecraft/commands/common/GiveItemCommand.h"
 #include "minecraft/commands/common/TimeCommand.h"
@@ -33,13 +33,14 @@
 class Player;
 class UILayer;
 #ifdef _DEBUG_MENUS_ENABLED
-#include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/ClientConnection.h"
 #include "minecraft/client/multiplayer/MultiPlayerLevel.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/client/renderer/GameRenderer.h"
 #include "minecraft/server/MinecraftServer.h"
+#include "minecraft/server/ServerAction.h"
+#include "util/StringHelpers.h"
 
 UIScene_DebugOverlay::UIScene_DebugOverlay(int iPad, void* initData,
                                            UILayer* parentLayer)
@@ -208,9 +209,9 @@ void UIScene_DebugOverlay::handlePress(F64 controlId, F64 childId) {
         case eControl_Mobs: {
             int id = childId;
             if (id < m_mobFactories.size()) {
-                app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                       eXuiServerAction_SpawnMob,
-                                       (void*)m_mobFactories[id]);
+                MinecraftServer::getInstance()->queueServerAction(
+                    minecraft::server::SpawnDebugMob{
+                        0, static_cast<int>(m_mobFactories[id])});
             }
         } break;
         case eControl_Enchantments: {
@@ -245,8 +246,8 @@ void UIScene_DebugOverlay::handlePress(F64 controlId, F64 childId) {
             conn->send(ToggleDownfallCommand::preparePacket());
         } break;
         case eControl_Thunder:
-            app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                   eXuiServerAction_ToggleThunder);
+            MinecraftServer::getInstance()->queueServerAction(
+                minecraft::server::ToggleThunder{});
             break;
         case eControl_ResetTutorial:
             Tutorial::debugResetPlayerSavedProgress(

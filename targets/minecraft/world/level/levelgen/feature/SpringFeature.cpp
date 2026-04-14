@@ -1,9 +1,8 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "SpringFeature.h"
 
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
-#include "app/linux/LinuxGame.h"
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/tile/Tile.h"
 

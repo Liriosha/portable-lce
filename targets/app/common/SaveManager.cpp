@@ -1,4 +1,3 @@
-#include "app/linux/LinuxGame.h"
 #include "app/common/SaveManager.h"
 
 #include <chrono>
@@ -6,12 +5,12 @@
 #include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "minecraft/server/MinecraftServer.h"
+#include "minecraft/server/ServerAction.h"
 #include "platform/profile/profile.h"
 
 void SaveManager::setAutosaveTimerTime(int settingValue) {
     m_uiAutosaveTimer =
-        time_util::clock::now() +
-        std::chrono::minutes(settingValue * 15);
+        time_util::clock::now() + std::chrono::minutes(settingValue * 15);
 }
 
 bool SaveManager::autosaveDue() const {
@@ -35,9 +34,8 @@ void SaveManager::lock() {
 
             if (g_NetworkManager.IsLocalGame() &&
                 g_NetworkManager.GetPlayerCount() == 1) {
-                app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                       eXuiServerAction_PauseServer,
-                                       (void*)true);
+                MinecraftServer::getInstance()->queueServerAction(
+                    minecraft::server::PauseServer{true});
             }
         }
     }
@@ -54,9 +52,8 @@ void SaveManager::unlock() {
 
             if (g_NetworkManager.IsLocalGame() &&
                 g_NetworkManager.GetPlayerCount() == 1) {
-                app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                       eXuiServerAction_PauseServer,
-                                       (void*)false);
+                MinecraftServer::getInstance()->queueServerAction(
+                    minecraft::server::PauseServer{false});
             }
         }
     }

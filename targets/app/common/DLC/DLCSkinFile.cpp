@@ -3,12 +3,12 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "platform/renderer/renderer.h"
 #include "DLCManager.h"
 #include "app/common/DLC/DLCFile.h"
-#include "app/linux/LinuxGame.h"
+#include "app/common/Game.h"
 #include "minecraft/client/model/SkinBox.h"
 #include "platform/XboxStubs.h"
+#include "platform/renderer/renderer.h"
 
 DLCSkinFile::DLCSkinFile(const std::string& path)
     : DLCFile(DLCManager::e_DLCType_Skin, path) {
@@ -56,8 +56,8 @@ void DLCSkinFile::addParameter(DLCManager::EDLCParameterType type,
 
                 int maximumChars = 55;
 
-                bool bIsSDMode =
-                    !PlatformRenderer.IsHiDef() && !PlatformRenderer.IsWidescreen();
+                bool bIsSDMode = !PlatformRenderer.IsHiDef() &&
+                                 !PlatformRenderer.IsWidescreen();
 
                 if (bIsSDMode) {
                     maximumChars = 45;
@@ -110,9 +110,9 @@ void DLCSkinFile::addParameter(DLCManager::EDLCParameterType type,
             SKIN_BOX* pSkinBox = new SKIN_BOX;
             memset(pSkinBox, 0, sizeof(SKIN_BOX));
 
-            sscanf(value.c_str(), "%9ls%f%f%f%f%f%f%f%f", wchBodyPart, 10,
-                    &pSkinBox->fX, &pSkinBox->fY, &pSkinBox->fZ, &pSkinBox->fW,
-                    &pSkinBox->fH, &pSkinBox->fD, &pSkinBox->fU, &pSkinBox->fV);
+            sscanf(value.c_str(), "%9s%f%f%f%f%f%f%f%f", wchBodyPart,
+                   &pSkinBox->fX, &pSkinBox->fY, &pSkinBox->fZ, &pSkinBox->fW,
+                   &pSkinBox->fH, &pSkinBox->fD, &pSkinBox->fU, &pSkinBox->fV);
 
             if (strcmp(wchBodyPart, "HEAD") == 0) {
                 pSkinBox->ePart = eBodyPart_Head;
@@ -132,8 +132,7 @@ void DLCSkinFile::addParameter(DLCManager::EDLCParameterType type,
             m_AdditionalBoxes.push_back(pSkinBox);
         } break;
         case DLCManager::e_DLCParamType_Anim: {
-            sscanf(value.c_str(), "%X", &m_uiAnimOverrideBitmask,
-                    sizeof(unsigned int));
+            sscanf(value.c_str(), "%X", &m_uiAnimOverrideBitmask);
             uint32_t skinId = app.getSkinIdFromPath(m_path);
             app.SetAnimOverrideBitmask(skinId, m_uiAnimOverrideBitmask);
             break;

@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "Entity.h"
 
 #include <stdarg.h>
@@ -17,12 +15,12 @@
 #include "EntityIO.h"
 #include "EntityPos.h"
 #include "SyncedEntityData.h"
-#include "minecraft/GameEnums.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/Random.h"
 #include "minecraft/Direction.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/Pos.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/model/HumanoidModel.h"
@@ -30,7 +28,7 @@
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
 #include "minecraft/server/level/ServerLevel.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/item/ItemEntity.h"
@@ -686,12 +684,13 @@ void Entity::move(double xa, double ya, double za,
     bool isPlayerSneaking =
         onGround && isSneaking() && instanceof(eTYPE_PLAYER);
 
+    auto shared = shared_from_this();
+
     if (isPlayerSneaking) {
         double d = 0.05;
 
         AABB translated_bb = bb.move(xa, -1.0, 0.0);
-        while (xa != 0 &&
-               level->getCubes(shared_from_this(), &translated_bb)->empty()) {
+        while (xa != 0 && level->getCubes(shared, &translated_bb)->empty()) {
             if (xa < d && xa >= -d)
                 xa = 0;
             else if (xa > 0)
@@ -702,8 +701,7 @@ void Entity::move(double xa, double ya, double za,
         }
 
         translated_bb = bb.move(0, -1.0, za);
-        while (za != 0 &&
-               level->getCubes(shared_from_this(), &translated_bb)->empty()) {
+        while (za != 0 && level->getCubes(shared, &translated_bb)->empty()) {
             if (za < d && za >= -d)
                 za = 0;
             else if (za > 0)
@@ -715,7 +713,7 @@ void Entity::move(double xa, double ya, double za,
 
         translated_bb = bb.move(xa, -1.0, za);
         while (xa != 0 && za != 0 &&
-               level->getCubes(shared_from_this(), &translated_bb)->empty()) {
+               level->getCubes(shared, &translated_bb)->empty()) {
             if (xa < d && xa >= -d)
                 xa = 0;
             else if (xa > 0)
@@ -735,7 +733,7 @@ void Entity::move(double xa, double ya, double za,
 
     AABB expanded = bb.expand(xa, ya, za);
     std::vector<AABB>* aABBs =
-        level->getCubes(shared_from_this(), &expanded, noEntityCubes, true);
+        level->getCubes(shared, &expanded, noEntityCubes, true);
 
     // LAND FIRST, then x and z
     auto itEndAABB = aABBs->end();

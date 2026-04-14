@@ -1,13 +1,11 @@
-#include "minecraft/util/Log.h"
 #include "CustomPayloadPacket.h"
 
 #include <limits>
 
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
 #include "PacketListener.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
+#include "minecraft/util/Log.h"
 
 // Mojang-defined custom packets
 const std::string CustomPayloadPacket::CUSTOM_BOOK_PACKET = "MC|BEdit";

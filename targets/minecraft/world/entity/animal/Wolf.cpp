@@ -6,11 +6,10 @@
 #include <vector>
 
 #include "Sheep.h"
-#include "util/StringHelpers.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/entity/Entity.h"
@@ -50,6 +49,7 @@
 #include "minecraft/world/level/tile/ColoredTile.h"
 #include "minecraft/world/phys/AABB.h"
 #include "nbt/CompoundTag.h"
+#include "util/StringHelpers.h"
 
 Wolf::Wolf(Level* level) : TamableAnimal(level) {
     // 4J Stu - This function call had to be moved here from the Entity ctor to

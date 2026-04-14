@@ -17,14 +17,10 @@
 #include "Timer.h"
 #include "User.h"
 #include "app/common/Audio/SoundEngine.h"
-#include "app/common/DLC/DLCManager.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/common/Tutorial/Tutorial.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "app/common/UI/All Platforms/UIEnums.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
-#include "app/linux/Linux_UIController.h"
-#include "app/linux/Stubs/winapi_stubs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "java/Class.h"
 #include "java/Random.h"
 #include "minecraft/GameEnums.h"
@@ -54,9 +50,9 @@
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/client/title/TitleScreen.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
 #include "minecraft/network/packet/Packet.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/stats/Stats.h"
 #include "minecraft/stats/StatsCounter.h"
 #include "minecraft/util/Log.h"
@@ -85,6 +81,7 @@
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/chunk/CompressedTileStorage.h"
 #include "minecraft/world/level/dimension/Dimension.h"
+#include "minecraft/world/level/dlc/DLCConstants.h"
 #include "minecraft/world/level/material/Material.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/storage/LevelData.h"
@@ -95,23 +92,24 @@
 #include "minecraft/world/level/tile/TallGrassPlantTile.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/HitResult.h"
+#include "minecraft/world/tutorial/ITutorial.h"
 #include "platform/XboxStubs.h"
+#include "platform/network/network.h"
 #include "platform/profile/profile.h"
 #include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
+#include "platform/stubs.h"
 #include "strings.h"
 #if defined(ENABLE_JAVA_GUIS)
 #include "minecraft/client/gui/inventory/CreativeInventoryScreen.h"
 #endif
-#include "app/common/Colours/ColourTable.h"
 #include "app/common/ConsoleGameMode.h"
-#include "app/common/DLC/DLCPack.h"
-#include "app/common/Minecraft_Macros.h"
 #include "app/common/Tutorial/FullTutorialMode.h"
 #include "app/common/UI/All Platforms/IUIScene_CreativeMenu.h"
 #include "app/common/UI/UIFontData.h"
 #include "java/File.h"
 #include "java/System.h"
+#include "minecraft/Minecraft_Macros.h"
 #include "minecraft/StaticConstructors.h"
 #include "minecraft/client/MemoryTracker.h"
 #include "minecraft/client/gui/Font.h"
@@ -123,7 +121,8 @@
 #include "minecraft/client/multiplayer/MultiPlayerGameMode.h"
 #include "minecraft/client/player/Input.h"
 #include "minecraft/client/renderer/texture/TextureManager.h"
-#include "minecraft/client/skins/DLCTexturePack.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
+#include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/world/entity/npc/Villager.h"
 #include "minecraft/world/item/alchemy/PotionMacros.h"
 #include "minecraft/world/level/chunk/SparseDataStorage.h"
@@ -157,7 +156,8 @@ ResourceLocation Minecraft::ALT_FONT_LOCATION = ResourceLocation(TN_ALT_FONT);
 
 Minecraft::Minecraft(Component* mouseComponent, Canvas* parent,
                      MinecraftApplet* minecraftApplet, int width, int height,
-                     bool fullscreen) {
+                     bool fullscreen, IPlatformLeaderboard& leaderboard_)
+    : leaderboard(leaderboard_) {
     // 4J - added this block of initialisers
     gameMode = nullptr;
     hasCrashed = false;
@@ -324,7 +324,7 @@ void Minecraft::init() {
     EntityRenderDispatcher::instance->itemInHandRenderer =
         new ItemInHandRenderer(this, false);
 
-    for (int i = 0; i < 4; ++i) stats[i] = new StatsCounter();
+    for (int i = 0; i < 4; ++i) stats[i] = new StatsCounter(leaderboard);
 
     /*		4J - TODO, 4J-JEV: Unnecessary.
     Achievements::openInventory->setDescFormatter(nullptr);
@@ -467,35 +467,27 @@ File Minecraft::getWorkingDirectory() {
 }
 
 File Minecraft::getWorkingDirectory(const std::string& applicationName) {
-    // 4J - original version
-    // 4jcraft: ported to C++
-    std::string userHome = getenv("HOME");
-    File* workingDirectory;
-#if defined(__linux__)
-    workingDirectory = new File(userHome, '.' + applicationName + '/');
-#elif defined(_WINDOWS64)
-    std::string applicationData = getenv("APPDATA");
-    if (!applicationData.empty()) {
-        workingDirectory =
-            new File(applicationData, '.' + applicationName + '/');
-    } else {
-        workingDirectory = new File(userHome, '.' + applicationName + '/');
-    }
-// #elif defined(_MACOS)
-//		workingDirectory = new File(userHome, "Library/Application
-// Support/" + applicationName);
+#ifndef _WIN32
+    const char* homedir = getenv("HOME");
 #else
-    workingDirectory = new File(userHome, applicationName + '/');
+    const char* homedir = getenv("USERPROFILE");
 #endif
-    if (!workingDirectory->exists()) {
-        if (!workingDirectory->mkdirs()) {
-            Log::info("The working directory could not be created");
-            assert(0);
-            // throw new RuntimeException("The working directory could not be
-            // created: " + workingDirectory);
+
+    if (homedir != nullptr) {
+        File workingDirectory(std::string(homedir), '.' + applicationName + '/');
+
+        if (!workingDirectory.exists()) {
+            if (!workingDirectory.mkdirs()) {
+                Log::info("The working directory could not be created.\n");
+                assert(0);
+            }
         }
+
+        return workingDirectory;
+    } else {
+        Log::info("Could not locate user's home directory. This platform is likely missing an implementation of Minecraft::getWorkingDirectory.\n");
+        assert(0);
     }
-    return *workingDirectory;
 }
 
 LevelStorageSource* Minecraft::getLevelSource() { return levelSource; }
@@ -806,7 +798,7 @@ bool Minecraft::addLocalPlayer(int idx) {
     m_connectionFailed[idx] = false;
     m_pendingLocalConnections[idx] = nullptr;
 
-    bool success = g_NetworkManager.AddLocalPlayerByUserIndex(idx);
+    bool success = NetworkService.AddLocalPlayerByUserIndex(idx);
 
     if (success) {
         Log::info("Adding temp local player on pad %d\n", idx);
@@ -827,7 +819,7 @@ bool Minecraft::addLocalPlayer(int idx) {
         ui.NavigateToScene(idx, eUIScene_ConnectingProgress, param);
 
     } else {
-        Log::info("g_NetworkManager.AddLocalPlayerByUserIndex failed\n");
+        Log::info("NetworkService.AddLocalPlayerByUserIndex failed\n");
     }
 
     return success;
@@ -957,7 +949,7 @@ void Minecraft::removeLocalPlayerIdx(int idx) {
                 ->removeClientConnection(mplp->connection, true);
             delete mplp->connection;
             mplp->connection = nullptr;
-            g_NetworkManager.RemoveLocalPlayerByUserIndex(idx);
+            NetworkService.RemoveLocalPlayerByUserIndex(idx);
         }
         getLevel(localplayers[idx]->dimension)->removeEntity(localplayers[idx]);
 
@@ -975,7 +967,7 @@ void Minecraft::removeLocalPlayerIdx(int idx) {
         ;
         delete m_pendingLocalConnections[idx];
         m_pendingLocalConnections[idx] = nullptr;
-        g_NetworkManager.RemoveLocalPlayerByUserIndex(idx);
+        NetworkService.RemoveLocalPlayerByUserIndex(idx);
     } else {
         // Not sure how this works on qnet, but for other platforms, calling
         // RemoveLocalPlayerByUserIndex won't do anything if there isn't a local
@@ -1062,7 +1054,7 @@ void Minecraft::run_middle() {
                 //            }
 
                 // 4J-PB - AUTOSAVE TIMER - if the player is the host
-                if (level != nullptr && g_NetworkManager.IsHost()) {
+                if (level != nullptr && NetworkService.IsHost()) {
                     /*if(!bAutosaveTimerSet)
                     {
                     // set the timer
@@ -1096,18 +1088,8 @@ void Minecraft::run_middle() {
                                     TexturePack* tPack =
                                         Minecraft::GetInstance()
                                             ->skins->getSelected();
-                                    DLCTexturePack* pDLCTexPack =
-                                        (DLCTexturePack*)tPack;
-
-                                    DLCPack* pDLCPack =
-                                        pDLCTexPack->getDLCInfoParentPack();
-
-                                    if (pDLCPack) {
-                                        if (!pDLCPack->hasPurchasedFile(
-                                                DLCManager::e_DLCType_Texture,
-                                                "")) {
-                                            bTrialTexturepack = true;
-                                        }
+                                    if (tPack->needsPurchase()) {
+                                        bTrialTexturepack = true;
                                     }
                                 }
 
@@ -1131,21 +1113,15 @@ void Minecraft::run_middle() {
 #if !defined(_CONTENT_PACKAGE)
                                         {
                                             // print the time
-                                            auto now_tp = std::chrono::
-                                                system_clock::now();
-                                            std::time_t now_tt = std::chrono::
-                                                system_clock::to_time_t(now_tp);
-                                            std::tm utcTime{};
-#if defined(_WIN32)
-                                            gmtime_s(&utcTime, &now_tt);
-#else
-                                            gmtime_r(&now_tt, &utcTime);
-#endif
+                                            auto now = std::chrono::system_clock::now();
+                                            auto dp  = std::chrono::floor<std::chrono::days>(now);
+                                            std::chrono::hh_mm_ss hms{std::chrono::floor<std::chrono::seconds>(now - dp)};
 
                                             Log::info("%02d:%02d:%02d\n",
-                                                      utcTime.tm_hour,
-                                                      utcTime.tm_min,
-                                                      utcTime.tm_sec);
+                                                    (int)hms.hours().count(),
+                                                    (int)hms.minutes().count(),
+                                                    (int)hms.seconds().count());
+
                                         }
 #endif
                                     } else {
@@ -1184,7 +1160,7 @@ void Minecraft::run_middle() {
                             // list get the unique save name and xuid from
                             // whoever is the host
                             INetworkPlayer* pHostPlayer =
-                                g_NetworkManager.GetHostPlayer();
+                                NetworkService.GetHostPlayer();
                             PlayerUID xuid = pHostPlayer->GetUID();
 
                             if (gameServices().isInBannedLevelList(
@@ -1216,7 +1192,7 @@ void Minecraft::run_middle() {
                 // quadrant display to remind them to press start (if the
                 // session has space)
                 if (level != nullptr && bFirstTimeIntoGame &&
-                    g_NetworkManager.SessionHasSpace()) {
+                    NetworkService.SessionHasSpace()) {
                     // have a short delay before the display
                     if (iFirstTimeCountdown == 0) {
                         bFirstTimeIntoGame = false;
@@ -1390,7 +1366,7 @@ void Minecraft::run_middle() {
                         bool tryJoin = !pause &&
                                        !ui.IsIgnorePlayerJoinMenuDisplayed(
                                            PlatformInput.GetPrimaryPad()) &&
-                                       g_NetworkManager.SessionHasSpace() &&
+                                       NetworkService.SessionHasSpace() &&
                                        PlatformRenderer.IsHiDef() &&
                                        PlatformInput.ButtonPressed(i);
                         if (tryJoin) {
@@ -1408,7 +1384,7 @@ void Minecraft::run_middle() {
                                     if (PlatformProfile.IsSignedIn(i)) {
                                         // if this is a local game, then the
                                         // player just needs to be signed in
-                                        if (g_NetworkManager.IsLocalGame() ||
+                                        if (NetworkService.IsLocalGame() ||
                                             (PlatformProfile.IsSignedInLive(
                                                  i) &&
                                              PlatformProfile
@@ -1425,7 +1401,7 @@ void Minecraft::run_middle() {
                                                         "ui\n");
                                                     PlatformProfile.RequestSignInUI(
                                                         false,
-                                                        g_NetworkManager
+                                                        NetworkService
                                                             .IsLocalGame(),
                                                         true, false, true,
                                                         [this](bool b, int p) {
@@ -1443,7 +1419,8 @@ void Minecraft::run_middle() {
                                                     player =
                                                         createExtraLocalPlayer(
                                                             i,
-                                                            PlatformProfile.GetGamertag(i),
+                                                            PlatformProfile
+                                                                .GetGamertag(i),
                                                             i,
                                                             level->dimension
                                                                 ->id);
@@ -1497,7 +1474,7 @@ void Minecraft::run_middle() {
                                                     "ui\n");
                                                 PlatformProfile.RequestSignInUI(
                                                     false,
-                                                    g_NetworkManager
+                                                    NetworkService
                                                         .IsLocalGame(),
                                                     true, false, true,
                                                     [this](bool b, int p) {
@@ -1512,8 +1489,7 @@ void Minecraft::run_middle() {
                                         Log::info(
                                             "Bringing up the sign in ui\n");
                                         PlatformProfile.RequestSignInUI(
-                                            false,
-                                            g_NetworkManager.IsLocalGame(),
+                                            false, NetworkService.IsLocalGame(),
                                             true, false, true,
                                             [this](bool b, int p) {
                                                 return InGame_SignInReturned(
@@ -1739,7 +1715,7 @@ void Minecraft::run_middle() {
                     Packet::renderAllPacketStats();
 #else
                     // To show the size of the QNet queue in bytes and messages
-                    g_NetworkManager.renderQueueMeter();
+                    NetworkService.renderQueueMeter();
 #endif
                 } else {
                     lastTimer = System::nanoTime();
@@ -1778,8 +1754,8 @@ void Minecraft::run_middle() {
                 // pause = !isClientSide() && screen != nullptr &&
                 // screen->isPauseScreen();
 #if defined(ENABLE_JAVA_GUIS)
-                pause = g_NetworkManager.IsLocalGame() &&
-                        g_NetworkManager.GetPlayerCount() == 1 &&
+                pause = NetworkService.IsLocalGame() &&
+                        NetworkService.GetPlayerCount() == 1 &&
                         screen != nullptr && screen->isPauseScreen();
 #else
                 pause = gameServices().isAppPaused();
@@ -3980,12 +3956,12 @@ std::string Minecraft::gatherStats1() {
 }
 
 std::string Minecraft::gatherStats2() {
-    return g_NetworkManager.GatherStats();
+    return NetworkService.GatherStats();
     // return levelRenderer->gatherStats2();
 }
 
 std::string Minecraft::gatherStats3() {
-    return g_NetworkManager.GatherRTTStats();
+    return NetworkService.GatherRTTStats();
     // return "P: " + particleEngine->countParticles() + ". T: " +
     // level->gatherStats();
 }
@@ -4101,13 +4077,15 @@ void Minecraft::respawnPlayer(int iPad, int dimension, int newEntityId) {
     gameRenderer->EnableUpdateThread();
 }
 
-void Minecraft::start(const std::string& name, const std::string& sid) {
-    startAndConnectTo(name, sid, "");
+void Minecraft::start(const std::string& name, const std::string& sid,
+                      IPlatformLeaderboard& leaderboard) {
+    startAndConnectTo(name, sid, "", leaderboard);
 }
 
 void Minecraft::startAndConnectTo(const std::string& name,
                                   const std::string& sid,
-                                  const std::string& url) {
+                                  const std::string& url,
+                                  IPlatformLeaderboard& leaderboard) {
     bool fullScreen = false;
     std::string userName = name;
 
@@ -4130,7 +4108,8 @@ void Minecraft::startAndConnectTo(const std::string& name,
     Minecraft* minecraft;
     // 4J - was new Minecraft(frame, canvas, nullptr, 854, 480, fullScreen);
 
-    minecraft = new Minecraft(nullptr, nullptr, nullptr, 1280, 720, fullScreen);
+    minecraft = new Minecraft(nullptr, nullptr, nullptr, 1280, 720, fullScreen,
+                              leaderboard);
 
     /* - 4J - removed
     {
@@ -4202,7 +4181,7 @@ bool useLomp = false;
 
 int g_iMainThreadId;
 
-void Minecraft::main() {
+void Minecraft::main(IPlatformLeaderboard& leaderboard) {
     std::string name;
     std::string sessionId;
 
@@ -4214,7 +4193,7 @@ void Minecraft::main() {
     EntityRenderDispatcher::staticCtor();
     TileEntityRenderDispatcher::staticCtor();
     User::staticCtor();
-    Tutorial::staticCtor();
+    ITutorial::staticInit();
     ColourTable::staticCtor();
     gameServices().loadDefaultGameRules();
 
@@ -4242,7 +4221,7 @@ void Minecraft::main() {
     // On PS4, we call Minecraft::Start from another thread, as this has been
     // timed taking ~2.5 seconds and we need to do some basic rendering stuff so
     // that we don't break the TRCs on SubmitDone calls
-    Minecraft::start(name, sessionId);
+    Minecraft::start(name, sessionId, leaderboard);
 }
 
 bool Minecraft::renderNames() {
@@ -4465,7 +4444,7 @@ void Minecraft::playerLeftTutorial(int iPad) {
 int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
     Minecraft* pMinecraftClass = (Minecraft*)pParam;
 
-    if (g_NetworkManager.IsInSession()) {
+    if (NetworkService.IsInSession()) {
         // 4J Stu - There seems to be a bug in the signin ui call that enables
         // guest sign in. We never allow this within game, so make sure that
         // it's disabled Fix for #66516 - TCR #124: MPS Guest Support ; #001:
@@ -4477,19 +4456,19 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
 
     // If sign in succeded, we're in game and this player isn't already playing,
     // continue
-    if (bContinue == true && g_NetworkManager.IsInSession() &&
+    if (bContinue == true && NetworkService.IsInSession() &&
         pMinecraftClass->localplayers[iPad] == nullptr) {
         // It's possible that the player has not signed in - they can back out
         // or choose no for the converttoguest
         if (PlatformProfile.IsSignedIn(iPad)) {
-            if (!g_NetworkManager.SessionHasSpace()) {
+            if (!NetworkService.SessionHasSpace()) {
                 unsigned int uiIDA[1];
                 uiIDA[0] = IDS_OK;
                 ui.RequestErrorMessage(IDS_MULTIPLAYER_FULL_TITLE,
                                        IDS_MULTIPLAYER_FULL_TEXT, uiIDA, 1);
             }
             // if this is a local game then profiles just need to be signed in
-            else if (g_NetworkManager.IsLocalGame() ||
+            else if (NetworkService.IsLocalGame() ||
                      (PlatformProfile.IsSignedInLive(iPad) &&
                       PlatformProfile.AllowedToPlayMultiplayer(iPad))) {
                 if (pMinecraftClass->level->isClientSide) {
@@ -4500,8 +4479,8 @@ int Minecraft::InGame_SignInReturned(void* pParam, bool bContinue, int iPad) {
                         pMinecraftClass->localplayers[iPad];
                     if (player == nullptr) {
                         player = pMinecraftClass->createExtraLocalPlayer(
-                            iPad, PlatformProfile.GetGamertag(iPad),
-                            iPad, pMinecraftClass->level->dimension->id);
+                            iPad, PlatformProfile.GetGamertag(iPad), iPad,
+                            pMinecraftClass->level->dimension->id);
                     }
                 }
             } else if (PlatformProfile.IsSignedInLive(

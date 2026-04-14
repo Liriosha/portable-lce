@@ -7,15 +7,13 @@
 #include <memory>
 #include <vector>
 
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_MinecraftPlayer.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "util/StringHelpers.h"
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
@@ -23,7 +21,9 @@
 #include "minecraft/stats/GenericStats.h"
 #include "minecraft/world/effect/MobEffectInstance.h"
 #include "minecraft/world/inventory/InventoryMenu.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 class UILayer;
 

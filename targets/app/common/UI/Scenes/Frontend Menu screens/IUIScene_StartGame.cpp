@@ -4,18 +4,18 @@
 
 #include <cstdint>
 
-#include "platform/profile/profile.h"
 #include "app/common/App_structs.h"
 #include "app/common/DLC/DLCManager.h"
+#include "app/common/Game.h"
+#include "app/common/Iggy/include/rrCore.h"
 #include "app/common/UI/Controls/UIControl_BitmapIcon.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_TexturePackList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/LinuxGame.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
+#include "platform/profile/profile.h"
 
 class UILayer;
 
@@ -145,8 +145,9 @@ void IUIScene_StartGame::UpdateTexturePackDescription(int index) {
         app.GetFileFromTPD(eTPDFileType_Loc, pbData, dwBytes, &pbFileData,
                            &dwFileBytes);
         if (dwFileBytes > 0 && pbFileData) {
-            StringTable* pStringTable =
-                new StringTable(pbFileData, dwFileBytes);
+            StringTable* pStringTable = new StringTable(
+                std::span<const std::uint8_t>(pbFileData, dwFileBytes),
+                app.getLocale());
             m_texturePackTitle.SetText(
                 pStringTable->getString("IDS_DISPLAY_NAME"));
             m_texturePackDescription.SetText(

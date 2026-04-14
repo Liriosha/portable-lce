@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "EntityHorse.h"
 
 #include <math.h>
@@ -7,12 +6,11 @@
 #include <limits>
 #include <numbers>
 
-#include "app/linux/LinuxGame.h"
-#include "util/StringHelpers.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
 #include "minecraft/client/renderer/Textures.h"
 #include "minecraft/core/particles/ParticleTypes.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/damageSource/DamageSource.h"
 #include "minecraft/world/effect/MobEffect.h"
@@ -52,6 +50,7 @@
 #include "minecraft/world/phys/AABB.h"
 #include "nbt/CompoundTag.h"
 #include "nbt/ListTag.h"
+#include "util/StringHelpers.h"
 
 class EntitySelector;
 class Path;
@@ -71,8 +70,8 @@ std::string EntityHorse::ARMOR_TEXTURES[EntityHorse::ARMORS] = {
 int EntityHorse::ARMOR_TEXTURES_ID[EntityHorse::ARMORS] = {
     -1, TN_MOB_HORSE_ARMOR_IRON, TN_MOB_HORSE_ARMOR_GOLD,
     TN_MOB_HORSE_ARMOR_DIAMOND};
-std::string EntityHorse::ARMOR_HASHES[EntityHorse::ARMORS] = {"", "meo",
-                                                               "goo", "dio"};
+std::string EntityHorse::ARMOR_HASHES[EntityHorse::ARMORS] = {"", "meo", "goo",
+                                                              "dio"};
 int EntityHorse::ARMOR_PROTECTION[EntityHorse::ARMORS] = {0, 5, 7, 11};
 
 std::string EntityHorse::VARIANT_TEXTURES[EntityHorse::VARIANTS] = {
@@ -841,10 +840,9 @@ bool EntityHorse::mobInteract(std::shared_ptr<Player> player) {
         }
         doPlayerRide(player);
 
-        Log::info(
-            "<EntityHorse::mobInteract> Horse speed: %f\n",
-            (float)(getAttribute(SharedMonsterAttributes::MOVEMENT_SPEED)
-                        ->getValue()));
+        Log::info("<EntityHorse::mobInteract> Horse speed: %f\n",
+                  (float)(getAttribute(SharedMonsterAttributes::MOVEMENT_SPEED)
+                              ->getValue()));
 
         return true;
     } else {
@@ -1225,11 +1223,11 @@ void EntityHorse::addAdditonalSaveData(CompoundTag* tag) {
 
     if (inventory->getItem(INV_SLOT_ARMOR) != nullptr) {
         tag->put("ArmorItem", inventory->getItem(INV_SLOT_ARMOR)
-                                   ->save(new CompoundTag("ArmorItem")));
+                                  ->save(new CompoundTag("ArmorItem")));
     }
     if (inventory->getItem(INV_SLOT_SADDLE) != nullptr) {
         tag->put("SaddleItem", inventory->getItem(INV_SLOT_SADDLE)
-                                    ->save(new CompoundTag("SaddleItem")));
+                                   ->save(new CompoundTag("SaddleItem")));
     }
 }
 

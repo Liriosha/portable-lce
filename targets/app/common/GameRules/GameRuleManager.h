@@ -8,9 +8,9 @@
 #include <unordered_map>
 
 #include "app/common/DLC/DLCGameRulesHeader.h"
-#include "app/common/GameRules/ConsoleGameRulesConstants.h"
 #include "app/common/GameRules/LevelGeneration/LevelGenerators.h"
 #include "app/common/GameRules/LevelRules/LevelRules.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
 
 class LevelGenerationOptions;
 class RootGameRulesDefinition;
@@ -26,8 +26,6 @@ class WstringLookup;
 class DLCGameRulesHeader;
 class File;
 class LevelRuleset;
-
-#define GAME_RULE_SAVENAME "requiredGameRules.grf"
 
 // 4J-JEV:
 #define LEVEL_GEN_ID int

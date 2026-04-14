@@ -1,4 +1,3 @@
-#include "minecraft/util/Log.h"
 #include "EntityRenderDispatcher.h"
 
 #include <assert.h>
@@ -6,7 +5,6 @@
 #include <cmath>
 #include <utility>
 
-#include "platform/renderer/renderer.h"
 #include "ArrowRenderer.h"
 #include "BatRenderer.h"
 #include "BlazeRenderer.h"
@@ -35,7 +33,6 @@
 #include "LightningBoltRenderer.h"
 #include "MinecartRenderer.h"
 #include "MinecartSpawnerRenderer.h"
-#include "app/linux/LinuxGame.h"
 #include "MobRenderer.h"
 #include "MushroomCowRenderer.h"
 #include "OcelotRenderer.h"
@@ -59,7 +56,6 @@
 #include "WitherSkullRenderer.h"
 #include "WolfRenderer.h"
 #include "ZombieRenderer.h"
-
 #include "minecraft/client/model/ChickenModel.h"
 #include "minecraft/client/model/CowModel.h"
 #include "minecraft/client/model/HumanoidModel.h"
@@ -73,6 +69,7 @@
 #include "minecraft/client/model/WolfModel.h"
 #include "minecraft/client/model/ZombieModel.h"
 #include "minecraft/client/renderer/Tesselator.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/player/Player.h"
@@ -81,6 +78,8 @@
 #include "minecraft/world/item/alchemy/PotionBrewing.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 class Font;
 class IconRegister;

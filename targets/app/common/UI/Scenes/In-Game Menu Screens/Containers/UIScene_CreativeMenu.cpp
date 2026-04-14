@@ -4,26 +4,26 @@
 
 #include <memory>
 
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
 #include "app/common/UI/Controls/UIControl_Base.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/Iggy/include/iggy.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "platform/XboxStubs.h"
+#include "app/common/Audio/SoundTypes.h"
+#include "app/common/Game.h"
+#include "app/common/Iggy/include/rrCore.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/player/LocalPlayer.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/world/SimpleContainer.h"
+#include "platform/XboxStubs.h"
 
 class UILayer;
 

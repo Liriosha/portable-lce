@@ -1,9 +1,8 @@
-#include "minecraft/IGameServices.h"
 #include "SimpleContainer.h"
 
 #include <vector>
 
-#include "app/linux/LinuxGame.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/Container.h"
 #include "minecraft/world/item/ItemInstance.h"
 #include "net.minecraft.world.ContainerListener.h"

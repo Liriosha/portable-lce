@@ -5,17 +5,14 @@
 #include <utility>
 #include <vector>
 
-#include "platform/profile/profile.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/util/HtmlString.h"
@@ -23,7 +20,11 @@
 #include "minecraft/world/inventory/Slot.h"
 #include "minecraft/world/item/ItemInstance.h"
 #include "minecraft/world/item/trading/MerchantRecipe.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
+#include "util/StringHelpers.h"
 
 class UILayer;
 
@@ -83,7 +84,7 @@ UIScene_TradingMenu::UIScene_TradingMenu(int iPad, void* _initData,
     ui.OverrideSFX(m_iPad, ACTION_MENU_UP, true);
     ui.OverrideSFX(m_iPad, ACTION_MENU_DOWN, true);
 
-    app.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_TRADING);
+    PlatformGame.SetRichPresenceContext(iPad, CONTEXT_GAME_STATE_TRADING);
 }
 
 std::string UIScene_TradingMenu::getMoviePath() {

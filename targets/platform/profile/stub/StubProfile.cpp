@@ -5,12 +5,14 @@
 #include <functional>
 
 #include "../ProfileConstants.h"
-#include "input/input.h"
-#include "../../../app/common/Tutorial/TutorialEnum.h" // 4jcraft TODO
-#include "../../../app/common/App_Defines.h" // 4jcraft TODO
+#include "platform/input/input.h"
 
-StubProfile stub_profile_instance;
-IPlatformProfile& PlatformProfile = stub_profile_instance;
+namespace platform_internal {
+IPlatformProfile& PlatformProfile_get() {
+    static StubProfile instance;
+    return instance;
+}
+}  // namespace platform_internal
 
 namespace {
 constexpr PlayerUID kFakeXuidBase = 0xe000d45248242f2eULL;
@@ -192,9 +194,5 @@ bool StubProfile::CanViewPlayerCreatedContent(int, bool, PlayerUID*,
 // GetPrimaryPad/SetPrimaryPad — delegates to PlatformPlatft.
 // Kept here temporarily for call sites that still use PlatformPlatfore.
 // These forward to the canonical copies in SDL2Input.
-int StubProfile::GetPrimaryPad() {
-    return PlatformInput.GetPrimaryPad();
-}
-void StubProfile::SetPrimaryPad(int iPad) {
-    PlatformInput.SetPrimaryPad(iPad);
-}
+int StubProfile::GetPrimaryPad() { return PlatformInput.GetPrimaryPad(); }
+void StubProfile::SetPrimaryPad(int iPad) { PlatformInput.SetPrimaryPad(iPad); }

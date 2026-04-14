@@ -3,15 +3,15 @@
 #include <memory>
 #include <vector>
 
-#include "platform/input/input.h"
 #include "app/common/Tutorial/Constraints/InputConstraint.h"
 #include "app/common/Tutorial/Tasks/TutorialTask.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
 #include "minecraft/world/level/material/Material.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/input/input.h"
 
 ChoiceTask::ChoiceTask(
     Tutorial* tutorial, int descriptionId, int promptId /*= -1*/,
@@ -55,12 +55,12 @@ bool ChoiceTask::isCompleted() {
 
         if (!m_bConfirmMappingComplete &&
             PlatformInput.GetValue(pMinecraft->player->GetXboxPad(),
-                                  m_iConfirmMapping) > 0) {
+                                   m_iConfirmMapping) > 0) {
             m_bConfirmMappingComplete = true;
         }
         if (!m_bCancelMappingComplete &&
             PlatformInput.GetValue(pMinecraft->player->GetXboxPad(),
-                                  m_iCancelMapping) > 0) {
+                                   m_iCancelMapping) > 0) {
             m_bCancelMappingComplete = true;
         }
     }

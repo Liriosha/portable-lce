@@ -1,12 +1,15 @@
 #include "app/common/GameSettingsManager.h"
 
+#include <cstring>
+
+#include "app/common/Audio/SoundEngine.h"
 #include "app/common/Game.h"
-#include "app/common/App_Defines.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/Console_Debug_enum.h"
 #include "app/common/Network/GameNetworkManager.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/UI/ConsoleUIController.h"
+#include "minecraft/Console_Debug_enum.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/GameTypes.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/client/gui/Gui.h"
@@ -17,15 +20,14 @@
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/server/MinecraftServer.h"
 #include "minecraft/server/PlayerList.h"
+#include "minecraft/server/ServerAction.h"
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "platform/input/input.h"
+#include "platform/profile/ProfileConstants.h"
 #include "platform/renderer/renderer.h"
 #include "platform/storage/storage.h"
-#include "app/common/Audio/SoundEngine.h"
-
-#include <cstring>
 
 GameSettingsManager::GameSettingsManager() {
     memset(GameSettingsA, 0, sizeof(GameSettingsA));
@@ -39,17 +41,10 @@ void GameSettingsManager::initGameSettings() {
         // clear the flag to say the settings have changed
         GameSettingsA[i]->bSettingsChanged = false;
 
-#if defined(_WINDOWS64)
         IPlatformProfile::PROFILESETTINGS* pProfileSettings =
             PlatformProfile.GetDashboardProfileSettings(i);
         memset(pProfileSettings, 0, sizeof(IPlatformProfile::PROFILESETTINGS));
         setDefaultOptions(pProfileSettings, i);
-#else
-        IPlatformProfile::PROFILESETTINGS* pProfileSettings =
-            PlatformProfile.GetDashboardProfileSettings(i);
-        memset(pProfileSettings, 0, sizeof(IPlatformProfile::PROFILESETTINGS));
-        setDefaultOptions(pProfileSettings, i);
-#endif
     }
 }
 
@@ -123,17 +118,16 @@ int GameSettingsManager::setDefaultOptions(
     setGameSettings(iPad, eGameSetting_PS3_EULA_Read, 0);
 
     if (!app.GetGameStarted()) {
-        GameSettingsA[iPad]->ucLanguage =
-            MINECRAFT_LANGUAGE_DEFAULT;
-        GameSettingsA[iPad]->ucLocale =
-            MINECRAFT_LANGUAGE_DEFAULT;
+        GameSettingsA[iPad]->ucLanguage = MINECRAFT_LANGUAGE_DEFAULT;
+        GameSettingsA[iPad]->ucLocale = MINECRAFT_LANGUAGE_DEFAULT;
     }
 
     return 0;
 }
 
 int GameSettingsManager::defaultOptionsCallback(
-    void* pParam, IPlatformProfile::PROFILESETTINGS* pSettings, const int iPad) {
+    void* pParam, IPlatformProfile::PROFILESETTINGS* pSettings,
+    const int iPad) {
     Game* pApp = (Game*)pParam;
 
     pApp->DebugPrintf("Setting default options for player %d", iPad);
@@ -194,8 +188,7 @@ int GameSettingsManager::oldProfileVersionCallback(
             pGameSettings->uiBitmaskValues |= GAMESETTING_DISPLAYHAND;
             pGameSettings->uiBitmaskValues |= GAMESETTING_CUSTOMSKINANIM;
             pGameSettings->uiBitmaskValues |= GAMESETTING_DEATHMESSAGES;
-            pGameSettings->uiBitmaskValues |=
-                (GAMESETTING_UISIZE & 0x00000800);
+            pGameSettings->uiBitmaskValues |= (GAMESETTING_UISIZE & 0x00000800);
             pGameSettings->uiBitmaskValues |=
                 (GAMESETTING_UISIZE_SPLITSCREEN & 0x00004000);
             pGameSettings->uiBitmaskValues |= GAMESETTING_ANIMATEDCHARACTER;
@@ -283,8 +276,10 @@ void GameSettingsManager::actionGameSettings(int iPad, eGameSetting eVal) {
 
                 if (bInGame && g_NetworkManager.IsHost() &&
                     (iPad == PlatformProfile.GetPrimaryPad())) {
-                    app.SetXuiServerAction(
-                        iPad, eXuiServerAction_ServerSettingChanged_Difficulty);
+                    MinecraftServer::getInstance()->queueServerAction(
+                        minecraft::server::BroadcastSettingChanged{
+                            minecraft::server::BroadcastSettingChanged::Kind::
+                                Difficulty});
                 }
             } else {
                 app.DebugPrintf(
@@ -309,30 +304,30 @@ void GameSettingsManager::actionGameSettings(int iPad, eGameSetting eVal) {
         case eGameSetting_ControlSouthPaw:
             if (GameSettingsA[iPad]->usBitmaskValues & 0x80) {
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_LX,
-                                                   AXIS_MAP_RX);
+                                                    AXIS_MAP_RX);
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_LY,
-                                                   AXIS_MAP_RY);
+                                                    AXIS_MAP_RY);
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_RX,
-                                                   AXIS_MAP_LX);
+                                                    AXIS_MAP_LX);
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_RY,
-                                                   AXIS_MAP_LY);
+                                                    AXIS_MAP_LY);
                 PlatformInput.SetJoypadStickTriggerMap(iPad, TRIGGER_MAP_0,
-                                                      TRIGGER_MAP_1);
+                                                       TRIGGER_MAP_1);
                 PlatformInput.SetJoypadStickTriggerMap(iPad, TRIGGER_MAP_1,
-                                                      TRIGGER_MAP_0);
+                                                       TRIGGER_MAP_0);
             } else {
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_LX,
-                                                   AXIS_MAP_LX);
+                                                    AXIS_MAP_LX);
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_LY,
-                                                   AXIS_MAP_LY);
+                                                    AXIS_MAP_LY);
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_RX,
-                                                   AXIS_MAP_RX);
+                                                    AXIS_MAP_RX);
                 PlatformInput.SetJoypadStickAxisMap(iPad, AXIS_MAP_RY,
-                                                   AXIS_MAP_RY);
+                                                    AXIS_MAP_RY);
                 PlatformInput.SetJoypadStickTriggerMap(iPad, TRIGGER_MAP_0,
-                                                      TRIGGER_MAP_0);
+                                                       TRIGGER_MAP_0);
                 PlatformInput.SetJoypadStickTriggerMap(iPad, TRIGGER_MAP_1,
-                                                      TRIGGER_MAP_1);
+                                                       TRIGGER_MAP_1);
             }
             break;
         case eGameSetting_SplitScreenVertical:
@@ -350,8 +345,10 @@ void GameSettingsManager::actionGameSettings(int iPad, eGameSetting eVal) {
                     eGameHostOption_Gamertags,
                     ((GameSettingsA[iPad]->usBitmaskValues & 0x0008) != 0) ? 1
                                                                            : 0);
-                app.SetXuiServerAction(
-                    iPad, eXuiServerAction_ServerSettingChanged_Gamertags);
+                MinecraftServer::getInstance()->queueServerAction(
+                    minecraft::server::BroadcastSettingChanged{
+                        minecraft::server::BroadcastSettingChanged::Kind::
+                            Gamertags});
 
                 PlayerList* players =
                     MinecraftServer::getInstance()->getPlayerList();
@@ -407,8 +404,10 @@ void GameSettingsManager::actionGameSettings(int iPad, eGameSetting eVal) {
                 app.SetGameHostOption(
                     eGameHostOption_BedrockFog,
                     getGameSettings(iPad, eGameSetting_BedrockFog) ? 1 : 0);
-                app.SetXuiServerAction(
-                    iPad, eXuiServerAction_ServerSettingChanged_BedrockFog);
+                MinecraftServer::getInstance()->queueServerAction(
+                    minecraft::server::BroadcastSettingChanged{
+                        minecraft::server::BroadcastSettingChanged::Kind::
+                            BedrockFog});
             }
         } break;
         case eGameSetting_DisplayHUD:
@@ -464,8 +463,7 @@ unsigned char GameSettingsManager::getMinecraftLanguage(int iPad) {
     }
 }
 
-void GameSettingsManager::setMinecraftLocale(int iPad,
-                                             unsigned char ucLocale) {
+void GameSettingsManager::setMinecraftLocale(int iPad, unsigned char ucLocale) {
     GameSettingsA[iPad]->ucLocale = ucLocale;
     GameSettingsA[iPad]->bSettingsChanged = true;
 }
@@ -1345,8 +1343,8 @@ void GameSettingsManager::setGameHostOption(unsigned int& uiHostSettings,
     }
 }
 
-unsigned int GameSettingsManager::getGameHostOption(
-    unsigned int uiHostSettings, eGameHostOption eVal) {
+unsigned int GameSettingsManager::getGameHostOption(unsigned int uiHostSettings,
+                                                    eGameHostOption eVal) {
     switch (eVal) {
         case eGameHostOption_FriendsOfFriends:
             return (uiHostSettings & GAME_HOST_OPTION_BITMASK_FRIENDSOFFRIENDS);

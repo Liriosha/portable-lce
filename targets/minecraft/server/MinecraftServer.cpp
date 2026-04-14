@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "MinecraftServer.h"
 
 #include <assert.h>
@@ -12,29 +10,22 @@
 #include <thread>
 #include <utility>
 
-#include "platform/PlatformTypes.h"
-#include "platform/profile/profile.h"
-#include "platform/storage/storage.h"
 #include "ConsoleInput.h"
 #include "DispenserBootstrap.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/GameRules/GameRuleManager.h"
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/linux/LinuxGame.h"
 #include "PlayerList.h"
 #include "Settings.h"
-#include "util/Timer.h"
 #include "java/Class.h"
 #include "java/File.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "java/InputOutputStream/FileOutputStream.h"
 #include "java/Random.h"
 #include "java/System.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/Pos.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/commands/Command.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/network/packet/GameEventPacket.h"
 #include "minecraft/network/packet/ServerSettingsChangedPacket.h"
 #include "minecraft/network/packet/SetTimePacket.h"
@@ -44,12 +35,15 @@
 #include "minecraft/server/level/ServerChunkCache.h"
 #include "minecraft/server/level/ServerLevel.h"
 #include "minecraft/server/network/ServerConnection.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/EntityIO.h"
 #include "minecraft/world/entity/Mob.h"
 #include "minecraft/world/entity/player/Player.h"
 #include "minecraft/world/item/ItemInstance.h"
+#include "minecraft/world/level/ConsoleGameRulesConstants.h"
 #include "minecraft/world/level/GameRules.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/LevelSettings.h"
 #include "minecraft/world/level/LevelType.h"
 #include "minecraft/world/level/chunk/ChunkSource.h"
@@ -62,20 +56,20 @@
 #include "minecraft/world/level/storage/McRegionLevelStorage.h"
 #include "minecraft/world/level/storage/McRegionLevelStorageSource.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/PlatformTypes.h"
+#include "platform/network/network.h"
+#include "platform/profile/profile.h"
+#include "platform/storage/storage.h"
 #include "strings.h"
+#include "util/Timer.h"
 #if defined(SPLIT_SAVES)
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileSplit.h"
 #endif
-#include "platform/input/input.h"
-#include "platform/ShutdownManager.h"
-#include "app/common/Console_Debug_enum.h"
-#include "app/common/GameRules/LevelGeneration/ConsoleSchematicFile.h"
-#include "app/common/Network/Socket.h"
-#include "app/common/UI/All Platforms/UIStructs.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "minecraft/Console_Debug_enum.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/ProgressRenderer.h"
 #include "minecraft/client/renderer/GameRenderer.h"
+#include "minecraft/network/Socket.h"
 #include "minecraft/server/commands/ServerCommandDispatcher.h"
 #include "minecraft/server/level/ServerPlayer.h"
 #include "minecraft/world/level/Level.h"
@@ -83,7 +77,11 @@
 #include "minecraft/world/level/chunk/CompressedTileStorage.h"
 #include "minecraft/world/level/chunk/SparseDataStorage.h"
 #include "minecraft/world/level/chunk/SparseLightStorage.h"
+#include "minecraft/world/level/levelgen/ConsoleSchematicFile.h"
 #include "minecraft/world/level/storage/ConsoleSaveFileIO/ConsoleSaveFileOriginal.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "platform/input/input.h"
+#include "platform/thread/ShutdownManager.h"
 
 class ConsoleInputSource;
 
@@ -152,22 +150,26 @@ bool MinecraftServer::initServer(int64_t seed, NetworkGameInitData* initData,
     Log::info("\n*** SERVER SETTINGS ***\n");
     Log::info(
         "ServerSettings: host-friends-only is %s\n",
-        (gameServices().getGameHostOption(eGameHostOption_FriendsOfFriends) > 0) ? "on"
-                                                                      : "off");
+        (gameServices().getGameHostOption(eGameHostOption_FriendsOfFriends) > 0)
+            ? "on"
+            : "off");
     Log::info("ServerSettings: game-type is %s\n",
-                    (gameServices().getGameHostOption(eGameHostOption_GameType) == 0)
-                        ? "Survival Mode"
-                        : "Creative Mode");
+              (gameServices().getGameHostOption(eGameHostOption_GameType) == 0)
+                  ? "Survival Mode"
+                  : "Creative Mode");
+    Log::info("ServerSettings: pvp is %s\n",
+              (gameServices().getGameHostOption(eGameHostOption_PvP) > 0)
+                  ? "on"
+                  : "off");
     Log::info(
-        "ServerSettings: pvp is %s\n",
-        (gameServices().getGameHostOption(eGameHostOption_PvP) > 0) ? "on" : "off");
-    Log::info("ServerSettings: fire spreads is %s\n",
-                    (gameServices().getGameHostOption(eGameHostOption_FireSpreads) > 0)
-                        ? "on"
-                        : "off");
-    Log::info(
-        "ServerSettings: tnt explodes is %s\n",
-        (gameServices().getGameHostOption(eGameHostOption_TNT) > 0) ? "on" : "off");
+        "ServerSettings: fire spreads is %s\n",
+        (gameServices().getGameHostOption(eGameHostOption_FireSpreads) > 0)
+            ? "on"
+            : "off");
+    Log::info("ServerSettings: tnt explodes is %s\n",
+              (gameServices().getGameHostOption(eGameHostOption_TNT) > 0)
+                  ? "on"
+                  : "off");
     Log::info("\n");
 
     // TODO 4J Stu - Init a load of settings based on data passed as params
@@ -262,7 +264,7 @@ bool MinecraftServer::initServer(int64_t seed, NetworkGameInitData* initData,
         initData->saveData->fileSize = 0;
     }
 
-    g_NetworkManager.ServerReady();  // 4J added
+    NetworkService.ServerReady();  // 4J added
     return m_bLoaded;
 }
 
@@ -385,7 +387,9 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
 
     LevelSettings* levelSettings = new LevelSettings(
         levelSeed, gameType,
-        gameServices().getGameHostOption(eGameHostOption_Structures) > 0 ? true : false,
+        gameServices().getGameHostOption(eGameHostOption_Structures) > 0
+            ? true
+            : false,
         isHardcore(), true, pLevelType, initData->xzSize, initData->hellScale);
     if (gameServices().getGameHostOption(eGameHostOption_BonusChest))
         levelSettings->enableStartingBonusItems();
@@ -420,7 +424,8 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         // We are loading a save from the storage manager
 #if defined(SPLIT_SAVES)
         bool bLevelGenBaseSave = false;
-        LevelGenerationOptions* levelGen = gameServices().getLevelGenerationOptions();
+        LevelGenerationOptions* levelGen =
+            gameServices().getLevelGenerationOptions();
         if (levelGen != nullptr && levelGen->requiresBaseSave()) {
             unsigned int fileSize = 0;
             std::uint8_t* pvSaveData = levelGen->getBaseSaveData(fileSize);
@@ -447,7 +452,7 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
     //    McRegionLevelStorage *storage = new McRegionLevelStorage(File("."),
     //    name, true); // TODO
     for (unsigned int i = 0; i < levels.size(); i++) {
-        if (s_bServerHalted || !g_NetworkManager.IsInSession()) {
+        if (s_bServerHalted || !NetworkService.IsInSession()) {
             return false;
         }
 
@@ -486,7 +491,7 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         levels[i]->difficulty = gameServices().getGameHostOption(
             eGameHostOption_Difficulty);  // pMinecraft->options->difficulty;
         Log::info("MinecraftServer::loadLevel - Difficulty = %d\n",
-                        levels[i]->difficulty);
+                  levels[i]->difficulty);
 
 #if DEBUG_SERVER_DONT_SPAWN_MOBS
         levels[i]->setSpawnSettings(false, false);
@@ -515,9 +520,9 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         eGameHostOption_HasBeenInCreative,
         gameType == GameType::CREATIVE || levels[0]->getHasBeenInCreative());
     gameServices().setGameHostOption(eGameHostOption_Structures,
-                          levels[0]->isGenerateMapFeatures());
+                                     levels[0]->isGenerateMapFeatures());
 
-    if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
+    if (s_bServerHalted || !NetworkService.IsInSession()) return false;
 
     // 4J - Make a new thread to do post processing
 
@@ -560,10 +565,12 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
 
     int64_t lastTime = System::currentTimeMillis();
 #if defined(_LARGE_WORLDS)
-    if (gameServices().getGameNewWorldSize() > levels[0]->getLevelData()->getXZSizeOld()) {
-        if (!gameServices().getGameNewWorldSizeUseMoat())  // check the moat settings to
-                                                // see if we should be
-                                                // overwriting the edge tiles
+    if (gameServices().getGameNewWorldSize() >
+        levels[0]->getLevelData()->getXZSizeOld()) {
+        if (!gameServices()
+                 .getGameNewWorldSizeUseMoat())  // check the moat settings to
+                                                 // see if we should be
+                                                 // overwriting the edge tiles
         {
             overwriteBordersForNewWorldSize(levels[0]);
         }
@@ -591,7 +598,7 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
             int total = twoRPlusOne * twoRPlusOne;
             for (int x = -r; x <= r && running; x += 16) {
                 for (int z = -r; z <= r && running; z += 16) {
-                    if (s_bServerHalted || !g_NetworkManager.IsInSession()) {
+                    if (s_bServerHalted || !NetworkService.IsInSession()) {
                         delete spawnPos;
                         m_postUpdateTerminate = true;
                         postProcessTerminate(mcprogress);
@@ -652,14 +659,13 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
 
         if (!levels[0]->getLevelData()->getHasStronghold()) {
             int x, z;
-            if (gameServices().getTerrainFeaturePosition(eTerrainFeature_Stronghold, &x,
-                                              &z)) {
+            if (gameServices().getTerrainFeaturePosition(
+                    eTerrainFeature_Stronghold, &x, &z)) {
                 levels[0]->getLevelData()->setXStronghold(x);
                 levels[0]->getLevelData()->setZStronghold(z);
                 levels[0]->getLevelData()->setHasStronghold();
 
-                Log::info(
-                    "=== FOUND stronghold in terrain features list\n");
+                Log::info("=== FOUND stronghold in terrain features list\n");
 
             } else {
                 // can't find the stronghold position in the terrain feature
@@ -679,19 +685,19 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
     //	printf("Lighting complete at %dms\n",System::currentTimeMillis() -
     // startTime);
 
-    if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
+    if (s_bServerHalted || !NetworkService.IsInSession()) return false;
 
     if (levels[1]->isNew) {
         levels[1]->save(true, mcprogress);
     }
 
-    if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
+    if (s_bServerHalted || !NetworkService.IsInSession()) return false;
 
     if (levels[2]->isNew) {
         levels[2]->save(true, mcprogress);
     }
 
-    if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
+    if (s_bServerHalted || !NetworkService.IsInSession()) return false;
 
     // 4J - added - immediately save newly created level, like single player
     // game 4J Stu - We also want to immediately save the tutorial
@@ -701,13 +707,13 @@ bool MinecraftServer::loadLevel(LevelStorageSource* storageSource,
         levels[0]->save(true, mcprogress);
     }
 
-    if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
+    if (s_bServerHalted || !NetworkService.IsInSession()) return false;
 
     if (levels[0]->isNew || levels[1]->isNew || levels[2]->isNew) {
         levels[0]->saveToDisc(mcprogress, false);
     }
 
-    if (s_bServerHalted || !g_NetworkManager.IsInSession()) return false;
+    if (s_bServerHalted || !NetworkService.IsInSession()) return false;
 
     /*
      * int r = 24; for (int x = -r; x <= r; x++) {
@@ -881,7 +887,7 @@ void MinecraftServer::Suspend() {
 
     m_suspending = false;
     Log::info("Suspend server: Elapsed time %f\n",
-                    static_cast<float>(timer.elapsed_seconds()));
+              static_cast<float>(timer.elapsed_seconds()));
 }
 
 bool MinecraftServer::IsSuspending() { return m_suspending; }
@@ -961,7 +967,7 @@ void MinecraftServer::stopServer(bool didInit) {
     delete settings;
     settings = nullptr;
 
-    g_NetworkManager.ServerStopped();
+    NetworkService.ServerStopped();
 }
 
 void MinecraftServer::halt() { running = false; }
@@ -1079,8 +1085,8 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
 
         if (pLevelData && pLevelData->getHasStronghold() == false) {
             int x, z;
-            if (gameServices().getTerrainFeaturePosition(eTerrainFeature_Stronghold, &x,
-                                              &z)) {
+            if (gameServices().getTerrainFeaturePosition(
+                    eTerrainFeature_Stronghold, &x, &z)) {
                 pLevelData->setXStronghold(x);
                 pLevelData->setZStronghold(z);
                 pLevelData->setHasStronghold();
@@ -1178,201 +1184,9 @@ void MinecraftServer::run(int64_t seed, void* lpParameter) {
                 }
             }
 
-            // Process delayed actions
-            eXuiServerAction eAction;
-            void* param;
-            for (int i = 0; i < XUSER_MAX_COUNT; i++) {
-                eAction = gameServices().getXuiServerAction(i);
-                param = gameServices().getXuiServerActionParam(i);
-
-                switch (eAction) {
-                    case eXuiServerAction_AutoSaveGame:
-                    case eXuiServerAction_SaveGame:
-                        gameServices().lockSaveNotification();
-                        if (players != nullptr) {
-                            players->saveAll(
-                                Minecraft::GetInstance()->progressRenderer);
-                        }
-
-                        players->broadcastAll(
-                            std::shared_ptr<UpdateProgressPacket>(
-                                new UpdateProgressPacket(20)));
-
-                        for (unsigned int j = 0; j < levels.size(); j++) {
-                            if (s_bServerHalted) break;
-                            // 4J Stu - Save the levels in reverse order so we
-                            // don't overwrite the level.dat with the data from
-                            // the nethers leveldata. Fix for #7418 -
-                            // Functional: Gameplay: Saving after sleeping in a
-                            // bed will place player at nighttime when
-                            // restarting.
-                            ServerLevel* level = levels[levels.size() - 1 - j];
-                            level->save(
-                                true,
-                                Minecraft::GetInstance()->progressRenderer,
-                                (eAction == eXuiServerAction_AutoSaveGame));
-
-                            players->broadcastAll(
-                                std::shared_ptr<UpdateProgressPacket>(
-                                    new UpdateProgressPacket(33 + (j * 33))));
-                        }
-                        if (!s_bServerHalted) {
-                            saveGameRules();
-
-                            levels[0]->saveToDisc(
-                                Minecraft::GetInstance()->progressRenderer,
-                                (eAction == eXuiServerAction_AutoSaveGame));
-                        }
-                        gameServices().unlockSaveNotification();
-                        break;
-                    case eXuiServerAction_DropItem:
-                        // Find the player, and drop the id at their feet
-                        {
-                            std::shared_ptr<ServerPlayer> player =
-                                players->players.at(0);
-                            size_t id = (size_t)param;
-                            player->drop(std::shared_ptr<ItemInstance>(
-                                new ItemInstance(id, 1, 0)));
-                        }
-                        break;
-                    case eXuiServerAction_SpawnMob: {
-                        std::shared_ptr<ServerPlayer> player =
-                            players->players.at(0);
-                        eINSTANCEOF factory = (eINSTANCEOF)((size_t)param);
-                        std::shared_ptr<Mob> mob =
-                            std::dynamic_pointer_cast<Mob>(
-                                EntityIO::newByEnumType(factory,
-                                                        player->level));
-                        mob->moveTo(player->x + 1, player->y, player->z + 1,
-                                    player->level->random->nextFloat() * 360,
-                                    0);
-                        mob->setDespawnProtected();  // 4J added, default to
-                                                     // being protected against
-                                                     // despawning (has to be
-                                                     // done after initial
-                                                     // position is set)
-                        player->level->addEntity(mob);
-                    } break;
-                    case eXuiServerAction_PauseServer:
-                        m_isServerPaused = ((size_t)param == true);
-                        if (m_isServerPaused) {
-                            m_serverPausedEvent->set();
-                        }
-                        break;
-                    case eXuiServerAction_ToggleRain: {
-                        bool isRaining = levels[0]->getLevelData()->isRaining();
-                        levels[0]->getLevelData()->setRaining(!isRaining);
-                        levels[0]->getLevelData()->setRainTime(
-                            levels[0]->random->nextInt(Level::TICKS_PER_DAY *
-                                                       7) +
-                            Level::TICKS_PER_DAY / 2);
-                    } break;
-                    case eXuiServerAction_ToggleThunder: {
-                        bool isThundering =
-                            levels[0]->getLevelData()->isThundering();
-                        levels[0]->getLevelData()->setThundering(!isThundering);
-                        levels[0]->getLevelData()->setThunderTime(
-                            levels[0]->random->nextInt(Level::TICKS_PER_DAY *
-                                                       7) +
-                            Level::TICKS_PER_DAY / 2);
-                    } break;
-                    case eXuiServerAction_ServerSettingChanged_Gamertags:
-                        players->broadcastAll(
-                            std::shared_ptr<ServerSettingsChangedPacket>(
-                                new ServerSettingsChangedPacket(
-                                    ServerSettingsChangedPacket::HOST_OPTIONS,
-                                    gameServices().getGameHostOption(
-                                        eGameHostOption_Gamertags))));
-                        break;
-                    case eXuiServerAction_ServerSettingChanged_BedrockFog:
-                        players->broadcastAll(
-                            std::shared_ptr<ServerSettingsChangedPacket>(
-                                new ServerSettingsChangedPacket(
-                                    ServerSettingsChangedPacket::
-                                        HOST_IN_GAME_SETTINGS,
-                                    gameServices().getGameHostOption(
-                                        eGameHostOption_All))));
-                        break;
-
-                    case eXuiServerAction_ServerSettingChanged_Difficulty:
-                        players->broadcastAll(std::shared_ptr<
-                                              ServerSettingsChangedPacket>(
-                            new ServerSettingsChangedPacket(
-                                ServerSettingsChangedPacket::HOST_DIFFICULTY,
-                                Minecraft::GetInstance()
-                                    ->options->difficulty)));
-                        break;
-                    case eXuiServerAction_ExportSchematic:
-#if !defined(_CONTENT_PACKAGE)
-                        gameServices().lockSaveNotification();
-
-                        // players->broadcastAll(
-                        // shared_ptr<UpdateProgressPacket>( new
-                        // UpdateProgressPacket(20) ) );
-
-                        if (!s_bServerHalted) {
-                            ConsoleSchematicFile::XboxSchematicInitParam*
-                                initData = (ConsoleSchematicFile::
-                                                XboxSchematicInitParam*)param;
-                            File targetFileDir("Schematics");
-                            if (!targetFileDir.exists()) targetFileDir.mkdir();
-
-                            char filename[128];
-                            snprintf(filename, 128, "%s%dx%dx%d.sch",
-                                     initData->name,
-                                     (initData->endX - initData->startX + 1),
-                                     (initData->endY - initData->startY + 1),
-                                     (initData->endZ - initData->startZ + 1));
-
-                            File dataFile =
-                                File(targetFileDir, std::string(filename));
-                            if (dataFile.exists()) dataFile._delete();
-                            FileOutputStream fos = FileOutputStream(dataFile);
-                            DataOutputStream dos = DataOutputStream(&fos);
-                            ConsoleSchematicFile::generateSchematicFile(
-                                &dos, levels[0], initData->startX,
-                                initData->startY, initData->startZ,
-                                initData->endX, initData->endY, initData->endZ,
-                                initData->bSaveMobs, initData->compressionType);
-                            dos.close();
-
-                            delete initData;
-                        }
-                        gameServices().unlockSaveNotification();
-#endif
-                        break;
-                    case eXuiServerAction_SetCameraLocation:
-#if !defined(_CONTENT_PACKAGE)
-                    {
-                        DebugSetCameraPosition* pos =
-                            (DebugSetCameraPosition*)param;
-
-                        Log::info("DEBUG: Player=%i\n", pos->player);
-                        Log::info(
-                            "DEBUG: Teleporting to pos=(%f.2, %f.2, %f.2), "
-                            "looking at=(%f.2,%f.2)\n",
-                            pos->m_camX, pos->m_camY, pos->m_camZ, pos->m_yRot,
-                            pos->m_elev);
-
-                        std::shared_ptr<ServerPlayer> player =
-                            players->players.at(pos->player);
-                        player->debug_setPosition(pos->m_camX, pos->m_camY,
-                                                  pos->m_camZ, pos->m_yRot,
-                                                  pos->m_elev);
-
-                        // Doesn't work
-                        // player->setYHeadRot(pos->m_yRot);
-                        // player->absMoveTo(pos->m_camX, pos->m_camY,
-                        // pos->m_camZ, pos->m_yRot, pos->m_elev);
-                    }
-#endif
-                    break;
-                    default:
-                        break;
-                }
-
-                gameServices().setXuiServerAction(i, eXuiServerAction_Idle);
-            }
+            // Drain typed action queue (queued by app/server consumers
+            // via MinecraftServer::queueServerAction).
+            drainServerActions();
 
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
@@ -1604,11 +1418,11 @@ void MinecraftServer::chunkPacketManagement_PreTick() {
     s_tickStartTime = System::currentTimeMillis();
     s_sentTo.clear();
 
-    std::vector<std::shared_ptr<PlayerConnection> >* players =
+    std::vector<std::shared_ptr<PlayerConnection>>* players =
         connection->getPlayers();
 
     if (players->size()) {
-        std::vector<std::shared_ptr<PlayerConnection> > playersOrig = *players;
+        std::vector<std::shared_ptr<PlayerConnection>> playersOrig = *players;
         players->clear();
 
         do {
@@ -1641,7 +1455,8 @@ bool MinecraftServer::chunkPacketManagement_CanSendTo(INetworkPlayer* player) {
 
     auto now = time_util::clock::now();
     if (player->GetSessionIndex() == s_slowQueuePlayerIndex &&
-        (now - s_slowQueueLastTime) > std::chrono::milliseconds(MINECRAFT_SERVER_SLOW_QUEUE_DELAY)) {
+        (now - s_slowQueueLastTime) >
+            std::chrono::milliseconds(MINECRAFT_SERVER_SLOW_QUEUE_DELAY)) {
         //		Log::info("Slow queue OK for player #%d\n",
         // player->GetSessionIndex());
         return true;
@@ -1660,8 +1475,9 @@ void MinecraftServer::chunkPacketManagement_PostTick() {
     // 4J Ensure that the slow queue owner keeps cycling if it's not been used
     // in a while
     auto now = time_util::clock::now();
-    if ((s_slowQueuePacketSent) || ((now - s_slowQueueLastTime) >
-                                    std::chrono::milliseconds(2 * MINECRAFT_SERVER_SLOW_QUEUE_DELAY))) {
+    if ((s_slowQueuePacketSent) ||
+        ((now - s_slowQueueLastTime) >
+         std::chrono::milliseconds(2 * MINECRAFT_SERVER_SLOW_QUEUE_DELAY))) {
         //		Log::info("Considering cycling: (%d) %d - %d -> %d
         //> %d\n",s_slowQueuePacketSent, time, s_slowQueueLastTime, (time -
         // s_slowQueueLastTime), (2*MINECRAFT_SERVER_SLOW_QUEUE_DELAY));
@@ -1678,13 +1494,13 @@ void MinecraftServer::chunkPacketManagement_PostTick() {
 }
 
 void MinecraftServer::cycleSlowQueueIndex() {
-    if (!g_NetworkManager.IsInSession()) return;
+    if (!NetworkService.IsInSession()) return;
 
     int startingIndex = s_slowQueuePlayerIndex;
     INetworkPlayer* currentPlayer = nullptr;
     int currentPlayerCount = 0;
     do {
-        currentPlayerCount = g_NetworkManager.GetPlayerCount();
+        currentPlayerCount = NetworkService.GetPlayerCount();
         if (startingIndex >= currentPlayerCount) startingIndex = 0;
         ++s_slowQueuePlayerIndex;
 
@@ -1695,11 +1511,11 @@ void MinecraftServer::cycleSlowQueueIndex() {
             // join. The QNet session might be ending while we do this, so do a
             // few more checks that the player is real
             currentPlayer =
-                g_NetworkManager.GetPlayerByIndex(s_slowQueuePlayerIndex);
+                NetworkService.GetPlayerByIndex(s_slowQueuePlayerIndex);
         } else {
             s_slowQueuePlayerIndex = 0;
         }
-    } while (g_NetworkManager.IsInSession() && currentPlayerCount > 0 &&
+    } while (NetworkService.IsInSession() && currentPlayerCount > 0 &&
              s_slowQueuePlayerIndex != startingIndex &&
              currentPlayer != nullptr && currentPlayer->IsLocal());
     //	Log::info("Cycled slow queue index to %d\n",
@@ -1721,4 +1537,174 @@ bool MinecraftServer::flagEntitiesToBeRemoved(unsigned int* flags) {
         }
     }
     return removedFound;
+}
+
+void MinecraftServer::queueServerAction(
+    minecraft::server::ServerAction action) {
+    std::lock_guard<std::mutex> lock(m_actionQueueMutex);
+    m_actionQueue.push_back(std::move(action));
+}
+
+void MinecraftServer::drainServerActions() {
+    std::vector<minecraft::server::ServerAction> queue;
+    {
+        std::lock_guard<std::mutex> lock(m_actionQueueMutex);
+        if (m_actionQueue.empty()) return;
+        queue.swap(m_actionQueue);
+    }
+    for (auto& action : queue) {
+        std::visit([this](auto& a) { handleServerAction(a); }, action);
+    }
+}
+
+void MinecraftServer::handleServerAction(const minecraft::server::SaveGame& a) {
+    gameServices().lockSaveNotification();
+    if (players != nullptr) {
+        players->saveAll(Minecraft::GetInstance()->progressRenderer);
+    }
+
+    players->broadcastAll(
+        std::shared_ptr<UpdateProgressPacket>(new UpdateProgressPacket(20)));
+
+    for (unsigned int j = 0; j < levels.size(); j++) {
+        if (s_bServerHalted) break;
+        // 4J Stu - Save the levels in reverse order so we don't overwrite
+        // the level.dat with the data from the nethers leveldata. Fix for
+        // #7418 - Functional: Gameplay: Saving after sleeping in a bed will
+        // place player at nighttime when restarting.
+        ServerLevel* level = levels[levels.size() - 1 - j];
+        level->save(true, Minecraft::GetInstance()->progressRenderer,
+                    a.autoSave);
+
+        players->broadcastAll(std::shared_ptr<UpdateProgressPacket>(
+            new UpdateProgressPacket(33 + (j * 33))));
+    }
+    if (!s_bServerHalted) {
+        saveGameRules();
+        levels[0]->saveToDisc(Minecraft::GetInstance()->progressRenderer,
+                              a.autoSave);
+    }
+    gameServices().unlockSaveNotification();
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::DropDebugItem& a) {
+    if (players == nullptr || players->players.empty()) return;
+    std::shared_ptr<ServerPlayer> player = players->players.at(a.playerIndex);
+    player->drop(
+        std::shared_ptr<ItemInstance>(new ItemInstance(a.itemId, 1, 0)));
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::SpawnDebugMob& a) {
+    if (players == nullptr || players->players.empty()) return;
+    std::shared_ptr<ServerPlayer> player = players->players.at(a.playerIndex);
+    auto factory = static_cast<eINSTANCEOF>(a.mobFactoryId);
+    std::shared_ptr<Mob> mob = std::dynamic_pointer_cast<Mob>(
+        EntityIO::newByEnumType(factory, player->level));
+    if (mob == nullptr) return;
+    mob->moveTo(player->x + 1, player->y, player->z + 1,
+                player->level->random->nextFloat() * 360, 0);
+    mob->setDespawnProtected();  // 4J added, default to being protected against
+                                 // despawning (has to be done after initial
+                                 // position is set)
+    player->level->addEntity(mob);
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::PauseServer& a) {
+    m_isServerPaused = a.paused;
+    if (m_isServerPaused) {
+        m_serverPausedEvent->set();
+    }
+}
+
+void MinecraftServer::handleServerAction(const minecraft::server::ToggleRain&) {
+    bool isRaining = levels[0]->getLevelData()->isRaining();
+    levels[0]->getLevelData()->setRaining(!isRaining);
+    levels[0]->getLevelData()->setRainTime(
+        levels[0]->random->nextInt(Level::TICKS_PER_DAY * 7) +
+        Level::TICKS_PER_DAY / 2);
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::ToggleThunder&) {
+    bool isThundering = levels[0]->getLevelData()->isThundering();
+    levels[0]->getLevelData()->setThundering(!isThundering);
+    levels[0]->getLevelData()->setThunderTime(
+        levels[0]->random->nextInt(Level::TICKS_PER_DAY * 7) +
+        Level::TICKS_PER_DAY / 2);
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::BroadcastSettingChanged& a) {
+    using Kind = minecraft::server::BroadcastSettingChanged::Kind;
+    switch (a.kind) {
+        case Kind::Gamertags:
+            players->broadcastAll(std::shared_ptr<ServerSettingsChangedPacket>(
+                new ServerSettingsChangedPacket(
+                    ServerSettingsChangedPacket::HOST_OPTIONS,
+                    gameServices().getGameHostOption(
+                        eGameHostOption_Gamertags))));
+            break;
+        case Kind::BedrockFog:
+            players->broadcastAll(std::shared_ptr<ServerSettingsChangedPacket>(
+                new ServerSettingsChangedPacket(
+                    ServerSettingsChangedPacket::HOST_IN_GAME_SETTINGS,
+                    gameServices().getGameHostOption(eGameHostOption_All))));
+            break;
+        case Kind::Difficulty:
+            players->broadcastAll(std::shared_ptr<ServerSettingsChangedPacket>(
+                new ServerSettingsChangedPacket(
+                    ServerSettingsChangedPacket::HOST_DIFFICULTY,
+                    Minecraft::GetInstance()->options->difficulty)));
+            break;
+    }
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::ExportSchematic& a) {
+#if !defined(_CONTENT_PACKAGE)
+    gameServices().lockSaveNotification();
+    if (!s_bServerHalted) {
+        File targetFileDir("Schematics");
+        if (!targetFileDir.exists()) targetFileDir.mkdir();
+
+        char filename[128];
+        snprintf(filename, 128, "%s%dx%dx%d.sch", a.name,
+                 (a.endX - a.startX + 1), (a.endY - a.startY + 1),
+                 (a.endZ - a.startZ + 1));
+
+        File dataFile = File(targetFileDir, std::string(filename));
+        if (dataFile.exists()) dataFile._delete();
+        FileOutputStream fos = FileOutputStream(dataFile);
+        DataOutputStream dos = DataOutputStream(&fos);
+        ConsoleSchematicFile::generateSchematicFile(
+            &dos, levels[0], a.startX, a.startY, a.startZ, a.endX, a.endY,
+            a.endZ, a.saveMobs, a.compressionType);
+        dos.close();
+    }
+    gameServices().unlockSaveNotification();
+#else
+    (void)a;
+#endif
+}
+
+void MinecraftServer::handleServerAction(
+    const minecraft::server::SetCameraLocation& a) {
+#if !defined(_CONTENT_PACKAGE)
+    Log::info("DEBUG: Player=%i\n", a.playerIndex);
+    Log::info(
+        "DEBUG: Teleporting to pos=(%f.2, %f.2, %f.2), looking "
+        "at=(%f.2,%f.2)\n",
+        a.x, a.y, a.z, a.yRot, a.elev);
+
+    if (players == nullptr ||
+        a.playerIndex >= static_cast<int>(players->players.size()))
+        return;
+    std::shared_ptr<ServerPlayer> player = players->players.at(a.playerIndex);
+    player->debug_setPosition(a.x, a.y, a.z, a.yRot, a.elev);
+#else
+    (void)a;
+#endif
 }

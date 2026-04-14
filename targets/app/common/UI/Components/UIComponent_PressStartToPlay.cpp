@@ -1,9 +1,9 @@
 #include "UIComponent_PressStartToPlay.h"
 
+#include "app/common/Game.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "strings.h"
 
 class UILayer;

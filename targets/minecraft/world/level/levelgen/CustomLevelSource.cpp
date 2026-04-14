@@ -1,24 +1,19 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "CustomLevelSource.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
-#include "app/linux/LinuxGame.h"
-#include "platform/fs/fs.h"
-#include "minecraft/world/level/biome/Biome.h"
-#include "minecraft/world/level/chunk/ChunkSource.h"
-#if defined(__linux__)
-#include "app/linux/Stubs/winapi_stubs.h"
-#endif
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/world/entity/MobCategory.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/MobSpawner.h"
+#include "minecraft/world/level/biome/Biome.h"
 #include "minecraft/world/level/biome/BiomeSource.h"
+#include "minecraft/world/level/chunk/ChunkSource.h"
 #include "minecraft/world/level/chunk/LevelChunk.h"
 #include "minecraft/world/level/levelgen/CanyonFeature.h"
 #include "minecraft/world/level/levelgen/LargeCaveFeature.h"
@@ -32,6 +27,7 @@
 #include "minecraft/world/level/storage/LevelData.h"
 #include "minecraft/world/level/tile/HeavyTile.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/fs/fs.h"
 
 const double CustomLevelSource::SNOW_SCALE = 0.3;
 const double CustomLevelSource::SNOW_CUTOFF = 0.5;
@@ -63,9 +59,9 @@ CustomLevelSource::CustomLevelSource(Level* level, int64_t seed,
 
     {
         const char* waterHeightPath = "GameRules/waterheight.bin";
-        auto result = PlatformFilesystem.readFile(
-            waterHeightPath, m_waterheightOverride.data(),
-            m_waterheightOverride.size());
+        auto result = PlatformFilesystem.readFile(waterHeightPath,
+                                                  m_waterheightOverride.data(),
+                                                  m_waterheightOverride.size());
         if (result.status == IPlatformFilesystem::ReadStatus::NotFound) {
             memset(m_waterheightOverride.data(), level->seaLevel,
                    m_waterheightOverride.size());
@@ -262,7 +258,8 @@ void CustomLevelSource::buildSurfaces(int xOffs, int zOffs,
             uint8_t top = b->topMaterial;
             uint8_t material = b->material;
 
-            LevelGenerationOptions* lgo = gameServices().getLevelGenerationOptions();
+            LevelGenerationOptions* lgo =
+                gameServices().getLevelGenerationOptions();
             if (lgo != nullptr) {
                 lgo->getBiomeOverride(b->id, material, top);
             }

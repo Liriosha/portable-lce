@@ -1,11 +1,10 @@
-#include "minecraft/IGameServices.h"
 #include "AttributeModifier.h"
 
 #include <assert.h>
 #include <wchar.h>
 
 #include "minecraft/GameEnums.h"
-#include "app/linux/LinuxGame.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/util/HtmlString.h"
 #include "minecraft/world/entity/ai/attributes/Attribute.h"
 

@@ -3,21 +3,22 @@
 
 #include <wchar.h>
 
-#include "platform/input/input.h"
-#include "platform/profile/profile.h"
-#include "minecraft/GameEnums.h"
-#include "app/common/GameRules/LevelGeneration/ConsoleSchematicFile.h"
+#include "app/common/Game.h"
+#include "app/common/Iggy/include/rrCore.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_TextInput.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/server/MinecraftServer.h"
+#include "minecraft/server/ServerAction.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/chunk/ChunkSource.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "platform/input/input.h"
+#include "platform/profile/profile.h"
 
 class UILayer;
 #ifdef _DEBUG_MENUS_ENABLED
@@ -52,7 +53,8 @@ UIScene_DebugCreateSchematic::UIScene_DebugCreateSchematic(int iPad,
 
     m_buttonCreate.init("Create", eControl_Create);
 
-    m_data = new ConsoleSchematicFile::XboxSchematicInitParam();
+    m_data = {};
+    m_data.compressionType = Compression::eCompressionType_None;
 }
 
 std::string UIScene_DebugCreateSchematic::getMoviePath() {
@@ -86,38 +88,36 @@ void UIScene_DebugCreateSchematic::handlePress(F64 controlId, F64 childId) {
     switch ((int)controlId) {
         case eControl_Create: {
             // We want the start to be even
-            if (m_data->startX > 0 && m_data->startX % 2 != 0)
-                m_data->startX -= 1;
-            else if (m_data->startX < 0 && m_data->startX % 2 != 0)
-                m_data->startX -= 1;
-            if (m_data->startY < 0)
-                m_data->startY = 0;
-            else if (m_data->startY > 0 && m_data->startY % 2 != 0)
-                m_data->startY -= 1;
-            if (m_data->startZ > 0 && m_data->startZ % 2 != 0)
-                m_data->startZ -= 1;
-            else if (m_data->startZ < 0 && m_data->startZ % 2 != 0)
-                m_data->startZ -= 1;
+            if (m_data.startX > 0 && m_data.startX % 2 != 0)
+                m_data.startX -= 1;
+            else if (m_data.startX < 0 && m_data.startX % 2 != 0)
+                m_data.startX -= 1;
+            if (m_data.startY < 0)
+                m_data.startY = 0;
+            else if (m_data.startY > 0 && m_data.startY % 2 != 0)
+                m_data.startY -= 1;
+            if (m_data.startZ > 0 && m_data.startZ % 2 != 0)
+                m_data.startZ -= 1;
+            else if (m_data.startZ < 0 && m_data.startZ % 2 != 0)
+                m_data.startZ -= 1;
 
             // We want the end to be odd to have a total size that is even
-            if (m_data->endX > 0 && m_data->endX % 2 == 0)
-                m_data->endX += 1;
-            else if (m_data->endX < 0 && m_data->endX % 2 == 0)
-                m_data->endX += 1;
-            if (m_data->endY > Level::maxBuildHeight)
-                m_data->endY = Level::maxBuildHeight;
-            else if (m_data->endY > 0 && m_data->endY % 2 == 0)
-                m_data->endY += 1;
-            else if (m_data->endY < 0 && m_data->endY % 2 == 0)
-                m_data->endY += 1;
-            if (m_data->endZ > 0 && m_data->endZ % 2 == 0)
-                m_data->endZ += 1;
-            else if (m_data->endZ < 0 && m_data->endZ % 2 == 0)
-                m_data->endZ += 1;
+            if (m_data.endX > 0 && m_data.endX % 2 == 0)
+                m_data.endX += 1;
+            else if (m_data.endX < 0 && m_data.endX % 2 == 0)
+                m_data.endX += 1;
+            if (m_data.endY > Level::maxBuildHeight)
+                m_data.endY = Level::maxBuildHeight;
+            else if (m_data.endY > 0 && m_data.endY % 2 == 0)
+                m_data.endY += 1;
+            else if (m_data.endY < 0 && m_data.endY % 2 == 0)
+                m_data.endY += 1;
+            if (m_data.endZ > 0 && m_data.endZ % 2 == 0)
+                m_data.endZ += 1;
+            else if (m_data.endZ < 0 && m_data.endZ % 2 == 0)
+                m_data.endZ += 1;
 
-            app.SetXuiServerAction(PlatformProfile.GetPrimaryPad(),
-                                   eXuiServerAction_ExportSchematic,
-                                   (void*)m_data);
+            MinecraftServer::getInstance()->queueServerAction(m_data);
 
             navigateBack();
         } break;
@@ -143,13 +143,13 @@ void UIScene_DebugCreateSchematic::handleCheckboxToggled(F64 controlId,
                                                          bool selected) {
     switch ((int)controlId) {
         case eControl_SaveMobs:
-            m_data->bSaveMobs = selected;
+            m_data.saveMobs = selected;
             break;
         case eControl_UseCompression:
             if (selected)
-                m_data->compressionType = APPROPRIATE_COMPRESSION_TYPE;
+                m_data.compressionType = APPROPRIATE_COMPRESSION_TYPE;
             else
-                m_data->compressionType = Compression::eCompressionType_RLE;
+                m_data.compressionType = Compression::eCompressionType_RLE;
             break;
     }
 }
@@ -164,9 +164,9 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
             case eControl_Name:
                 m_textInputName.setLabel(value);
                 if (!value.empty()) {
-                    snprintf(m_data->name, 64, "%s", value.c_str());
+                    snprintf(m_data.name, 64, "%s", value.c_str());
                 } else {
-                    snprintf(m_data->name, 64, "schematic");
+                    snprintf(m_data.name, 64, "schematic");
                 }
                 break;
             case eControl_StartX:
@@ -174,7 +174,7 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
 
                 if (iVal >= (LEVEL_MAX_WIDTH * -16) ||
                     iVal < (LEVEL_MAX_WIDTH * 16)) {
-                    m_data->startX = iVal;
+                    m_data.startX = iVal;
                 }
                 break;
             case eControl_StartY:
@@ -182,7 +182,7 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
 
                 if (iVal >= (LEVEL_MAX_WIDTH * -16) ||
                     iVal < (LEVEL_MAX_WIDTH * 16)) {
-                    m_data->startY = iVal;
+                    m_data.startY = iVal;
                 }
                 break;
             case eControl_StartZ:
@@ -190,7 +190,7 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
 
                 if (iVal >= (LEVEL_MAX_WIDTH * -16) ||
                     iVal < (LEVEL_MAX_WIDTH * 16)) {
-                    m_data->startZ = iVal;
+                    m_data.startZ = iVal;
                 }
                 break;
             case eControl_EndX:
@@ -198,7 +198,7 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
 
                 if (iVal >= (LEVEL_MAX_WIDTH * -16) ||
                     iVal < (LEVEL_MAX_WIDTH * 16)) {
-                    m_data->endX = iVal;
+                    m_data.endX = iVal;
                 }
                 break;
             case eControl_EndY:
@@ -206,7 +206,7 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
 
                 if (iVal >= (LEVEL_MAX_WIDTH * -16) ||
                     iVal < (LEVEL_MAX_WIDTH * 16)) {
-                    m_data->endY = iVal;
+                    m_data.endY = iVal;
                 }
                 break;
             case eControl_EndZ:
@@ -214,7 +214,7 @@ int UIScene_DebugCreateSchematic::handleKeyboardComplete(bool bRes) {
 
                 if (iVal >= (LEVEL_MAX_WIDTH * -16) ||
                     iVal < (LEVEL_MAX_WIDTH * 16)) {
-                    m_data->endZ = iVal;
+                    m_data.endZ = iVal;
                 }
                 break;
             default:

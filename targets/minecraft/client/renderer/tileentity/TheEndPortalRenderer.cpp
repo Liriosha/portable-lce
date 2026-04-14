@@ -2,9 +2,7 @@
 
 #include <memory>
 
-#include "platform/renderer/renderer.h"
 #include "TileEntityRenderDispatcher.h"
-
 #include "java/FloatBuffer.h"
 #include "java/Random.h"
 #include "java/System.h"
@@ -15,6 +13,8 @@
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/world/level/tile/entity/TheEndPortalTileEntity.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation TheEndPortalRenderer::END_SKY_LOCATION =
     ResourceLocation(TN_MISC_TUNNEL);

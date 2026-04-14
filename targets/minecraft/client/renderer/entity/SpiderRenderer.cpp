@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "platform/renderer/renderer.h"
-
 #include "minecraft/SharedConstants.h"
 #include "minecraft/client/model/SpiderModel.h"
 #include "minecraft/client/renderer/Textures.h"
@@ -11,6 +9,8 @@
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/monster/Spider.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation SpiderRenderer::SPIDER_LOCATION =
     ResourceLocation(TN_MOB_SPIDER);

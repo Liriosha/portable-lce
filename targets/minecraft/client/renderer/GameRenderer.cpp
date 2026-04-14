@@ -1,5 +1,3 @@
-#include "minecraft/IGameServices.h"
-#include "minecraft/util/Log.h"
 #include "GameRenderer.h"
 
 #include <float.h>
@@ -8,31 +6,22 @@
 #include <cmath>
 #include <numbers>
 
-#include "platform/PlatformTypes.h"
-#include "platform/input/input.h"
-#include "platform/renderer/renderer.h"
 #include "BossMobGuiInfo.h"
 #include "Chunk.h"
 #include "ItemInHandRenderer.h"
 #include "LevelRenderer.h"
-#include "minecraft/GameEnums.h"
-#include "platform/ShutdownManager.h"
-#include "app/common/Colours/ColourTable.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "minecraft/client/BufferedImage.h"
-#include "util/FrameProfiler.h"
-#include "platform/stubs.h"
 #include "Tesselator.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
-
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/FloatBuffer.h"
 #include "java/JavaMath.h"
 #include "java/Random.h"
 #include "java/System.h"
 #include "minecraft/Facing.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/SharedConstants.h"
+#include "minecraft/client/BufferedImage.h"
 #include "minecraft/client/Camera.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/MemoryTracker.h"
@@ -55,10 +44,11 @@
 #include "minecraft/client/renderer/culling/Frustum.h"
 #include "minecraft/client/renderer/culling/FrustumCuller.h"
 #include "minecraft/client/renderer/texture/TextureAtlas.h"
+#include "minecraft/client/resources/Colours/ColourTable.h"
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/util/Log.h"
 #include "minecraft/util/SmoothFloat.h"
 #include "minecraft/world/effect/MobEffect.h"
 #include "minecraft/world/effect/MobEffectInstance.h"
@@ -80,10 +70,17 @@
 #include "minecraft/world/level/chunk/SparseLightStorage.h"
 #include "minecraft/world/level/dimension/Dimension.h"
 #include "minecraft/world/level/material/Material.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "minecraft/world/level/tile/Tile.h"
 #include "minecraft/world/phys/AABB.h"
 #include "minecraft/world/phys/HitResult.h"
 #include "minecraft/world/phys/Vec3.h"
+#include "platform/PlatformTypes.h"
+#include "platform/input/input.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
+#include "platform/thread/ShutdownManager.h"
+#include "util/FrameProfiler.h"
 
 bool GameRenderer::anaglyph3d = false;
 int GameRenderer::anaglyphPass = 0;
@@ -610,7 +607,8 @@ void GameRenderer::getFovAndAspect(float& fov, float& aspect, float a,
     aspect = mc->width / (float)mc->height;
     fov = getFov(a, applyEffects);
 
-    if ((mc->player->m_iScreenSection == IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP) ||
+    if ((mc->player->m_iScreenSection ==
+         IPlatformRenderer::VIEWPORT_TYPE_SPLIT_TOP) ||
         (mc->player->m_iScreenSection ==
          IPlatformRenderer::VIEWPORT_TYPE_SPLIT_BOTTOM)) {
         aspect *= 2.0f;
@@ -665,7 +663,8 @@ void GameRenderer::setupCamera(float a, int eye) {
     bool bNoBobbingAnim = (mc->player->getAnimOverrideBitmask() &
                            (1 << HumanoidModel::eAnim_NoBobbing)) != 0;
 
-    if (gameServices().getGameSettings(mc->player->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (gameServices().getGameSettings(mc->player->GetXboxPad(),
+                                       eGameSetting_ViewBob) &&
         !mc->player->abilities.flying && !bNoLegAnim && !bNoBobbingAnim)
         bobView(a);
 
@@ -720,7 +719,7 @@ void GameRenderer::renderItemInHand(float a, int eye) {
             localplayer->inventory->getSelected();
         if (!(item && item->getItem()->id == Item::map_Id) &&
             gameServices().getGameSettings(localplayer->GetXboxPad(),
-                                eGameSetting_DisplayHand) == 0)
+                                           eGameSetting_DisplayHand) == 0)
             renderHand = false;
     }
 
@@ -760,7 +759,8 @@ void GameRenderer::renderItemInHand(float a, int eye) {
     bool bNoLegAnim = (localplayer->getAnimOverrideBitmask() &
                        ((1 << HumanoidModel::eAnim_NoLegAnim) |
                         (1 << HumanoidModel::eAnim_NoBobbing))) != 0;
-    if (gameServices().getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (gameServices().getGameSettings(localplayer->GetXboxPad(),
+                                       eGameSetting_ViewBob) &&
         !localplayer->abilities.flying && !bNoLegAnim)
         bobView(a);
 
@@ -792,7 +792,8 @@ void GameRenderer::renderItemInHand(float a, int eye) {
 
     // 4J-PB - changing this to be per player
     // if (mc->options->bobView) bobView(a);
-    if (gameServices().getGameSettings(localplayer->GetXboxPad(), eGameSetting_ViewBob) &&
+    if (gameServices().getGameSettings(localplayer->GetXboxPad(),
+                                       eGameSetting_ViewBob) &&
         !localplayer->abilities.flying && !bNoLegAnim)
         bobView(a);
 }
@@ -800,25 +801,26 @@ void GameRenderer::renderItemInHand(float a, int eye) {
 // 4J - change brought forward from 1.8.2
 void GameRenderer::turnOffLightLayer(double alpha) {  // 4J - TODO
     FRAME_PROFILE_SCOPE(Lightmap);
-#if defined(__linux__)
+
+    // 4jcraft
     if (SharedConstants::TEXTURE_LIGHTING) {
         PlatformRenderer.TextureBindVertex(-1);
     }
-#else
-    // 4jcraft: manually handle this in order to ensure that the light layer is
-    // turned off correctly
-    if (SharedConstants::TEXTURE_LIGHTING) {
-        glClientActiveTexture(GL_TEXTURE1);
-        glActiveTexture(GL_TEXTURE1);
-        glMatrixMode(GL_TEXTURE);
-        glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glClientActiveTexture(GL_TEXTURE0);
-        glActiveTexture(GL_TEXTURE0);
-    }
-#endif
+
+    // // 4jcraft: manually handle this in order to ensure that the light layer
+    // is
+    // // turned off correctly
+    // if (SharedConstants::TEXTURE_LIGHTING) {
+    //     glClientActiveTexture(GL_TEXTURE1);
+    //     glActiveTexture(GL_TEXTURE1);
+    //     glMatrixMode(GL_TEXTURE);
+    //     glLoadIdentity();
+    //     glMatrixMode(GL_MODELVIEW);
+    //     glDisable(GL_TEXTURE_2D);
+    //     glBindTexture(GL_TEXTURE_2D, 0);
+    //     glClientActiveTexture(GL_TEXTURE0);
+    //     glActiveTexture(GL_TEXTURE0);
+    // }
 }
 
 // 4J - change brought forward from 1.8.2
@@ -826,7 +828,7 @@ void GameRenderer::turnOnLightLayer(
     double alpha,
     bool scaleLight) {  // 4jcraft: added scaleLight for entity lighting
     FRAME_PROFILE_SCOPE(Lightmap);
-#if defined(__linux__)
+#if 1
     if (!SharedConstants::TEXTURE_LIGHTING) return;
 
     const int textureId = getLightTexture(mc->player->GetXboxPad(), mc->level);
@@ -835,7 +837,7 @@ void GameRenderer::turnOnLightLayer(
     if (logCount < 16) {
         ++logCount;
         Log::info("[linux-lightmap] turnOnLightLayer tex=%d scale=%d\n",
-                        textureId, scaleLight ? 1 : 0);
+                  textureId, scaleLight ? 1 : 0);
     }
 
     PlatformRenderer.TextureBindVertex(textureId, scaleLight);
@@ -986,10 +988,10 @@ void GameRenderer::updateLightTexture(float a) {
             int g = (int)(_g * 255);
             int b = (int)(_b * 255);
 
-#if defined(_WIN64) || __linux__
+#if 1
             lightPixels[j][i] = alpha << 24 | b << 16 | g << 8 | r;
 #else
-            lightPixels[j][i] = r << 24 | g << 16 | b << 8 | alpha;
+//             lightPixels[j][i] = r << 24 | g << 16 | b << 8 | alpha;
 #endif
         }
 
@@ -1199,8 +1201,7 @@ void GameRenderer::EnableUpdateThread() {
     // #endif
 #if defined(MULTITHREAD_ENABLE)
     if (updateRunning) return;
-    Log::info(
-        "------------------EnableUpdateThread--------------------\n");
+    Log::info("------------------EnableUpdateThread--------------------\n");
     updateRunning = true;
     m_updateEvents->set(eUpdateCanRun);
     m_updateEvents->set(eUpdateEventIsFinished);
@@ -1213,8 +1214,7 @@ void GameRenderer::DisableUpdateThread() {
     // #endif
 #if defined(MULTITHREAD_ENABLE)
     if (!updateRunning) return;
-    Log::info(
-        "------------------DisableUpdateThread--------------------\n");
+    Log::info("------------------DisableUpdateThread--------------------\n");
     updateRunning = false;
     m_updateEvents->clear(eUpdateCanRun);
     m_updateEvents->waitForSingle(eUpdateEventIsFinished,
@@ -1397,7 +1397,8 @@ void GameRenderer::renderLevel(float a, int64_t until) {
 
         glDisable(GL_BLEND);
         glEnable(GL_CULL_FACE);
-        PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA,
+                                           GL_ONE_MINUS_SRC_ALPHA);
         PlatformRenderer.StateSetDepthMask(true);
         setupFog(0, a);
         glEnable(GL_BLEND);
@@ -1419,7 +1420,8 @@ void GameRenderer::renderLevel(float a, int64_t until) {
             int visibleWaterChunks =
                 levelRenderer->render(cameraEntity, 1, a, updateChunks);
 
-            PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            PlatformRenderer.StateSetBlendFunc(GL_SRC_ALPHA,
+                                               GL_ONE_MINUS_SRC_ALPHA);
 
             if (visibleWaterChunks > 0) {
                 levelRenderer->render(

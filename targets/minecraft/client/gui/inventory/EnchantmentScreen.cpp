@@ -7,7 +7,6 @@
 #include <sstream>
 #include <string>
 
-
 #include "AbstractContainerScreen.h"
 #include "minecraft/client/Lighting.h"
 #include "minecraft/client/Minecraft.h"
@@ -22,6 +21,7 @@
 #include "minecraft/world/inventory/EnchantmentMenu.h"
 #include "minecraft/world/inventory/Slot.h"
 #include "minecraft/world/item/ItemInstance.h"
+#include "platform/stubs.h"
 
 class Level;
 
@@ -316,11 +316,10 @@ EnchantmentScreen::EnchantmentNames::EnchantmentNames() {
         "physical grow shrink demon elemental spirit animal creature beast "
         "humanoid undead fresh stale ";
     std::istringstream iss(allWords);
-    std::copy(std::istream_iterator<std::string, char,
-                                    std::char_traits<char> >(iss),
-              std::istream_iterator<std::string, char,
-                                    std::char_traits<char> >(),
-              std::back_inserter(words));
+    std::copy(
+        std::istream_iterator<std::string, char, std::char_traits<char> >(iss),
+        std::istream_iterator<std::string, char, std::char_traits<char> >(),
+        std::back_inserter(words));
 }
 
 std::string EnchantmentScreen::EnchantmentNames::getRandomName() {

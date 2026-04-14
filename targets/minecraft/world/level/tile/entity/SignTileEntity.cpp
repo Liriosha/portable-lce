@@ -2,14 +2,13 @@
 
 #include <wchar.h>
 
-#include "app/linux/Stubs/winapi_stubs.h"
-#include "PlatformTypes.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/network/packet/SignUpdatePacket.h"
 #include "minecraft/server/level/ServerLevel.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
 #include "nbt/CompoundTag.h"
+#include "platform/PlatformTypes.h"
 
 class Player;
 
@@ -33,7 +32,8 @@ SignTileEntity::SignTileEntity() : TileEntity() {
 SignTileEntity::~SignTileEntity() {
     // TODO ORBIS_STUBBED;
     // 4J-PB - we don't need to verify strings anymore -
-    // PlatformInput.CancelQueuedVerifyStrings([this](STRING_VERIFY_RESPONSE* r) { return handleStringVerify(r); });
+    // PlatformInput.CancelQueuedVerifyStrings([this](STRING_VERIFY_RESPONSE* r)
+    // { return handleStringVerify(r); });
 }
 
 void SignTileEntity::save(CompoundTag* tag) {
@@ -45,8 +45,7 @@ void SignTileEntity::save(CompoundTag* tag) {
 #if !defined(_CONTENT_PACKAGE)
     fprintf(stderr, "### - Saving a sign with text - \n");
     for (int i = 0; i < 4; i++) {
-        fprintf(stderr, m_wsmessages[i].c_str());
-        fprintf(stderr, "\n");
+        fprintf(stderr, "%s\n", m_wsmessages[i].c_str());
     }
 #endif
 }
@@ -64,8 +63,7 @@ void SignTileEntity::load(CompoundTag* tag) {
 #if !defined(_CONTENT_PACKAGE)
     fprintf(stderr, "### - Loaded a sign with text - \n");
     for (int i = 0; i < 4; i++) {
-        fprintf(stderr, m_wsmessages[i].c_str());
-        fprintf(stderr, "\n");
+        fprintf(stderr, "%s\n", m_wsmessages[i].c_str());
     }
 #endif
 
@@ -108,7 +106,7 @@ void SignTileEntity::setChanged() {
     // 4J-PB - For TU14 we are allowed to not verify strings anymore !
     m_bVerified = true;
     /*
-    if(!g_NetworkManager.IsLocalGame() && !m_bVerified)
+    if(!NetworkService.IsLocalGame() && !m_bVerified)
     //if (pMinecraft->level->isClientSide)
     {
             char *wcMessages[MAX_SIGN_LINES];
@@ -124,7 +122,8 @@ sizeof(char)*(MAX_LINE_LENGTH+1)); if(m_wsmessages[i].length()>0)
             // at this point, we can ask the online string verifier if our sign
 text is ok #if 0 m_bVerified=true; #else
 
-            if(!PlatformInput.VerifyStrings((char**)&wcMessages,MAX_SIGN_LINES,[this](STRING_VERIFY_RESPONSE* r) { return handleStringVerify(r); }))
+            if(!PlatformInput.VerifyStrings((char**)&wcMessages,MAX_SIGN_LINES,[this](STRING_VERIFY_RESPONSE*
+r) { return handleStringVerify(r); }))
             {
                     // Nothing to verify
                     m_bVerified=true;
@@ -153,7 +152,7 @@ int SignTileEntity::handleStringVerify(STRING_VERIFY_RESPONSE* pResults) {
     m_bVerified = true;
     m_bCensored = false;
     for (int i = 0; i < pResults->wNumStrings; i++) {
-        if (pResults->pStringResult[i] != ERROR_SUCCESS) {
+        if (pResults->pStringResult[i] != 0) {
             m_bCensored = true;
         }
     }

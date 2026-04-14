@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-
 #include "AbstractContainerScreen.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
@@ -22,8 +21,9 @@
 #include "minecraft/world/inventory/MerchantContainer.h"
 #include "minecraft/world/inventory/MerchantMenu.h"
 #include "minecraft/world/item/trading/Merchant.h"
-#include "minecraft/world/item/trading/MerchantRecipeList.h"
 #include "minecraft/world/item/trading/MerchantRecipe.h"
+#include "minecraft/world/item/trading/MerchantRecipeList.h"
+#include "platform/stubs.h"
 
 class Level;
 

@@ -3,14 +3,14 @@
 #include <memory>
 #include <numbers>
 
-#include "platform/renderer/renderer.h"
-
 #include "minecraft/client/model/ChestModel.h"
 #include "minecraft/client/model/geom/ModelPart.h"
 #include "minecraft/client/renderer/Textures.h"
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/world/level/tile/entity/EnderChestTileEntity.h"
 #include "minecraft/world/level/tile/entity/TileEntity.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 ResourceLocation EnderChestRenderer::ENDER_CHEST_LOCATION =
     ResourceLocation(TN_TILE_ENDER_CHEST);

@@ -6,21 +6,20 @@
 #include <thread>
 #include <vector>
 
-#include "platform/ShutdownManager.h"
-#include "app/common/Network/GameNetworkManager.h"
-#include "app/common/Network/NetworkPlayerInterface.h"
-#include "app/common/Network/Socket.h"
-#include "util/StringHelpers.h"
-#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
 #include "java/InputOutputStream/BufferedOutputStream.h"
 #include "java/InputOutputStream/ByteArrayOutputStream.h"
 #include "java/InputOutputStream/DataInputStream.h"
 #include "java/InputOutputStream/DataOutputStream.h"
 #include "java/System.h"
+#include "minecraft/network/INetworkService.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
 #include "minecraft/network/packet/KeepAlivePacket.h"
 #include "minecraft/network/packet/Packet.h"
 #include "minecraft/network/packet/PacketListener.h"
+#include "minecraft/world/level/storage/ConsoleSaveFileIO/compression.h"
+#include "platform/network/network.h"
+#include "platform/thread/ShutdownManager.h"
+#include "util/StringHelpers.h"
 
 class SocketAddress;
 
@@ -201,10 +200,6 @@ bool Connection::writeTick() {
         }
 
         Packet::writePacket(packet, bufferedDos);
-#if defined(__linux__)
-        bufferedDos->flush();  // Ensure buffered data reaches socket before any
-                               // other writes
-#endif
 
 #if !defined(_CONTENT_PACKAGE)
         // 4J Added for debugging
@@ -253,15 +248,6 @@ bool Connection::writeTick() {
         // write it to QNet as a single packet with priority flags Otherwise
         // just buffer the packet with other outgoing packets as the java game
         // did
-#if defined(__linux__)
-        // Linux fix: For local connections, always use bufferedDos to avoid
-        // byte interleaving between the BufferedOutputStream buffer and direct
-        // sos writes. The shouldDelay/writeWithFlags path writes directly to
-        // sos, which can inject bytes BEFORE unflushed bufferedDos data.
-        Packet::writePacket(packet, bufferedDos);
-        bufferedDos->flush();  // Ensure data reaches socket immediately for
-                               // delayed packets
-#else
         if (packet->shouldDelay) {
             Packet::writePacket(packet, byteArrayDos);
 
@@ -276,8 +262,6 @@ bool Connection::writeTick() {
         } else {
             Packet::writePacket(packet, bufferedDos);
         }
-
-#endif
 
 #if !defined(_CONTENT_PACKAGE)
         // 4J Added for debugging
@@ -471,8 +455,8 @@ void Connection::tick() {
     std::vector<std::shared_ptr<Packet> > packetsToHandle;
     {
         std::lock_guard<std::mutex> lock(incoming_cs);
-        while (!disconnected && !g_NetworkManager.IsLeavingGame() &&
-               g_NetworkManager.IsInSession() && !incoming.empty() &&
+        while (!disconnected && !NetworkService.IsLeavingGame() &&
+               NetworkService.IsInSession() && !incoming.empty() &&
                max-- >= 0) {
             std::shared_ptr<Packet> packet = incoming.front();
             packetsToHandle.push_back(packet);

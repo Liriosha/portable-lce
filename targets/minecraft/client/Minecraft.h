@@ -6,12 +6,13 @@
 #include <string>
 #include <vector>
 
-#include "platform/PlatformTypes.h"
-#include "platform/C4JThread.h"
 #include "java/File.h"
 #include "minecraft/client/resources/ResourceLocation.h"
 #include "minecraft/network/packet/DisconnectPacket.h"
+#include "platform/PlatformTypes.h"
+#include "platform/leaderboard/leaderboard.h"
 #include "platform/stubs.h"
+#include "platform/thread/C4JThread.h"
 
 class Timer;
 class MultiPlayerLevel;
@@ -31,7 +32,7 @@ class BackgroundDownloader;
 class HumanoidModel;
 class HitResult;
 class Options;
-class SoundEngine;
+class ConsoleSoundEngine;
 class MinecraftApplet;
 class MouseHandler;
 class TexturePackRepository;
@@ -69,7 +70,7 @@ public:
     static const std::string VERSION_STRING;
     Minecraft(Component* mouseComponent, Canvas* parent,
               MinecraftApplet* minecraftApplet, int width, int height,
-              bool fullscreen);
+              bool fullscreen, IPlatformLeaderboard& leaderboard);
     void init();
 
     // 4J - removed
@@ -190,7 +191,7 @@ protected:
     MinecraftApplet* minecraftApplet;
 
 public:
-    SoundEngine* soundEngine;
+    ConsoleSoundEngine* soundEngine;
     MouseHandler* mouseHandler;
 
 public:
@@ -214,6 +215,11 @@ private:
 public:
     // 4J- this should really be in localplayer
     StatsCounter* stats[4];
+
+    // Borrowed from the composition root - Minecraft does not own the
+    // backend. The reference is valid for the lifetime of the Minecraft
+    // singleton (the leaderboard outlives Minecraft).
+    IPlatformLeaderboard& leaderboard;
 
 private:
     std::string connectToIp;
@@ -337,12 +343,14 @@ public:
     std::string gatherStats4();
 
     void respawnPlayer(int iPad, int dimension, int newEntityId);
-    static void start(const std::string& name, const std::string& sid);
+    static void start(const std::string& name, const std::string& sid,
+                      IPlatformLeaderboard& leaderboard);
     static void startAndConnectTo(const std::string& name,
                                   const std::string& sid,
-                                  const std::string& url);
+                                  const std::string& url,
+                                  IPlatformLeaderboard& leaderboard);
     ClientConnection* getConnection(int iPad);  // 4J Stu added iPad param
-    static void main();
+    static void main(IPlatformLeaderboard& leaderboard);
     static bool renderNames();
     static bool useFancyGraphics();
     static bool useAmbientOcclusion();

@@ -1,14 +1,14 @@
 #include "UIComponent_MenuBackground.h"
 
-#include "platform/renderer/renderer.h"
+#include "app/common/Iggy/include/iggy.h"
 #include "app/common/UI/UILayer.h"
 #include "app/common/UI/UIScene.h"
-#include "app/linux/Iggy/include/iggy.h"
+#include "platform/renderer/renderer.h"
 #ifndef _ENABLEIGGY
-#include "app/linux/Stubs/iggy_stubs.h"
+#include "app/common/Iggy/iggy_stubs.h"
 #endif
-#include "app/linux/Iggy/include/rrCore.h"
-#include "app/linux/Linux_UIController.h"
+#include "app/common/Iggy/include/rrCore.h"
+#include "app/common/UI/ConsoleUIController.h"
 
 UIComponent_MenuBackground::UIComponent_MenuBackground(int iPad, void* initData,
                                                        UILayer* parentLayer)
@@ -41,8 +41,8 @@ std::string UIComponent_MenuBackground::getMoviePath() {
     return "MenuBackground";
 }
 
-void UIComponent_MenuBackground::render(S32 width, S32 height,
-                                        IPlatformRenderer::eViewportType viewport) {
+void UIComponent_MenuBackground::render(
+    S32 width, S32 height, IPlatformRenderer::eViewportType viewport) {
     if (m_bSplitscreen) {
         S32 xPos = 0;
         S32 yPos = 0;

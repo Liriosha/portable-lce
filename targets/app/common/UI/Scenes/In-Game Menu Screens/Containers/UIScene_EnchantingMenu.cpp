@@ -5,19 +5,20 @@
 
 #include <memory>
 
-#include "platform/profile/profile.h"
+#include "app/common/Game.h"
 #include "app/common/Tutorial/Tutorial.h"
-#include "app/common/Tutorial/TutorialEnum.h"
 #include "app/common/Tutorial/TutorialMode.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_EnchantmentBook.h"
 #include "app/common/UI/Controls/UIControl_EnchantmentButton.h"
 #include "app/common/UI/Controls/UIControl_Label.h"
 #include "app/common/UI/Controls/UIControl_SlotList.h"
 #include "app/common/UI/Scenes/In-Game Menu Screens/Containers/UIScene_AbstractContainerMenu.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/world/inventory/EnchantmentMenu.h"
+#include "minecraft/world/tutorial/TutorialEnum.h"
+#include "platform/game/game.h"
+#include "platform/profile/profile.h"
 #include "strings.h"
 
 class UILayer;
@@ -55,7 +56,7 @@ UIScene_EnchantingMenu::UIScene_EnchantingMenu(int iPad, void* _initData,
 
     m_slotListIngredient.addSlots(EnchantmentMenu::INGREDIENT_SLOT, 1);
 
-    app.SetRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_ENCHANTING);
+    PlatformGame.SetRichPresenceContext(m_iPad, CONTEXT_GAME_STATE_ENCHANTING);
 
     delete initData;
 }

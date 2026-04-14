@@ -4,13 +4,14 @@
 #include <string>
 #include <vector>
 
-#include "platform/renderer/renderer.h"
 #include "Button.h"
 #include "PauseScreen.h"
-#include "util/StringHelpers.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/gui/Screen.h"
 #include "minecraft/client/multiplayer/MultiPlayerLocalPlayer.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
+#include "util/StringHelpers.h"
 
 void DeathScreen::init() {
     buttons.clear();

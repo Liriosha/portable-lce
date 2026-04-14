@@ -1,14 +1,13 @@
-#include "minecraft/IGameServices.h"
 #include "TntTile.h"
 
 #include <string>
 
-#include "minecraft/GameEnums.h"
-#include "app/linux/LinuxGame.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Class.h"
 #include "java/Random.h"
 #include "minecraft/Facing.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/world/IconRegister.h"
 #include "minecraft/world/entity/Entity.h"
 #include "minecraft/world/entity/LivingEntity.h"

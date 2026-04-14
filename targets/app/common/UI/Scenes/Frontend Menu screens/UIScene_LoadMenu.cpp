@@ -4,16 +4,13 @@
 #include <string.h>
 #include <wchar.h>
 
-#include "platform/PlatformTypes.h"
-#include "platform/profile/profile.h"
-#include "platform/renderer/renderer.h"
-#include "app/common/App_Defines.h"
-#include "minecraft/GameEnums.h"
+#include "app/common/Audio/SoundTypes.h"
 #include "app/common/DLC/DLCManager.h"
 #include "app/common/DLC/DLCPack.h"
-#include "app/common/GameRules/LevelGeneration/LevelGenerationOptions.h"
+#include "app/common/Game.h"
 #include "app/common/Network/GameNetworkManager.h"
 #include "app/common/UI/All Platforms/UIStructs.h"
+#include "app/common/UI/ConsoleUIController.h"
 #include "app/common/UI/Controls/UIControl_BitmapIcon.h"
 #include "app/common/UI/Controls/UIControl_Button.h"
 #include "app/common/UI/Controls/UIControl_CheckBox.h"
@@ -21,17 +18,21 @@
 #include "app/common/UI/Controls/UIControl_Slider.h"
 #include "app/common/UI/Scenes/Frontend Menu screens/IUIScene_StartGame.h"
 #include "app/common/UI/UILayer.h"
-#include "app/linux/LinuxGame.h"
-#include "app/linux/Linux_UIController.h"
-#include "platform/NetTypes.h"
+#include "minecraft/GameEnums.h"
+#include "minecraft/GameHostOptions.h"
+#include "minecraft/GameTypes.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/client/Options.h"
 #include "minecraft/client/skins/DLCTexturePack.h"
 #include "minecraft/client/skins/TexturePack.h"
 #include "minecraft/client/skins/TexturePackRepository.h"
 #include "minecraft/server/MinecraftServer.h"
-#include "minecraft/sounds/SoundTypes.h"
+#include "minecraft/world/level/GameRules/LevelGenerationOptions.h"
 #include "minecraft/world/level/LevelSettings.h"
+#include "platform/PlatformTypes.h"
+#include "platform/network/NetTypes.h"
+#include "platform/profile/profile.h"
+#include "platform/renderer/renderer.h"
 #include "strings.h"
 
 #define GAME_CREATE_ONLINE_TIMER_ID 0
@@ -301,7 +302,7 @@ void UIScene_LoadMenu::tick() {
 
         if (szSeed[0] != 0) {
             char TempString[256];
-            snprintf(TempString, 256, "%s: %hs", app.GetString(IDS_SEED),
+            snprintf(TempString, 256, "%s: %s", app.GetString(IDS_SEED),
                      szSeed);
             m_labelSeed.setLabel(TempString);
         } else {
@@ -776,7 +777,8 @@ void UIScene_LoadMenu::LaunchGame(void) {
                                 &pSaveDetails
                                      ->SaveInfoA[(int)m_iSaveGameInfoIndex],
                                 [this](bool bCorrupt, bool bOwner) {
-                                    return loadSaveDataReturned(bCorrupt, bOwner);
+                                    return loadSaveDataReturned(bCorrupt,
+                                                                bOwner);
                                 });
 
 #if TO_BE_IMPLEMENTED
@@ -784,7 +786,8 @@ void UIScene_LoadMenu::LaunchGame(void) {
                             IPlatformStorage::ELoadGame_DeviceRemoved) {
                             // disable saving
                             PlatformStorage.SetSaveDisabled(true);
-                            PlatformStorage.SetSaveDeviceSelected(m_iPad, false);
+                            PlatformStorage.SetSaveDeviceSelected(m_iPad,
+                                                                  false);
                             unsigned int uiIDA[1];
                             uiIDA[0] = IDS_OK;
                             ui.RequestErrorMessage(
@@ -867,8 +870,8 @@ int UIScene_LoadMenu::CheckResetNetherReturned(
     return 0;
 }
 
-int UIScene_LoadMenu::ConfirmLoadReturned(void* pParam, int iPad,
-                                          IPlatformStorage::EMessageResult result) {
+int UIScene_LoadMenu::ConfirmLoadReturned(
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_LoadMenu* pClass = (UIScene_LoadMenu*)pParam;
 
     if (result == IPlatformStorage::EMessage_ResultAccept) {
@@ -1025,8 +1028,8 @@ int UIScene_LoadMenu::loadSaveDataReturned(bool bIsCorrupt, bool bIsOwner) {
     return 0;
 }
 
-int UIScene_LoadMenu::TrophyDialogReturned(void* pParam, int iPad,
-                                           IPlatformStorage::EMessageResult result) {
+int UIScene_LoadMenu::TrophyDialogReturned(
+    void* pParam, int iPad, IPlatformStorage::EMessageResult result) {
     UIScene_LoadMenu* pClass = (UIScene_LoadMenu*)pParam;
     return LoadDataComplete(pClass);
 }

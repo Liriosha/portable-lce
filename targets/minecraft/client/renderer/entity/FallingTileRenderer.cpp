@@ -3,8 +3,6 @@
 #include <cmath>
 #include <memory>
 
-#include "platform/renderer/renderer.h"
-
 #include "minecraft/client/renderer/Tesselator.h"
 #include "minecraft/client/renderer/TileRenderer.h"
 #include "minecraft/client/renderer/entity/EntityRenderer.h"
@@ -14,6 +12,8 @@
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/tile/AnvilTile.h"
 #include "minecraft/world/level/tile/Tile.h"
+#include "platform/renderer/renderer.h"
+#include "platform/stubs.h"
 
 FallingTileRenderer::FallingTileRenderer() : EntityRenderer() {
     tileRenderer = new TileRenderer();

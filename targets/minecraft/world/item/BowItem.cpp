@@ -2,8 +2,8 @@
 
 #include <memory>
 
+#include "app/common/Audio/SoundTypes.h"
 #include "java/Random.h"
-#include "minecraft/sounds/SoundTypes.h"
 #include "minecraft/world/IconRegister.h"
 #include "minecraft/world/entity/player/Abilities.h"
 #include "minecraft/world/entity/player/Inventory.h"
@@ -18,7 +18,7 @@
 class Icon;
 
 const std::string BowItem::TEXTURE_PULL[] = {"bow_pull_0", "bow_pull_1",
-                                              "bow_pull_2"};
+                                             "bow_pull_2"};
 
 BowItem::BowItem(int id) : Item(id) {
     maxStackSize = 1;

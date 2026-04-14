@@ -1,14 +1,13 @@
 #pragma once
-#include "platform/NetTypes.h"
-#include "minecraft/client/model/SkinBox.h"
 #include "OffsettedRenderList.h"
-#include "platform/C4JThread.h"
-#include "util/Definitions.h"
 #include "java/JavaIntHash.h"
+#include "minecraft/client/model/SkinBox.h"
 #include "minecraft/core/particles/ParticleTypes.h"
 #include "minecraft/world/level/Level.h"
 #include "minecraft/world/level/LevelListener.h"
 #include "minecraft/world/phys/AABB.h"
+#include "platform/network/NetTypes.h"
+#include "platform/thread/C4JThread.h"
 
 class ClipChunk;
 class HitResult;
@@ -17,9 +16,6 @@ class ItemInstance;
 class LivingEntity;
 class Player;
 class ResourceLocation;
-#if !defined(__linux__)
-#include <xmcore.h>
-#endif
 #include <stddef.h>
 #include <stdint.h>
 
@@ -72,13 +68,8 @@ public:
     static const int CHUNK_SIZE = 16;
 #endif
     static const int CHUNK_Y_COUNT = Level::maxBuildHeight / CHUNK_SIZE;
-#if defined(_WINDOWS64)
     static const int MAX_COMMANDBUFFER_ALLOCATIONS =
         512 * 1024 * 1024;  // 4J - added
-#else
-    static const int MAX_COMMANDBUFFER_ALLOCATIONS =
-        55 * 1024 * 1024;  // 4J - added
-#endif
 public:
     LevelRenderer(Minecraft* mc, Textures* textures);
 

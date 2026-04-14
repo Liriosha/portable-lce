@@ -1,4 +1,3 @@
-#include "minecraft/IGameServices.h"
 #include "Monster.h"
 
 #include <math.h>
@@ -6,8 +5,8 @@
 #include <memory>
 #include <numbers>
 
-#include "app/linux/LinuxGame.h"
 #include "java/Random.h"
+#include "minecraft/IGameServices.h"
 #include "minecraft/client/Minecraft.h"
 #include "minecraft/util/Mth.h"
 #include "minecraft/world/Difficulty.h"
