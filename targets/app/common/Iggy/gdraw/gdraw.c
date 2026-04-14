@@ -7,7 +7,7 @@
 #include <windows.h>
 #endif
 // this is a really, really nasty hack to make this shit compile on macOS
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined (__linux__)
 #include "SDL_opengl.h"
 
 typedef void(APIENTRY* PFNGLGENBUFFERSPROC)(GLsizei, GLuint*);
