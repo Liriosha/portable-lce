@@ -40,6 +40,8 @@ jobs:
       matrix:
         build-type: ["amalgam", "full", "optimized"]
         arch: ["x86-64"]
+    permissions:
+      contents: write
     steps:
       - name: Cache .git folder
         uses: actions/cache@v5
