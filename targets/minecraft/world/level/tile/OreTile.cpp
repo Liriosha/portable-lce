@@ -10,12 +10,20 @@
 OreTile::OreTile(int id) : Tile(id, Material::stone) {}
 
 int OreTile::getResource(int data, Random* random, int playerBonusLevel) {
-    if (id == Tile::coalOre_Id) return Item::coal_Id;
-    if (id == Tile::diamondOre_Id) return Item::diamond_Id;
-    if (id == Tile::lapisOre_Id) return Item::dye_powder_Id;
-    if (id == Tile::emeraldOre_Id) return Item::emerald_Id;
-    if (id == Tile::netherQuartz_Id) return Item::netherQuartz_Id;
-    return id;
+    switch (id) {
+        case Tile::coalOre_Id:
+            return Item::coal_Id;
+        case Tile::diamondOre_Id:
+            return Item::diamond_Id;
+        case Tile::lapisOre_Id:
+            return Item::dye_powder_Id;
+        case Tile::emeraldOre_Id:
+            return Item::emerald_Id;
+        case Tile::netherQuartz_Id:
+            return Item::netherQuartz_Id;
+        default:
+            return id;
+    }
 }
 
 int OreTile::getResourceCount(Random* random) {
@@ -41,16 +49,15 @@ void OreTile::spawnResources(Level* level, int x, int y, int z, int data,
     // also spawn experience if the block is broken
     if (getResource(data, level->random, playerBonusLevel) != id) {
         int magicCount = 0;
-        if (id == Tile::coalOre_Id) {
-            magicCount = level->random->nextInt(0, 2);
-        } else if (id == Tile::diamondOre_Id) {
-            magicCount = level->random->nextInt(3, 7);
-        } else if (id == Tile::emeraldOre_Id) {
-            magicCount = level->random->nextInt(3, 7);
-        } else if (id == Tile::lapisOre_Id) {
-            magicCount = level->random->nextInt(2, 5);
-        } else if (id == Tile::netherQuartz_Id) {
-            magicCount = level->random->nextInt(2, 5);
+        switch (id) {
+            case Tile::coalOre_Id:
+                magicCount = level->random->nextInt(0, 2);
+            case Tile::emeraldOre_Id:
+            case Tile::diamondOre_Id:
+                magicCount = level->random->nextInt(3, 7);
+            case Tile::lapisOre_Id:
+            case Tile::netherQuartz_Id:
+                magicCount = level->random->nextInt(2, 5);
         }
         popExperience(level, x, y, z, magicCount);
     }
