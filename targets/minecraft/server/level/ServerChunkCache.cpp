@@ -85,40 +85,25 @@ std::vector<LevelChunk*>* ServerChunkCache::getLoadedChunkList() {
     return &m_loadedChunkList;
 }
 
-void ServerChunkCache::drop(int x, int z) {
+void ServerChunkCache::drop(const int x, cont int z) {
     // 4J - we're not dropping things anymore now that we have a fixed sized
     // cache
 #if defined(_LARGE_WORLDS)
+    int ix = x + XZOFFSET;
+    int iz = z + XZOFFSET;
+    // Check we're in range of the stored level
+    if ((ix < 0) || (ix >= XZSIZE)) return;
+    if ((iz < 0) || (iz >= XZSIZE)) return;
+    int idx = ix * XZSIZE + iz;
+    LevelChunk* chunk = cache[idx];
+    if (chunk != nullptr) {
+        chunk->loaded = false;
+        m_toDrop.push_back(chunk);
+        const auto it = std::find(m_loadedChunkList.begin(),
+                                  m_loadedChunkList.end(), chunk);
+        if (it != m_loadedChunkList.end()) m_loadedChunkList.erase(it);
 
-    bool canDrop = false;
-    //	if (level->dimension->mayRespawn())
-    //	{
-    //		Pos *spawnPos = level->getSharedSpawnPos();
-    //		int xd = x * 16 + 8 - spawnPos->x;
-    //		int zd = z * 16 + 8 - spawnPos->z;
-    //		delete spawnPos;
-    //		int r = 128;
-    //		if (xd < -r || xd > r || zd < -r || zd > r)
-    //		{
-    //			canDrop = true;
-    //}
-    //	}
-    //	else
-    {
-        canDrop = true;
-    }
-    if (canDrop) {
-        int ix = x + XZOFFSET;
-        int iz = z + XZOFFSET;
-        // Check we're in range of the stored level
-        if ((ix < 0) || (ix >= XZSIZE)) return;
-        if ((iz < 0) || (iz >= XZSIZE)) return;
-        int idx = ix * XZSIZE + iz;
-        LevelChunk* chunk = cache[idx];
-
-        if (chunk) {
-            m_toDrop.push_back(chunk);
-        }
+        cache[idx] = nullptr;
     }
 #endif
 }
@@ -801,6 +786,8 @@ bool ServerChunkCache::tick() {
                         int idx = ix * XZSIZE + iz;
                         m_unloadedCache[idx] = chunk;
                         cache[idx] = nullptr;
+                    } else {
+                        continue;
                     }
                 }
                 m_toDrop.pop_front();
