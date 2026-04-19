@@ -85,7 +85,7 @@ std::vector<LevelChunk*>* ServerChunkCache::getLoadedChunkList() {
     return &m_loadedChunkList;
 }
 
-void ServerChunkCache::drop(const int x, cont int z) {
+void ServerChunkCache::drop(const int x, const int z) {
     // 4J - we're not dropping things anymore now that we have a fixed sized
     // cache
 #if defined(_LARGE_WORLDS)
