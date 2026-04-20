@@ -474,7 +474,8 @@ File Minecraft::getWorkingDirectory(const std::string& applicationName) {
 #endif
 
     if (homedir != nullptr) {
-        File workingDirectory(std::string(homedir), '.' + applicationName + '/');
+        File workingDirectory(std::string(homedir),
+                              '.' + applicationName + '/');
 
         if (!workingDirectory.exists()) {
             if (!workingDirectory.mkdirs()) {
@@ -485,7 +486,9 @@ File Minecraft::getWorkingDirectory(const std::string& applicationName) {
 
         return workingDirectory;
     } else {
-        Log::info("Could not locate user's home directory. This platform is likely missing an implementation of Minecraft::getWorkingDirectory.\n");
+        Log::info(
+            "Could not locate user's home directory. This platform is likely "
+            "missing an implementation of Minecraft::getWorkingDirectory.\n");
         assert(0);
     }
 }
@@ -561,7 +564,10 @@ void Minecraft::setScreen(Screen* screen) {
 }
 
 void Minecraft::checkGlError(const std::string& string) {
-    // 4J - TODO
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        Log::info("[ERROR %s] : %s\n", string.c_str(), gluErrorString(error));
+    }
 }
 
 void Minecraft::destroy() {
@@ -1113,15 +1119,20 @@ void Minecraft::run_middle() {
 #if !defined(_CONTENT_PACKAGE)
                                         {
                                             // print the time
-                                            auto now = std::chrono::system_clock::now();
-                                            auto dp  = std::chrono::floor<std::chrono::days>(now);
-                                            std::chrono::hh_mm_ss hms{std::chrono::floor<std::chrono::seconds>(now - dp)};
+                                            auto now = std::chrono::
+                                                system_clock::now();
+                                            auto dp = std::chrono::floor<
+                                                std::chrono::days>(now);
+                                            std::chrono::hh_mm_ss hms{
+                                                std::chrono::floor<
+                                                    std::chrono::seconds>(now -
+                                                                          dp)};
 
-                                            Log::info("%02d:%02d:%02d\n",
-                                                    (int)hms.hours().count(),
-                                                    (int)hms.minutes().count(),
-                                                    (int)hms.seconds().count());
-
+                                            Log::info(
+                                                "%02d:%02d:%02d\n",
+                                                (int)hms.hours().count(),
+                                                (int)hms.minutes().count(),
+                                                (int)hms.seconds().count());
                                         }
 #endif
                                     } else {
