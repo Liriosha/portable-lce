@@ -5,7 +5,6 @@
 
 #include "java/Class.h"
 #include "minecraft/IGameServices.h"
-#include "minecraft/stdafx.h"
 #include "minecraft/world/entity/EntitySelector.h"
 #include "minecraft/world/entity/MobType.h"
 #include "minecraft/world/entity/boss/BossMob.h"

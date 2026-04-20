@@ -7,7 +7,6 @@
 
 #include "java/Class.h"
 #include "minecraft/IGameServices.h"
-#include "minecraft/stdafx.h"
 #include "minecraft/world/entity/LivingEntity.h"
 #include "minecraft/world/entity/Mob.h"
 #include "minecraft/world/entity/boss/BossMob.h"
