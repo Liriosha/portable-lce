@@ -564,9 +564,25 @@ void Minecraft::setScreen(Screen* screen) {
 }
 
 void Minecraft::checkGlError(const std::string& string) {
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        Log::info("[ERROR %s] : %s\n", string.c_str(), gluErrorString(error));
+    GLenum error;
+    while ((error = glGetError()) != GL_NO_ERROR) {
+        switch (error) {
+            case GL_INVALID_ENUM:
+                Log::info("[GL %s] : Invalid Enum\n", string.c_str());
+                break;
+            case GL_INVALID_VALUE:
+                Log::info("[GL %s] : Invalid Value\n", string.c_str());
+                break;
+            case GL_INVALID_OPERATION:
+                Log::info("[GL %s] : Invalid operation\n", string.c_str());
+                break;
+            case GL_OUT_OF_MEMORY:
+                Log::info("[GL %s] : Out of memory\n", string.c_str());
+                break;
+            default:
+                Log::info("[GL %s] : Unknown Error\n", string.c_str());
+                break;
+        }
     }
 }
 
