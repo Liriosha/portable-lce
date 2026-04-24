@@ -20,7 +20,7 @@ public:
                    unsigned int tilesLength, int iconOverride = -1,
                    int iData = -1, int iDataOverride = -1);
     // PLCE: added, destructor was never implemented
-    ~LookAtTileHint() { delete m_iTiles; };
+    ~LookAtTileHint() { delete[] m_iTiles; };
 
     virtual bool onLookAt(int id, int iData = 0);
 };
