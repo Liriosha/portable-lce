@@ -14,8 +14,6 @@ LookAtTileHint::LookAtTileHint(eTutorial_Hint id, Tutorial* tutorial,
     : TutorialHint(id, tutorial, -1, e_Hint_LookAtTile) {
     m_iTilesCount = tilesLength;
 
-    // PLCE: allocates ram here, shouldn't leak?
-    // Double check this
     m_iTiles = new int[m_iTilesCount];
     for (unsigned int i = 0; i < m_iTilesCount; i++) {
         m_iTiles[i] = tiles[i];
