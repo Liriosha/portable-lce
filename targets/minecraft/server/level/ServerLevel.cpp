@@ -956,10 +956,8 @@ void ServerLevel::save(bool force, ProgressListener* progressListener,
             // clean cache
             std::vector<LevelChunk*>* loadedChunkList =
                 cache->getLoadedChunkList();
-            for (auto it = loadedChunkList->begin();
-                 it != loadedChunkList->end(); ++it) {
-                LevelChunk* lc = *it;
-                if (!chunkMap->hasChunk(lc->x, lc->z)) {
+            for (LevelChunk* lc : *loadedChunkList) {
+                if (lc && !chunkMap->hasChunk(lc->x, lc->z)) {
                     cache->drop(lc->x, lc->z);
                 }
             }
