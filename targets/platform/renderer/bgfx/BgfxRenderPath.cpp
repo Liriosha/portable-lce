@@ -3,7 +3,6 @@
 #include <SDL.h>
 #include <SDL_syswm.h>
 #include <bgfx/bgfx.h>
-#include <bgfx/platform.h>
 
 #include <cstdio>
 #include <cstring>
@@ -138,43 +137,42 @@ BgfxRenderPath::BgfxRenderPath(SDL_Window* window) : window_(window) {
     bgfx::Init init;
 #if defined(__linux__)
     if (wmi.subsystem == SDL_SYSWM_X11) {
-        init.platformData.ndt = wmi.info.x11.display;
-        init.platformData.nwh = (void*)(uintptr_t)wmi.info.x11.window;
+        init.swapChain.ndt = wmi.info.x11.display;
+        init.swapChain.nwh = (void*)(uintptr_t)wmi.info.x11.window;
     } else if (wmi.subsystem == SDL_SYSWM_WAYLAND) {
-        init.platformData.ndt = wmi.info.wl.display;
-        init.platformData.nwh = wmi.info.wl.surface;
+        init.swapChain.ndt = wmi.info.wl.display;
+        init.swapChain.nwh = wmi.info.wl.surface;
         init.platformData.type = bgfx::NativeWindowHandleType::Wayland;
     } else {
         // Unknown subsystem
         assert(false && "Unsupported windowing system");
     }
 #elif defined(_WIN32)
-    init.platformData.nwh = wmi.info.win.window;
+    init.swapChain.nwh = wmi.info.win.window;
 #elif defined(__APPLE__)
-    init.platformData.nwh = wmi.info.cocoa.window;
+    init.swapChain.nwh = wmi.info.cocoa.window;
 #endif
 
-    #ifdef BGFX_RENDERER_VULKAN
-        init.type = bgfx::RendererType::Vulkan;
-    #endif
-    #ifdef BGFX_RENDERER_OPENGL
-        init.type = bgfx::RendererType::OpenGL;
-    #endif
-    #ifdef BGFX_RENDERER_METAL
-        init.type = bgfx::RendererType::Metal;
-    #endif
-    #ifdef BGFX_RENDERER_D3D12
-        init.Type = bgfx:RendererType::Direct3D12;
-    #endif
+#ifdef BGFX_RENDERER_VULKAN
+    init.type = bgfx::RendererType::Vulkan;
+#endif
+#ifdef BGFX_RENDERER_OPENGL
+    init.type = bgfx::RendererType::OpenGL;
+#endif
+#ifdef BGFX_RENDERER_METAL
+    init.type = bgfx::RendererType::Metal;
+#endif
+#ifdef BGFX_RENDERER_D3D12
+    init.type = bgfx::RendererType::Direct3D12;
+#endif
 
-
-    init.resolution.width = width_;
-    init.resolution.height = height_;
+    init.swapChain.width = width_;
+    init.swapChain.height = height_;
 #ifdef ENABLE_VSYNC
-init.resolution.reset = BGFX_RESET_VSYNC;
+    init.reset = BGFX_RESET_VSYNC;
 #else
-  init.resolution.reset = BGFX_RESET_NONE;
-#endif //
+    init.reset = BGFX_RESET_NONE;
+#endif  //
 
     init.limits.maxTransientVbSize = 32 * 1024 * 1024;
     bgfx::init(init);
@@ -209,8 +207,8 @@ init.resolution.reset = BGFX_RESET_VSYNC;
     // making the game look transparent
     // It is quite funny but not what we're looking for
     // if you want it back, add "BGFX_STATE_WRITE_A" to the BGFX state
-    state_.bgfx_state = BGFX_STATE_WRITE_RGB |
-                        BGFX_STATE_WRITE_Z | BGFX_STATE_DEPTH_TEST_LEQUAL;
+    state_.bgfx_state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_Z |
+                        BGFX_STATE_DEPTH_TEST_LEQUAL;
 
     // Load shaders
     const uint8_t* vs_data = nullptr;
@@ -276,9 +274,9 @@ init.resolution.reset = BGFX_RESET_VSYNC;
     s_tex1_ = bgfx::createUniform("s_tex1", bgfx::UniformType::Sampler);
     // PLCE: read fs_4jcraft.sc pls
     const uint8_t whitePx[4] = {0xFF, 0xFF, 0xFF, 0xFF};
-    white_tex_ = bgfx::createTexture2D(
-        1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0,
-        bgfx::copy(whitePx, sizeof(whitePx)));
+    white_tex_ =
+        bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0,
+                              bgfx::copy(whitePx, sizeof(whitePx)));
 }
 
 BgfxRenderPath::~BgfxRenderPath() {
@@ -309,8 +307,8 @@ BgfxRenderPath::~BgfxRenderPath() {
     for (auto* u :
          {&u_baseColor_, &u_chunkOffset_, &u_lightParams_, &u_light0Dir_,
           &u_light1Dir_, &u_lightDiffuse_, &u_lightAmbient_, &u_fogParams_,
-           &u_lmTransform_, &u_globalLM_, &u_texMatrix_, &u_fragParams_,
-           &u_fogColor_, &s_tex0_, &s_tex1_}) {
+          &u_lmTransform_, &u_globalLM_, &u_texMatrix_, &u_fragParams_,
+          &u_fogColor_, &s_tex0_, &s_tex1_}) {
         if (bgfx::isValid(*u)) bgfx::destroy(*u);
     }
 
@@ -508,8 +506,8 @@ void BgfxRenderPath::StateSetLightDirection(int l, float x, float y, float z) {
 }
 glm::vec4 BgfxRenderPath::lightDirUniform(int l) const {
     const float* src = (l == 0) ? state_.light0_dir : state_.light1_dir;
-    glm::vec3 d = glm::normalize(
-        glm::mat3(modelview_stack_.top()) * glm::vec3(src[0], src[1], src[2]));
+    glm::vec3 d = glm::normalize(glm::mat3(modelview_stack_.top()) *
+                                 glm::vec3(src[0], src[1], src[2]));
     return glm::vec4(d, 0.0f);
 }
 void BgfxRenderPath::StateSetLightEnable(int, bool) {}
@@ -538,6 +536,7 @@ void BgfxRenderPath::StateSetVertexTextureUV(float u, float v) {
 
 // MARK: DrawVertices
 
+// FIXME: Program is invalid here
 static int s_frameCount = 0;
 void BgfxRenderPath::DrawVertices(int primType, int count, void* data,
                                   int vType, int) {
@@ -702,8 +701,8 @@ void BgfxRenderPath::DrawVertices(int primType, int count, void* data,
             : white_tex_;
     bgfx::setTexture(1, s_tex1_, lightmap,
                      BGFX_SAMPLER_MIN_ANISOTROPIC |
-                         BGFX_SAMPLER_MAG_ANISOTROPIC |
-                         BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+                         BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_U_CLAMP |
+                         BGFX_SAMPLER_V_CLAMP);
     float fragP[4] = {hasTexture ? 1.0f : 0.0f,
                       state_.use_lightmap ? 1.0f : 0.0f, state_.alpha_ref,
                       state_.fog_enabled ? 1.0f : 0.0f};
@@ -723,9 +722,9 @@ void BgfxRenderPath::update_mesh(MeshHandle, const MeshDesc&) {}
 void BgfxRenderPath::destroy_mesh(MeshHandle) {}
 
 TextureHandle BgfxRenderPath::create_texture(const TextureDesc& desc) {
-    auto th = bgfx::createTexture2D(desc.width, desc.height,
-                                    desc.mip_levels > 1, 1,
-                                    bgfx::TextureFormat::RGBA8, 0);  // no mem
+    auto th =
+        bgfx::createTexture2D(desc.width, desc.height, desc.mip_levels > 1, 1,
+                              bgfx::TextureFormat::RGBA8, 0);  // no mem
 
     if (!desc.initial_data.empty()) {
         auto mem =
@@ -832,9 +831,9 @@ void BgfxRenderPath::resize(uint32_t w, uint32_t h) {
     width_ = w;
     height_ = h;
 #ifdef ENABLE_VSYNC
-    bgfx::reset(w, h, BGFX_RESET_VSYNC);
+    bgfx::reset(BGFX_RESET_VSYNC);
 #else
-    bgfx::reset(w, h, BGFX_RESET_NONE);
+    bgfx::reset(BGFX_RESET_NONE);
 #endif
 }
 
@@ -1242,26 +1241,25 @@ void BgfxRenderPath::TextureData(int width, int height, void* data, int level,
         wantMips ? mipChainCount((uint32_t)width, (uint32_t)height) : 1;
 
     // PLCE: don't sample deeper than the last level the game uploads.
-    if (wantMips) {
-        slot.sampler_flags &= ~BGFX_SAMPLER_LOD_MASK;
-        slot.sampler_flags |= BGFX_SAMPLER_LOD_CLAMP
-            | ((uint32_t)(slot.mip_levels - 1) << BGFX_SAMPLER_LOD_SHIFT);
-    }
+    // FIXME: These masks are no longer valid in bgfx
+    // if (wantMips) {
+    //     slot.sampler_flags &= ~BGFX_SAMPLER_LOD_MASK;
+    //     slot.sampler_flags |=
+    //         BGFX_SAMPLER_LOD_CLAMP |
+    //         ((uint32_t)(slot.mip_levels - 1) << BGFX_SAMPLER_LOD_SHIFT);
+    // }
 
     // PLCE: this used to crash on Nvidia(?).
-    if (level == 0
-    &&  ( !bgfx::isValid(slot.handle)
-       || slot.width  != (uint32_t)width
-       || slot.height != (uint32_t)height
-       || slot.created_mips != wanted ) ) {
+    if (level == 0 &&
+        (!bgfx::isValid(slot.handle) || slot.width != (uint32_t)width ||
+         slot.height != (uint32_t)height || slot.created_mips != wanted)) {
         if (bgfx::isValid(slot.handle)) bgfx::destroy(slot.handle);
 
-        slot.handle = bgfx::createTexture2D((uint16_t)width, (uint16_t)height,
-                                            wantMips, 1,
-                                            bgfx::TextureFormat::RGBA8,
-                                            slot.sampler_flags);
+        slot.handle = bgfx::createTexture2D(
+            (uint16_t)width, (uint16_t)height, wantMips, 1,
+            bgfx::TextureFormat::RGBA8, slot.sampler_flags);
         slot.created_mips = wanted;
-        slot.width  = (uint32_t)width;
+        slot.width = (uint32_t)width;
         slot.height = (uint32_t)height;
         state_.bound_texture_sampler_flags = slot.sampler_flags;
     }
@@ -1269,11 +1267,11 @@ void BgfxRenderPath::TextureData(int width, int height, void* data, int level,
     if (level < 0 || (uint16_t)level >= slot.created_mips) return;
 
     const bgfx::Memory* mem = bgfx::copy(data, (uint32_t)(width * height * 4));
-    bgfx::updateTexture2D(slot.handle, 0, (uint8_t)level, 0, 0,
-                          (uint16_t)width, (uint16_t)height, mem);
+    bgfx::updateTexture2D(slot.handle, 0, (uint8_t)level, 0, 0, (uint16_t)width,
+                          (uint16_t)height, mem);
 
-    if (slot.mip_levels > 1 && (uint16_t)level == slot.mip_levels - 1
-    &&  slot.mip_levels < slot.created_mips) {
+    if (slot.mip_levels > 1 && (uint16_t)level == slot.mip_levels - 1 &&
+        slot.mip_levels < slot.created_mips) {
         fillMipTail((uint16_t)level, (const uint8_t*)data, width, height,
                     slot.handle, slot.created_mips);
     }
@@ -1290,8 +1288,8 @@ void BgfxRenderPath::TextureDataUpdate(int xoff, int yoff, int w, int h,
     bgfx::updateTexture2D(slot.handle, 0, (uint8_t)level, (uint16_t)xoff,
                           (uint16_t)yoff, (uint16_t)w, (uint16_t)h, mem);
 
-    if (slot.mip_levels > 1 && (uint16_t)level == slot.mip_levels - 1
-    &&  slot.mip_levels < slot.created_mips && xoff == 0 && yoff == 0) {
+    if (slot.mip_levels > 1 && (uint16_t)level == slot.mip_levels - 1 &&
+        slot.mip_levels < slot.created_mips && xoff == 0 && yoff == 0) {
         fillMipTail((uint16_t)level, (const uint8_t*)data, w, h, slot.handle,
                     slot.created_mips);
     }
@@ -1440,6 +1438,7 @@ void BgfxRenderPath::Resume() {}
 void BgfxRenderPath::BeginEvent(const char*) {}
 void BgfxRenderPath::EndEvent() {}
 
+// FIXME: _program is invalid here
 void BgfxRenderPath::submit_immediate(const DrawCall& dc) {
     if (dc.source != rp::VertexSource::transient) return;
     const auto& tvb = dc.transient;
@@ -1515,18 +1514,18 @@ void BgfxRenderPath::submit_immediate(const DrawCall& dc) {
             : white_tex_;
     bgfx::setTexture(1, s_tex1_, lightmap,
                      BGFX_SAMPLER_MIN_ANISOTROPIC |
-                         BGFX_SAMPLER_MAG_ANISOTROPIC |
-                         BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP);
+                         BGFX_SAMPLER_MAG_ANISOTROPIC | BGFX_SAMPLER_U_CLAMP |
+                         BGFX_SAMPLER_V_CLAMP);
     float fragP[4] = {hasTexture ? 1.0f : 0.0f,
                       state_.use_lightmap ? 1.0f : 0.0f, state_.alpha_ref,
                       state_.fog_enabled ? 1.0f : 0.0f};
     bgfx::setUniform(u_fragParams_, fragP);
     bgfx::setUniform(u_fogColor_, state_.fog_color);
 
-    if (bgfx::isValid(program_))
-        bgfx::submit(view, program_);
-    else
-        bgfx::discard();
+    // if (bgfx::isValid(program_))
+    bgfx::submit(view, program_);
+    // else
+    //    bgfx::discard();
 }
 
 // MARK: Factory

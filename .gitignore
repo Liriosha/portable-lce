@@ -10,7 +10,15 @@
 !/scripts/
 !/subprojects/
 /subprojects/*
-!/subprojects/*.wrap
+!/subprojects/stb.wrap
+!/subprojects/zlib.wrap
+!/subprojects/miniaudio.wrap
+!/subprojects/sdl2.wrap
+!/subprojects/glm.wrap
+!/subprojects/glew.wrap
+!/subprojects/shiggy.wrap
+!/subprojects/simdutf.wrap
+!/subprojects/bgfx.wrap
 !/subprojects/packagefiles
 /scripts/__pycache__/
 !/.clang-format

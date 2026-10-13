@@ -1,11 +1,8 @@
 [wrap-git]
 directory = bgfx
-url = https://github.com/portable-lce/bgfx.meson.git
-revision = main
+url = https://github.com/Liriosha/mbgfx.git
+revision = HEAD
 clone-recursive = true
-
+depth = 1
 [provide]
 bgfx = bgfx_dep
-bgfx-example-common = examples_common_dep
-bx = bx_dep
-bimg = bimg_dep
