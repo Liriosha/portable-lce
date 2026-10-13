@@ -55,7 +55,7 @@ jobs:
       # Can't use nix here, windows :(
       - name: Install tooling
         run: |
-          choco install 7zip -y 
+          choco install 7zip nasm -y 
           python -m pip install meson
 
       - name: Restore build cache

@@ -60,7 +60,7 @@ jobs:
       - name: Download tooling
         if: ${{ matrix.build-type == 'optimized' }}
         run: |
-          brew install ccache sdl2 glfw glm
+          brew install ccache sdl2 glfw glm nasm
           python -m pip install meson
           python -m pip install ninja
 
