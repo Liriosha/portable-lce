@@ -1522,10 +1522,10 @@ void BgfxRenderPath::submit_immediate(const DrawCall& dc) {
     bgfx::setUniform(u_fragParams_, fragP);
     bgfx::setUniform(u_fogColor_, state_.fog_color);
 
-    // if (bgfx::isValid(program_))
-    bgfx::submit(view, program_);
-    // else
-    //    bgfx::discard();
+    if (bgfx::isValid(program_))
+        bgfx::submit(view, program_);
+    else
+        bgfx::discard();
 }
 
 // MARK: Factory
