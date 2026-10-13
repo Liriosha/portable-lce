@@ -2,7 +2,7 @@ option(
   'ui_backend',
   type: 'combo',
   choices: ['shiggy', 'java'],
-  value: 'shiggy',
+  value: 'java',
   description: 'Specifies a backend implementation for the game UI.',
 )
 
