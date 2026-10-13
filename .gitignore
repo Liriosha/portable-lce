@@ -8,6 +8,19 @@
 !/docs/
 !/targets/
 !/scripts/
+/scripts/__pycache__/
+!/.clang-format
+!/.git-blame-ignore-revs
+!/.gitattributes
+!/.gitignore
+!/.gitmodules
+!/CONTRIBUTING.md
+!/flake.nix
+!/meson.build
+!/meson.options
+!/README.md
+
+# Dependencies
 !/subprojects/
 /subprojects/*
 !/subprojects/stb.wrap
@@ -20,14 +33,4 @@
 !/subprojects/simdutf.wrap
 !/subprojects/bgfx.wrap
 !/subprojects/packagefiles
-/scripts/__pycache__/
-!/.clang-format
-!/.git-blame-ignore-revs
-!/.gitattributes
-!/.gitignore
-!/.gitmodules
-!/CONTRIBUTING.md
-!/flake.nix
-!/meson.build
-!/meson.options
-!/README.md
+
