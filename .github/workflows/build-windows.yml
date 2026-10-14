@@ -87,7 +87,9 @@ jobs:
       - name: Package artifact
         shell: bash -e {0}
         run: |
+          if [ -e "$FILE" ]; then
           cp subprojects/shiggy/libs/iggy_w64.dll  build_${{matrix.build-type}}/targets/app/iggy_w64.dll
+          fi
           cd build_${{matrix.build-type}}/targets/app
           7z a ../../../minecraft-client-windows-${{matrix.arch}}.zip * -x!Minecraft.Client.exe.p/
 
