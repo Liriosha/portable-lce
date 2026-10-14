@@ -122,7 +122,7 @@
             SDL2
             zlib
             libxcb
-            jpeg-turbo
+            jpeglib_turbo
           ];
 
           env.NIX_LDFLAGS = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin
