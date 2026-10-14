@@ -108,8 +108,8 @@
             pkg-config
             python3
             unzip
-            xorg.libX11
-            xorg.libXext
+            libX11
+            libXext
           ];
 
           buildInputs = with pkgs; [
@@ -121,7 +121,8 @@
             mimalloc
             SDL2
             zlib
-            xorg.libxcb
+            libxcb
+            jpeg-turbo
           ];
 
           env.NIX_LDFLAGS = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin
