@@ -108,6 +108,8 @@
             pkg-config
             python3
             unzip
+            xorg.libX11
+            xorg.libXext
           ];
 
           buildInputs = with pkgs; [
@@ -119,6 +121,7 @@
             mimalloc
             SDL2
             zlib
+            xorg.libxcb
           ];
 
           installPhase = ''
