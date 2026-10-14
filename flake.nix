@@ -124,6 +124,18 @@
             xorg.libxcb
           ];
 
+          env.NIX_LDFLAGS = lib.optionalString pkgs.stdenv.hostPlatform.isDarwin
+            (lib.concatStringsSep " " [
+              "-framework Cocoa"
+              "-framework IOKit"
+              "-framework OpenGL"
+              "-framework QuartzCore"
+              "-weak_framework Metal"
+              "-weak_framework VideoToolbox"
+              "-weak_framework CoreMedia"
+              "-weak_framework CoreVideo"
+            ]);
+
           installPhase = ''
             mkdir -p $out/share/portablelce
             cp -r targets/app/. $out/share/portablelce/
