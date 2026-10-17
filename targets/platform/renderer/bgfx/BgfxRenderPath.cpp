@@ -14,9 +14,9 @@
 #include "platform/PlatformTypes.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "shaders/fs_4jcraft.bin.h"
-#include "shaders/vs_4jcraft.bin.h"
+#include "fs_4jcraft.bin.h"
 #include "stb_image.h"
+#include "vs_4jcraft.bin.h"
 
 #ifdef __APPLE__
 #import <Cocoa/Cocoa.h>
@@ -229,12 +229,16 @@ BgfxRenderPath::BgfxRenderPath(SDL_Window* window) : window_(window) {
             fs_data = fs_4jcraft_glsl;
             fs_size = sizeof(fs_4jcraft_glsl);
             break;
+            // Currently can't compile metal shaders?
+            // Disabled except on darwin
+#if __APPLE__
         case bgfx::RendererType::Metal:
             vs_data = vs_4jcraft_mtl;
             vs_size = sizeof(vs_4jcraft_mtl);
             fs_data = fs_4jcraft_mtl;
             fs_size = sizeof(fs_4jcraft_mtl);
             break;
+#endif
         default:
             assert(0 && "shaders not yet compiled for this renderer");
             break;
@@ -274,9 +278,9 @@ BgfxRenderPath::BgfxRenderPath(SDL_Window* window) : window_(window) {
     s_tex1_ = bgfx::createUniform("s_tex1", bgfx::UniformType::Sampler);
     // PLCE: read fs_4jcraft.sc pls
     const uint8_t whitePx[4] = {0xFF, 0xFF, 0xFF, 0xFF};
-    white_tex_ =
-        bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::RGBA8, 0,
-                              bgfx::copy(whitePx, sizeof(whitePx)));
+    white_tex_ = bgfx::createTexture2D(
+        1, 1, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE,
+        bgfx::copy(whitePx, sizeof(whitePx)));
 }
 
 BgfxRenderPath::~BgfxRenderPath() {
@@ -722,9 +726,9 @@ void BgfxRenderPath::update_mesh(MeshHandle, const MeshDesc&) {}
 void BgfxRenderPath::destroy_mesh(MeshHandle) {}
 
 TextureHandle BgfxRenderPath::create_texture(const TextureDesc& desc) {
-    auto th =
-        bgfx::createTexture2D(desc.width, desc.height, desc.mip_levels > 1, 1,
-                              bgfx::TextureFormat::RGBA8, 0);  // no mem
+    auto th = bgfx::createTexture2D(
+        desc.width, desc.height, desc.mip_levels > 1, 1,
+        bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE);  // no mem
 
     if (!desc.initial_data.empty()) {
         auto mem =
@@ -828,12 +832,13 @@ void BgfxRenderPath::render_frame(const FrameDesc& frame) {
 }
 
 void BgfxRenderPath::resize(uint32_t w, uint32_t h) {
-    width_ = w;
-    height_ = h;
+    bgfx::SwapChain swapChain;
+    swapChain.width = w;
+    swapChain.height = h;
 #ifdef ENABLE_VSYNC
-    bgfx::reset(BGFX_RESET_VSYNC);
+    bgfx::reset(BGFX_RESET_VSYNC, &swapChain);
 #else
-    bgfx::reset(BGFX_RESET_NONE);
+    bgfx::reset(BGFX_RESET_NONE, &swapChain);
 #endif
 }
 

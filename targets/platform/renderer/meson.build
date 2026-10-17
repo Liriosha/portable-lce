@@ -1,3 +1,5 @@
+dependency('bgfx')
+subdir('bgfx/shaders')
 platform_renderer_bgfx_cpp_args = global_cpp_args + global_cpp_defs
 
 if host_machine.system() == 'darwin'
@@ -22,6 +24,7 @@ lib_platform_renderer_bgfx = static_library('platform_renderer',
         dependency('sdl2'),
         dependency('glm'),
         dependency('stb'),
+        dependency('shaders'),
         java_dep
     ],
     cpp_args: platform_renderer_bgfx_cpp_args,
