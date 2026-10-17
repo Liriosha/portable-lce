@@ -109,7 +109,8 @@
             python3
             unzip
             libX11
-            libXext
+            libXext,
+            glslang
           ];
 
           buildInputs = with pkgs; [
